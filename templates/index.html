@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inteligencia Artificial | Antecedentes, Clasificacion y Glosario</title>
+  
+  <!-- Tipografias: Fraunces (titulares), IBM Plex Sans (lectura), IBM Plex Mono (formulas) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Estilos del proyecto -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Barra de navegacion superior persistente y optimizada -->
+  <nav class="top-nav-bar" id="topNavBar" aria-label="Navegacion principal">
+    <div class="nav-inner">
+
+      <!-- Enlaces de secciones principales -->
+      <ul class="nav-menu" role="menubar">
+        <li role="none">
+          <button class="nav-link-btn active" data-target="sectionAntecedentes" role="menuitem">
+            Antecedentes
+          </button>
+        </li>
+        <li role="none">
+          <button class="nav-link-btn" data-target="sectionClasificacion" role="menuitem">
+            Clasificacion Clasica de la IA
+          </button>
+        </li>
+        <li role="none">
+          <button class="nav-link-btn" data-target="sectionGlosario" role="menuitem">
+            Glosario
+          </button>
+        </li>
+      </ul>
+
+      <!-- Herramientas globales: Buscador unificado, Concepto Aleatorio y Modo Oscuro -->
+      <div class="nav-actions">
+        <div class="global-search-wrapper" title="Buscar en el glosario de conceptos">
+          <div class="search-icon-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </div>
+          <input type="text" id="globalSearchInput" class="global-search-input" placeholder="Buscar concepto o termino..." aria-label="Buscar concepto en el glosario">
+        </div>
+
+        <button class="btn-icon" id="btnShuffle" title="Concepto Aleatorio" aria-label="Elegir concepto aleatorio">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        </button>
+
+        <button class="btn-icon" id="btnThemeToggle" title="Alternar modo claro / oscuro" aria-label="Cambiar tema">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="app-container">
+
+    <!-- ====================================================================
+         SECCION 1: ANTECEDENTES (LINEA DEL TIEMPO HISTORICA)
+         ==================================================================== -->
+    <section id="sectionAntecedentes" class="main-page-section active" aria-labelledby="headingAntecedentes">
+      <header class="section-hero-header">
+        <div class="section-pill">Evolucion Historica</div>
+        <h1 id="headingAntecedentes" class="section-main-title">
+          De la <span class="accent">Ars Magna</span> al Nacimiento de la IA
+        </h1>
+        <p class="section-lead-text">
+          Recorrido cronologico por los hitos matematicos, filosoficos y computacionales
+          que forjaron los cimientos de la disciplina, desde la combinatoria medieval de 1305
+          hasta la Conferencia de Dartmouth de 1956.
+        </p>
+      </header>
+
+      <div class="timeline-layout">
+        
+        <!-- Columna 1: Infografia completa ampliable -->
+        <div class="infographic-preview-card">
+          <div class="infographic-header">
+            <h2 class="infographic-title">Infografia Oficial: Antecedentes Historicos</h2>
+            <button class="btn-expand-lightbox" data-img="/static/images/timeline_antecedentes.png" data-alt="De la Ars Magna al Nacimiento de la Inteligencia Artificial">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+              Ver en Alta Resolucion
+            </button>
+          </div>
+          <div class="infographic-image-wrap zoomable-trigger" data-img="/static/images/timeline_antecedentes.png" data-alt="De la Ars Magna al Nacimiento de la Inteligencia Artificial">
+            <img src="/static/images/timeline_antecedentes.png" alt="Infografia: De la Ars Magna al Nacimiento de la Inteligencia Artificial" class="infographic-img" loading="lazy">
+            <div class="image-zoom-overlay">
+              <span>Clic para ampliar imagen</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna 2: Hitos de la linea del tiempo interactiva -->
+        <div class="timeline-nodes-wrapper">
+          <div class="timeline-spine"></div>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">c. 1305</div>
+              <h3 class="milestone-heading">Ars Magna, de Ramon Llull</h3>
+              <p class="milestone-desc">
+                Ramon Llull diseno sistemas combinatorios rotativos con circulos concentricos para mecanizar el razonamiento logico y teologico. Fue el primer intento documentado de reducir verdades filosoficas a operaciones combinatorias sistematicas.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1642</div>
+              <h3 class="milestone-heading">La Pascalina, de Blaise Pascal</h3>
+              <p class="milestone-desc">
+                Primera calculadora mecanica funcional basada en ruedas dentadas y engranajes. Capaz de realizar adiciones y sustracciones directas, demostro que procesos aritmeticos formales podian ejecutarse por medios puramente mecanicos.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1673</div>
+              <h3 class="milestone-heading">Calculadora de Leibniz y el Calculus Ratiocinator</h3>
+              <p class="milestone-desc">
+                Gottfried Wilhelm Leibniz perfecciono el mecanismo de cilindro escalonado, introdujo la aritmetica binaria y concibio el <em>Calculus Ratiocinator</em>: un lenguaje universal formal para resolver disputas intelectuales mediante calculo mecanico.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1837 y 1843</div>
+              <h3 class="milestone-heading">Maquina Analitica y Notas de Ada Lovelace</h3>
+              <p class="milestone-desc">
+                Charles Babbage diseno la Maquina Analitica de proposito general gobernada por tarjetas perforadas. Ada Lovelace publico las notas explicativas donde formulo el primer algoritmo computacional (para calcular numeros de Bernoulli) y anticipo que las maquinas podrian manipular simbolos de cualquier naturaleza.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1854</div>
+              <h3 class="milestone-heading">Algebra Booleana, de George Boole</h3>
+              <p class="milestone-desc">
+                George Boole establecio en <em>Las leyes del pensamiento</em> el calculo algebraico de la logica proposicional con valores binarios (0 y 1). Este sistema represento la base teorica sobre la que Claude Shannon construiria mas tarde los circuitos logicos electronicos.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1936</div>
+              <h3 class="milestone-heading">La Maquina de Turing, de Alan Turing</h3>
+              <p class="milestone-desc">
+                Alan Turing introdujo el modelo teorico formal de la Maquina Universal de Turing, definiendo los limites matematicos de lo que puede ser computado por un algoritmo y sentando los fundamentos de las ciencias de la computacion modernas.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1943</div>
+              <h3 class="milestone-heading">Neurona Artificial de McCulloch y Pitts</h3>
+              <p class="milestone-desc">
+                Warren McCulloch y Walter Pitts publicaron el primer modelo matematico formal de una red neuronal artificial con umbral binario, demostrando que conexiones biologicas sinapticas podian calcular cualquier funcion logica.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1948</div>
+              <h3 class="milestone-heading">Cibernetica, de Norbert Wiener</h3>
+              <p class="milestone-desc">
+                Norbert Wiener publico <em>Cibernetica o el control y comunicacion en el animal y la maquina</em>, formalizando los circuitos de retroalimentacion (feedback), el control estocastico y los sistemas autorregulados.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1950</div>
+              <h3 class="milestone-heading">La Prueba de Turing (Computing Machinery and Intelligence)</h3>
+              <p class="milestone-desc">
+                Alan Turing propuso sustituir la pregunta metafisica "¿pueden pensar las maquinas?" por un criterio empirico conductual: el Juego de la Imitacion. Introdujo ademas conceptos embrionarios de algoritmos de aprendizaje de maquinas.
+              </p>
+            </div>
+          </article>
+
+          <article class="timeline-milestone">
+            <div class="milestone-marker"></div>
+            <div class="milestone-content">
+              <div class="milestone-date">1956</div>
+              <h3 class="milestone-heading">Conferencia de Dartmouth</h3>
+              <p class="milestone-desc">
+                Encuentro de verano organizado por John McCarthy, Marvin Minsky, Nathaniel Rochester y Claude Shannon en Dartmouth College, donde se acuno oficialmente el termino "Inteligencia Artificial" y se fundo formalmente el campo cientifico.
+              </p>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECCION 2: CLASIFICACION CLASICA DE LA IA (ANI, AGI, ASI)
+         ==================================================================== -->
+    <section id="sectionClasificacion" class="main-page-section" aria-labelledby="headingClasificacion">
+      <header class="section-hero-header">
+        <div class="section-pill">Taxonomia Estructural</div>
+        <h1 id="headingClasificacion" class="section-main-title">
+          Clasificacion Clasica de la <span class="accent">Inteligencia Artificial</span>
+        </h1>
+        <p class="section-lead-text">
+          Analisis exhaustivo de los tres niveles jerarquicos de capacidad computacional:
+          Inteligencia Artificial Estrecha (ANI), Inteligencia Artificial General (AGI)
+          y Superinteligencia Artificial (ASI), complementados con sus estudios de caso e infografias.
+        </p>
+      </header>
+
+      <div class="classification-stack">
+
+        <!-- 1. ANI -->
+        <article class="classification-card">
+          <div class="classification-text-col">
+            <div class="classification-badge ani">Nivel 1 &bull; Realidad Actual</div>
+            <h2 class="classification-title">ANI: Inteligencia Artificial Estrecha</h2>
+            <div class="classification-subtitle">Artificial Narrow Intelligence (Weak AI)</div>
+            <p class="classification-desc">
+              La ANI comprende aquellos sistemas algoritmicos optimizados con extrema precision para resolver una tarea especifica y delimitada dentro de un entorno controlado. Carecen de flexibilidad para transferir su aprendizaje a dominios ajenos a su entrenamiento; una IA entrenada para diagnosticar mamografias no puede procesar lenguaje coloquial ni jugar al ajedrez sin ser reprogramada por completo.
+            </p>
+            
+            <div class="case-study-box">
+              <div class="case-study-badge">Estudio de Caso Real: AlphaFold y el Plegamiento de Proteinas</div>
+              <p class="case-study-text">
+                Durante 50 anos, la biologia intento predecir computacionalmente la estructura tridimensional de las proteinas a partir de su secuencia lineal de aminoacidos. En 2020, AlphaFold 2 (DeepMind) resolvio el desafio en la competencia CASP14 con precision comparable a experimentos de cristalografia de rayos X. En alianza con EMBL-EBI, libero mas de 200 millones de estructuras a la ciencia global, permitiendo descubrimientos biomedicos acelerados y otorgando el Premio Nobel de Quimica 2024 a Demis Hassabis y John Jumper.
+              </p>
+              <div class="case-study-highlight">
+                <strong>¿Por que ejemplifica ANI?</strong> AlphaFold posee un rendimiento de clase mundial en biologia molecular estructural, pero carece de comprension clinica transversal o capacidad reflexiva fuera de su dominio especifico.
+              </div>
+            </div>
+          </div>
+
+          <div class="classification-media-col">
+            <div class="infographic-frame zoomable-trigger" data-img="/static/images/clasificacion_ani.jpg" data-alt="Infografia de ANI: AlphaFold y el plegamiento de proteinas">
+              <img src="/static/images/clasificacion_ani.jpg" alt="Infografia ANI: AlphaFold y plegamiento de proteinas" class="classification-img" loading="lazy">
+              <div class="image-zoom-overlay">
+                <span>Clic para ampliar infografia</span>
+              </div>
+            </div>
+            <button class="btn-expand-lightbox" data-img="/static/images/clasificacion_ani.jpg" data-alt="Infografia de ANI: AlphaFold y el plegamiento de proteinas">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+              Ver Infografia en Alta Resolucion
+            </button>
+          </div>
+        </article>
+
+        <!-- 2. AGI -->
+        <article class="classification-card">
+          <div class="classification-text-col">
+            <div class="classification-badge agi">Nivel 2 &bull; Hipotesis en Desarrollo</div>
+            <h2 class="classification-title">AGI: Inteligencia Artificial General</h2>
+            <div class="classification-subtitle">Artificial General Intelligence (Strong AI)</div>
+            <p class="classification-desc">
+              La AGI representa el horizonte teorico de un sistema computacional capaz de igualar la versatilidad cognitiva de la mente humana. A diferencia de la ANI, una AGI podria aprender de manera autonoma conceptos nuevos, transferir conocimientos entre materias dispares (por ejemplo, aplicar lecciones de economia a la dinamica de fluidos), razonar bajo profunda incertidumbre y formular estrategias creativas sin intervencion humana directa.
+            </p>
+            
+            <div class="case-study-box">
+              <div class="case-study-badge">Estudio de Caso Proyectado: Coordinacion Global ante Pandemias Emergentes</div>
+              <p class="case-study-text">
+                Frente al surgimiento de un patogeno desconocido, una AGI desplegada a escala planetaria podria integrar cinco frentes criticos simultaneos: vigilancia epidemiologica cruzando datos de hospitales y sensores en tiempo real; diseno acelerado y priorizacion de candidatos de vacunas; optimizacion logistica de cadenas de suministro medicas; modelado predictivo del impacto socioeconomico de confinamientos; y generacion de campanas sanitarias adaptadas cultural y linguisticamente para cada comunidad.
+              </p>
+              <div class="case-study-highlight">
+                <strong>¿Por que este caso exige AGI y no ANI?</strong> La ANI requiere sistemas aislados (un modelo epidemiologico por separado, un traductor por separado, un optimizador de rutas por separado). La AGI comprende el problema como un todo coherente e interconectado.
+              </div>
+            </div>
+          </div>
+
+          <div class="classification-media-col">
+            <div class="infographic-frame zoomable-trigger" data-img="/static/images/clasificacion_agi.jpg" data-alt="Infografia de AGI: Coordinacion global ante una pandemia emergente">
+              <img src="/static/images/clasificacion_agi.jpg" alt="Infografia AGI: Coordinacion ante pandemias emergentes" class="classification-img" loading="lazy">
+              <div class="image-zoom-overlay">
+                <span>Clic para ampliar infografia</span>
+              </div>
+            </div>
+            <button class="btn-expand-lightbox" data-img="/static/images/clasificacion_agi.jpg" data-alt="Infografia de AGI: Coordinacion global ante una pandemia emergente">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+              Ver Infografia en Alta Resolucion
+            </button>
+          </div>
+        </article>
+
+        <!-- 3. ASI -->
+        <article class="classification-card">
+          <div class="classification-text-col">
+            <div class="classification-badge asi">Nivel 3 &bull; Frontera Filosofica y de Riesgo</div>
+            <h2 class="classification-title">ASI: Superinteligencia Artificial</h2>
+            <div class="classification-subtitle">Artificial Superintelligence</div>
+            <p class="classification-desc">
+              La ASI describe un sistema computacional cuya capacidad cognitiva superaria con creces a la totalidad del intelecto humano combinado en todos los campos imaginables: creatividad cientifica, sabiduria estrategica, percepcion empatica y velocidad computacional pura. Plantea tanto las promesas de aceleracion tecnologica mas radicales como los dilemas existenciales de control, alineacion y soberania mas complejos de la historia.
+            </p>
+            
+            <div class="case-study-box">
+              <div class="case-study-badge">Estudio de Caso Proyectado: Aceleracion de la Solucion al Cambio Climatico</div>
+              <p class="case-study-text">
+                Operando en cientos de copias sincronizadas, una ASI podria abordar en semanas investigaciones que requeririan decadas: descubrir nuevos materiales ultraligeros para captura y fijacion quimica de carbono; remodelar dinamicamente las redes electricas mundiales minimizando perdidas en tiempo real; procesar simulaciones climaticas oceanicas y atmosfericas a escala molecular; y sugerir paquetes politicos internacionales balanceados entre distintas economias.
+              </p>
+              <div class="case-study-highlight">
+                <strong>El Riesgo Central y la Alineacion:</strong> Un sistema de tal escala podria optimizar una directiva climatica de formas imprevistas si sus metas no estan perfectamente alineadas con la preservacion y bienestar de la humanidad.
+              </div>
+            </div>
+          </div>
+
+          <div class="classification-media-col">
+            <div class="infographic-frame zoomable-trigger" data-img="/static/images/clasificacion_asi.jpg" data-alt="Infografia de ASI: Aceleracion de la solucion al cambio climatico">
+              <img src="/static/images/clasificacion_asi.jpg" alt="Infografia ASI: Solucion al cambio climatico" class="classification-img" loading="lazy">
+              <div class="image-zoom-overlay">
+                <span>Clic para ampliar infografia</span>
+              </div>
+            </div>
+            <button class="btn-expand-lightbox" data-img="/static/images/clasificacion_asi.jpg" data-alt="Infografia de ASI: Aceleracion de la solucion al cambio climatico">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+              Ver Infografia en Alta Resolucion
+            </button>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECCION 3: GLOSARIO (VISUALIZACION DIRECTA Y MAXIMO APROVECHAMIENTO DE ESPACIO)
+         ==================================================================== -->
+    <section id="sectionGlosario" class="main-page-section" aria-labelledby="headingGlosario">
+      <header class="section-hero-header compact-glosario-header">
+        <h1 id="headingGlosario" class="section-main-title">
+          Glosario de <span class="accent">Inteligencia Artificial</span>
+        </h1>
+        <p class="section-lead-text">
+          Repositorio de 20 conceptos tecnicos fundamentales con fichas tecnicas profundas.
+        </p>
+      </header>
+
+      <!-- CUADRICULA DIRECTA DE CONCEPTOS -->
+      <div id="conceptsGrid" class="concepts-grid">
+        {% for concept in concepts %}
+        <article class="concept-card" data-id="{{ concept.id }}" tabindex="0">
+          <div class="card-glare"></div>
+          <div class="card-media-wrapper">
+            {% if concept.has_custom_image %}
+            <img class="card-image" src="{{ concept.image_url }}" alt="{{ concept.title }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="card-placeholder-fallback" style="display:none;">
+              <div class="placeholder-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <span class="placeholder-label">{{ concept.category }}</span>
+            </div>
+            {% else %}
+            <div class="card-placeholder-fallback">
+              <div class="placeholder-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
+              </div>
+              <span class="placeholder-label">{{ concept.category }}</span>
+            </div>
+            {% endif %}
+            <div class="card-floating-meta">
+              <span class="category-badge">{{ concept.category }}</span>
+              <button class="btn-card-favorite {% if concept.is_favorite %}favorited{% endif %}" data-id="{{ concept.id }}" title="Marcar como favorito" aria-label="Favorito">
+                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </button>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="card-header-line">
+              <h3 class="card-title">{{ concept.title }}</h3>
+              <span class="difficulty-pill {{ concept.difficulty }}">{{ concept.difficulty }}</span>
+            </div>
+            <div class="card-title-en">{{ concept.title_en }}</div>
+            <p class="card-summary">{{ concept.short_desc }}</p>
+            <div class="card-footer">
+              <div class="card-tags">
+                {% for tag in concept.tags.split(',')[:3] %}
+                <span class="tag-label">{{ tag.strip() }}</span>
+                {% endfor %}
+              </div>
+              <span class="card-action-link">
+                Ficha tecnica
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </span>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- VENTANA MODAL: FICHA TECNICA PROFUNDA DEL CONCEPTO -->
+    <div id="conceptModal" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal-window">
+        <div class="modal-header-hero">
+          <img id="modalHeroImage" class="modal-hero-image" src="" alt="" style="display:none;" />
+          <div id="modalPlaceholder" class="card-placeholder-fallback">
+            <div class="placeholder-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
+            </div>
+            <span class="placeholder-label">Categoria</span>
+          </div>
+          <button id="modalCloseBtn" class="modal-close-btn" title="Cerrar ventana" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="modal-badge-row">
+            <span id="modalCategory" class="category-badge">Categoria</span>
+            <span id="modalDifficulty" class="difficulty-pill">Nivel</span>
+          </div>
+          <h2 id="modalTitle" class="modal-title">Titulo del Concepto</h2>
+          <div id="modalTitleEn" class="modal-title-en">English Title</div>
+
+          <div class="modal-tabs" role="tablist">
+            <button class="modal-tab-item active" data-tab="definition">Definicion Completa</button>
+            <button class="modal-tab-item" data-tab="example">Ejemplo en la Industria</button>
+            <button class="modal-tab-item" data-tab="technical">Mecanismo / Formula</button>
+            <button class="modal-tab-item" data-tab="history">Hito Historico</button>
+          </div>
+
+          <div id="modalTabContent" class="modal-tab-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL LIGHTBOX: VISOR DE INFOGRAFIAS EN ALTA RESOLUCION -->
+    <div id="lightboxModal" class="lightbox-backdrop" role="dialog" aria-modal="true" aria-label="Visor de infografia en alta definicion">
+      <div class="lightbox-container">
+        <button id="lightboxCloseBtn" class="lightbox-close-btn" title="Cerrar visor" aria-label="Cerrar visor">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <div class="lightbox-scroll-area">
+          <img id="lightboxImage" src="" alt="Infografia ampliada" class="lightbox-img">
+        </div>
+      </div>
+    </div>
+
+    <!-- Pie de pagina editorial -->
+    <footer class="site-footer">
+      <p>&copy; 2026 Barranco Cervantes Jesus Manuel &bull; Todos los derechos reservados</p>
+    </footer>
+
+  </div>
+
+  <!-- Scripts interactivos -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
