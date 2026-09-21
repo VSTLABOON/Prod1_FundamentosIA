@@ -9,9 +9,10 @@ Aplicacion web full-stack construida en Python (Flask + SQLite) disenada para co
 1. **Barra de Navegacion Superior Persistente**:
    - `Antecedentes`: Linea del tiempo interactiva de 10 hitos seminales (1305 - 1956) e infografia en alta definicion.
    - `Clasificacion Clasica de la IA`: Analisis de ANI, AGI y ASI con casos de estudio reales y prospectivos acompanados de sus respectivas infografias tecnicas.
-   - `Glosario`: Repositorio relacional de 20 conceptos tecnicos con tres modos interactivos (Cuadricula 3D Tilt, Flashcards con giro 180° y Cuestionario con puntaje).
+   - `Machine Learning`: Fundamentos del paradigma inductivo, los 3 grandes paradigmas (Supervisado, No Supervisado, Por Refuerzo), el pipeline de 5 fases y un simulador interactivo de inferencia matematica en tiempo real para deteccion de fraude.
+   - `Glosario`: Repositorio relacional de 20 conceptos tecnicos con cuadricula de tarjetas 3D Tilt y modal de fichas tecnicas profundas.
 2. **Buscador Global Inteligente**:
-   - Ubicado en la barra superior (atajo: `/`). Al escribir cualquier termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
+   - Ubicado en la barra superior. Al escribir cualquier termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
 3. **Visor Lightbox de Infografias**:
    - Permite ampliar e inspeccionar a pantalla completa las 4 infografias en alta definicion.
 4. **Diseno Editorial Academico**:

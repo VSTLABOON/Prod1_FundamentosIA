@@ -32,6 +32,11 @@
           </button>
         </li>
         <li role="none">
+          <button class="nav-link-btn" data-target="sectionMachineLearning" role="menuitem">
+            Machine Learning
+          </button>
+        </li>
+        <li role="none">
           <button class="nav-link-btn" data-target="sectionGlosario" role="menuitem">
             Glosario
           </button>
@@ -350,7 +355,288 @@
     </section>
 
     <!-- ====================================================================
-         SECCION 3: GLOSARIO (VISUALIZACION DIRECTA Y MAXIMO APROVECHAMIENTO DE ESPACIO)
+         SECCION 3: MACHINE LEARNING (FUNDAMENTOS, PARADIGMAS Y SIMULADOR)
+         ==================================================================== -->
+    <section id="sectionMachineLearning" class="main-page-section" aria-labelledby="headingMachineLearning">
+      <header class="section-hero-header">
+        <div class="section-pill">Paradigma de Aprendizaje Inductivo</div>
+        <h1 id="headingMachineLearning" class="section-main-title">
+          Machine Learning: <span class="accent">Aprender a partir de Datos</span>
+        </h1>
+        <p class="section-lead-text">
+          El Machine Learning (Aprendizaje Automatico) es el subcampo de la inteligencia artificial dedicado al diseno y desarrollo de algoritmos capaces de extraer patrones empiricos a partir de datos historicos para optimizar de forma autonoma su desempeno predictivo sin ser programados explicitamente mediante reglas rigidas.
+        </p>
+      </header>
+
+      <!-- Comparativa Conceptual: Programacion Tradicional vs Machine Learning -->
+      <div class="ml-comparison-grid">
+        <div class="ml-comparison-card traditional">
+          <div class="comparison-tag">Paradigma Deductivo</div>
+          <h3 class="comparison-title">Informatica Tradicional (Basada en Reglas)</h3>
+          <div class="paradigm-pipeline">
+            <span class="pipeline-node">Datos de Entrada</span>
+            <span class="pipeline-plus">+</span>
+            <span class="pipeline-node">Reglas (Algoritmo Humano)</span>
+            <span class="pipeline-arrow">&rarr;</span>
+            <span class="pipeline-result">Respuestas</span>
+          </div>
+          <p class="comparison-desc">
+            El ingeniero debe codificar cada logica y excepcion mediante sentencias de control (if-else). Ante problemas altamente dimensionales o de entorno cambiante (como vision artificial o procesamiento del lenguaje natural), resulta imposible formular manualmente todas las reglas necesarias.
+          </p>
+        </div>
+
+        <div class="ml-comparison-card learning">
+          <div class="comparison-tag accent">Paradigma Inductivo</div>
+          <h3 class="comparison-title">Machine Learning (Basado en Experiencia)</h3>
+          <div class="paradigm-pipeline">
+            <span class="pipeline-node">Datos de Entrada</span>
+            <span class="pipeline-plus">+</span>
+            <span class="pipeline-node">Respuestas Conocidas</span>
+            <span class="pipeline-arrow">&rarr;</span>
+            <span class="pipeline-result accent">Modelo / Reglas Descubiertas</span>
+          </div>
+          <p class="comparison-desc">
+            El algoritmo busca estadisticamente la funcion matematica f(x) que mejor aproxima los resultados. Al presentarse nuevos datos no vistos previamente, el modelo entrenado es capaz de generalizar y predecir la respuesta correcta con alto grado de precision.
+          </p>
+        </div>
+      </div>
+
+      <!-- Los Tres Paradigmas Fundamentales -->
+      <div class="ml-paradigms-wrapper">
+        <div class="editorial-divider">
+          <h2 class="subheading-editorial">Los Tres Paradigmas Fundamentales del Aprendizaje</h2>
+          <span class="divider-line"></span>
+        </div>
+
+        <div class="ml-paradigms-grid">
+          <!-- Paradigma 1: Supervisado -->
+          <article class="ml-paradigm-card">
+            <div class="paradigm-card-top">
+              <span class="paradigm-type-pill supervised">Supervisado</span>
+              <span class="paradigm-math-tag">D = {(x_i, y_i)}</span>
+            </div>
+            <h3 class="paradigm-card-title">Aprendizaje Supervisado</h3>
+            <p class="paradigm-card-summary">
+              El algoritmo aprende a partir de un conjunto de datos etiquetado por expertos o registros previos, donde cada vector de caracteristicas de entrada cuenta con un valor objetivo predefinido.
+            </p>
+            <div class="paradigm-details">
+              <div class="detail-row">
+                <span class="detail-label">Clasificacion:</span>
+                <span class="detail-val">Prediccion de etiquetas discretas (ej. diagnostico medico benigno/maligno, filtros anti-spam, reconocimiento facial).</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Regresion:</span>
+                <span class="detail-val">Estimacion de variables numericas continuas (ej. pronostico del PIB, precios de inmuebles, proyeccion termica).</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Algoritmos Clave:</span>
+                <span class="detail-val">Regresion Logistica, Support Vector Machines (SVM), Random Forest, Redes Neuronales Profundas.</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Paradigma 2: No Supervisado -->
+          <article class="ml-paradigm-card">
+            <div class="paradigm-card-top">
+              <span class="paradigm-type-pill unsupervised">No Supervisado</span>
+              <span class="paradigm-math-tag">D = {x_i}</span>
+            </div>
+            <h3 class="paradigm-card-title">Aprendizaje No Supervisado</h3>
+            <p class="paradigm-card-summary">
+              El modelo explora conjuntos de datos no etiquetados para descubrir por si mismo patrones ocultos, agrupaciones naturales, anomalias y estructuras geometricas subyacentes.
+            </p>
+            <div class="paradigm-details">
+              <div class="detail-row">
+                <span class="detail-label">Clustering (Agrupamiento):</span>
+                <span class="detail-val">Segmentacion autonoma de clientes por habitos de compra, taxonomia biologica molecular, compresion de imagen.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Reduccion de Dimension:</span>
+                <span class="detail-val">Compresion y proyeccion de cientos de variables preservando la varianza esencial (ej. PCA, t-SNE, UMAP).</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Algoritmos Clave:</span>
+                <span class="detail-val">K-Means, DBSCAN, Analisis de Componentes Principales (PCA), Autoencoders neuronales.</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- Paradigma 3: Por Refuerzo -->
+          <article class="ml-paradigm-card">
+            <div class="paradigm-card-top">
+              <span class="paradigm-type-pill reinforcement">Por Refuerzo</span>
+              <span class="paradigm-math-tag">R_t = &sum; &gamma;^k r_{t+k+1}</span>
+            </div>
+            <h3 class="paradigm-card-title">Aprendizaje por Refuerzo</h3>
+            <p class="paradigm-card-summary">
+              Un agente autonomo interactua activamente con un entorno dinamico, seleccionando acciones para maximizar una senal de recompensa acumulativa a traves de procesos de ensayo y error.
+            </p>
+            <div class="paradigm-details">
+              <div class="detail-row">
+                <span class="detail-label">Dilema Exploracion-Explotacion:</span>
+                <span class="detail-val">Equilibrio entre probar nuevas conductas inexploradas y aprovechar las acciones de exito comprobado.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Aplicaciones Clave:</span>
+                <span class="detail-val">Pilotaje de coches autonomos, control de brazos roboticos, gestion de redes electricas y agentes de ajedrez/Go (AlphaZero).</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Algoritmos Clave:</span>
+                <span class="detail-val">Q-Learning, Deep Q-Networks (DQN), Proximal Policy Optimization (PPO), SARSA.</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <!-- Ciclo de Vida del Machine Learning: Pipeline de 5 Fases -->
+      <div class="ml-lifecycle-wrapper">
+        <div class="editorial-divider">
+          <h2 class="subheading-editorial">El Ciclo de Vida de un Sistema de Machine Learning</h2>
+          <span class="divider-line"></span>
+        </div>
+
+        <div class="lifecycle-steps-grid">
+          <div class="lifecycle-step-card">
+            <div class="step-badge">Fase 1</div>
+            <h4 class="step-heading">Recoleccion y Curaduria</h4>
+            <p class="step-text">Ingesta masiva de datos crudos, eliminacion de duplicados, balanceo de clases y mitigacion de sesgos en la muestra.</p>
+          </div>
+          <div class="lifecycle-step-card">
+            <div class="step-badge">Fase 2</div>
+            <h4 class="step-heading">Ingenieria de Atributos</h4>
+            <p class="step-text">Conversion de texto, imagenes o series de tiempo en tensores numericos normalizados (Feature Scaling, One-Hot Encoding).</p>
+          </div>
+          <div class="lifecycle-step-card">
+            <div class="step-badge">Fase 3</div>
+            <h4 class="step-heading">Entrenamiento y Ajuste</h4>
+            <p class="step-text">Optimizacion de los pesos del modelo mediante algoritmos como Gradiente Descendente para minimizar la funcion de perdida.</p>
+          </div>
+          <div class="lifecycle-step-card">
+            <div class="step-badge">Fase 4</div>
+            <h4 class="step-heading">Evaluacion y Validacion</h4>
+            <p class="step-text">Prueba de capacidad de generalizacion en datos de prueba independientes (Matriz de Confusion, F1-Score, Curva ROC-AUC).</p>
+          </div>
+          <div class="lifecycle-step-card">
+            <div class="step-badge">Fase 5</div>
+            <h4 class="step-heading">Inferencia en Produccion</h4>
+            <p class="step-text">Servicio en baja latencia del modelo optimizado a traves de microservicios REST o ejecucion en el cliente (Edge Computing).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ejemplo Practico: Simulador Interactivo de Inferencia en Tiempo Real -->
+      <div class="ml-case-study-wrapper">
+        <div class="editorial-divider">
+          <h2 class="subheading-editorial">Caso de Estudio Practico: Deteccion Predictiva de Fraude Bancario</h2>
+          <span class="divider-line"></span>
+        </div>
+        <p class="case-study-intro">
+          Para comprender exactamente como opera un algoritmo de Machine Learning en produccion, interactua con el siguiente simulador de <strong>Regresion Logistica</strong>. Ajusta las variables de entrada de una transaccion en curso para ver como el motor calcula la combinacion lineal ponderada <code>z</code> y la transforma en una probabilidad probabilistica mediante la funcion logistica <code>&sigma;(z)</code> frente a un umbral de decision.
+        </p>
+
+        <div class="ml-simulator-panel">
+          <!-- Columna 1: Atributos de Entrada (Features) -->
+          <div class="sim-panel-col controls-side">
+            <div class="sim-col-header">
+              <span class="sim-step-indicator">Paso 1: Variables de Entrada</span>
+              <h3 class="sim-panel-title">Vector de Caracteristicas (X)</h3>
+            </div>
+
+            <div class="sim-control-group">
+              <div class="sim-control-header">
+                <label for="simMonto" class="sim-control-label">Monto de la Operacion:</label>
+                <span id="simMontoValue" class="sim-control-badge">$450 USD</span>
+              </div>
+              <input type="range" id="simMonto" class="sim-slider" min="10" max="5000" step="10" value="450">
+              <div class="sim-control-footnote">Peso aprendido: w1 = +0.0008 por dolar (a mayor monto, mayor riesgo potencial).</div>
+            </div>
+
+            <div class="sim-control-group">
+              <div class="sim-control-header">
+                <label for="simDistancia" class="sim-control-label">Distancia a Ubicacion Habitual:</label>
+                <span id="simDistanciaValue" class="sim-control-badge">25 km</span>
+              </div>
+              <input type="range" id="simDistancia" class="sim-slider" min="0" max="3000" step="25" value="25">
+              <div class="sim-control-footnote">Peso aprendido: w2 = +0.0025 por km (distancias atipicas indican anomalia geografica).</div>
+            </div>
+
+            <div class="sim-control-group">
+              <div class="sim-control-header">
+                <label for="simHora" class="sim-control-label">Horario de Ejecucion:</label>
+                <span id="simHoraValue" class="sim-control-badge">14:00 hrs (Dia)</span>
+              </div>
+              <input type="range" id="simHora" class="sim-slider" min="0" max="23" step="1" value="14">
+              <div class="sim-control-footnote">Peso aprendido: w3 = +1.20 si ocurre en madrugada (02:00 a 05:00 hrs).</div>
+            </div>
+
+            <div class="sim-control-group">
+              <div class="sim-control-header">
+                <label for="simDispositivo" class="sim-control-label">Dispositivo e IP:</label>
+                <span id="simDispositivoValue" class="sim-control-badge">Conocido</span>
+              </div>
+              <select id="simDispositivo" class="sim-select-input">
+                <option value="0">Dispositivo Habitual del Cliente (x4 = 0)</option>
+                <option value="1">Nuevo Dispositivo o Direccion IP Desconocida (x4 = 1)</option>
+              </select>
+              <div class="sim-control-footnote">Peso aprendido: w4 = +1.60 si el identificador de hardware no esta registrado.</div>
+            </div>
+          </div>
+
+          <!-- Columna 2: Computo Matematico e Inferencia -->
+          <div class="sim-panel-col engine-side">
+            <div class="sim-col-header">
+              <span class="sim-step-indicator">Paso 2: Computo Matematico</span>
+              <h3 class="sim-panel-title">Inferencia en Tiempo Real</h3>
+            </div>
+
+            <!-- Ecuacion 1: Logit z -->
+            <div class="math-card">
+              <div class="math-card-label">1. Combinacion Lineal Ponderada (Logit)</div>
+              <div class="math-code-box">z = b + (w1 &times; x1) + (w2 &times; x2) + (w3 &times; x3) + (w4 &times; x4)</div>
+              <div class="math-subtext">
+                Sesgo base (bias) b = -3.50 &bull; Valor z calculado: <strong id="simMathLogit">-2.98</strong>
+              </div>
+            </div>
+
+            <!-- Ecuacion 2: Sigmoide -->
+            <div class="math-card">
+              <div class="math-card-label">2. Funcion de Activacion Logistica (Sigmoide)</div>
+              <div class="math-code-box">P(Fraude) = 1 / (1 + e<sup>-z</sup>)</div>
+              <div class="math-subtext">Mapea cualquier numero real de -&infin; a +&infin; en un intervalo de probabilidad [0.0, 1.0].</div>
+            </div>
+
+            <!-- Medidor de Probabilidad Dinamico -->
+            <div class="sim-meter-card">
+              <div class="meter-head-row">
+                <span class="meter-title">Score de Riesgo Calculado:</span>
+                <span id="simRiskScoreText" class="meter-score-highlight safe">4.8%</span>
+              </div>
+              <div class="meter-track-container">
+                <div id="simRiskBar" class="meter-bar-progress safe" style="width: 4.8%;"></div>
+                <div class="meter-threshold-marker" style="left: 50%;">
+                  <span class="threshold-caption">Umbral: 50%</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Veredicto del Algoritmo -->
+            <div id="simVerdictCard" class="sim-verdict-card safe">
+              <div class="verdict-header-row">
+                <span class="verdict-tag">Veredicto del Sistema:</span>
+                <span id="simVerdictTitle" class="verdict-status-title">TRANSACCION AUTORIZADA</span>
+              </div>
+              <p id="simVerdictText" class="verdict-explanation-text">
+                El score estimado (4.8%) se encuentra muy por debajo del umbral de riesgo del 50%. Los atributos analizados son congruentes con los habitos de compra historicos del usuario.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECCION 4: GLOSARIO (VISUALIZACION DIRECTA Y MAXIMO APROVECHAMIENTO DE ESPACIO)
          ==================================================================== -->
     <section id="sectionGlosario" class="main-page-section" aria-labelledby="headingGlosario">
       <header class="section-hero-header compact-glosario-header">

@@ -1221,6 +1221,597 @@ h1, h2, h3, h4, .serif-font {
   min-height: 400px;
 }
 
+/* ==========================================================================
+   SECCION MACHINE LEARNING (APRENDIZAJE AUTOMATICO)
+   ========================================================================== */
+
+/* Comparativa: Programacion Tradicional vs Machine Learning */
+.ml-comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.ml-comparison-card {
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.ml-comparison-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.ml-comparison-card.traditional {
+  border-left: 4px solid var(--ink-soft);
+}
+
+.ml-comparison-card.learning {
+  border-left: 4px solid var(--teal);
+}
+
+.comparison-tag {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--rule-light);
+  color: var(--ink-soft);
+  margin-bottom: 12px;
+}
+
+.comparison-tag.accent {
+  background: var(--teal-subtle);
+  color: var(--teal);
+}
+
+.comparison-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 16px 0;
+}
+
+.paradigm-pipeline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  background: var(--bg-raised);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--rule-light);
+  margin-bottom: 16px;
+  font-size: 0.84rem;
+}
+
+.pipeline-node {
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.pipeline-plus, .pipeline-arrow {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.pipeline-result {
+  background: var(--rule-light);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pipeline-result.accent {
+  background: var(--teal-subtle);
+  color: var(--teal);
+  border: 1px solid var(--teal);
+}
+
+.comparison-desc {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* Divisores editoriales */
+.editorial-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 40px 0 24px;
+}
+
+.subheading-editorial {
+  font-family: 'Fraunces', serif;
+  font-size: 1.45rem;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  margin: 0;
+}
+
+.divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+/* Grilla de los 3 Paradigmas */
+.ml-paradigms-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.ml-paradigm-card {
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.ml-paradigm-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+}
+
+.paradigm-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.paradigm-type-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.paradigm-type-pill.supervised {
+  background: var(--teal-subtle);
+  color: var(--teal);
+}
+
+.paradigm-type-pill.unsupervised {
+  background: var(--gold-subtle);
+  color: var(--gold);
+}
+
+.paradigm-type-pill.reinforcement {
+  background: var(--crimson-subtle);
+  color: var(--crimson);
+}
+
+.paradigm-math-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+}
+
+.paradigm-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 12px 0;
+}
+
+.paradigm-card-summary {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin: 0 0 16px 0;
+}
+
+.paradigm-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+  border-top: 1px solid var(--rule-light);
+  padding-top: 14px;
+}
+
+.detail-row {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.detail-label {
+  font-weight: 700;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Ciclo de vida / Pipeline de 5 fases */
+.lifecycle-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 40px;
+}
+
+.lifecycle-step-card {
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  padding: 16px 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.step-badge {
+  display: inline-block;
+  align-self: flex-start;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: var(--rule-light);
+  color: var(--ink-muted);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+.step-heading {
+  font-family: 'Fraunces', serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 8px 0;
+}
+
+.step-text {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+/* Caso de Estudio y Simulador de Inferencia */
+.case-study-intro {
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  margin-bottom: 24px;
+}
+
+.case-study-intro code {
+  font-family: 'IBM Plex Mono', monospace;
+  background: var(--rule-light);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+
+.ml-simulator-panel {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  margin-bottom: 40px;
+}
+
+.sim-panel-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.sim-col-header {
+  border-bottom: 1px solid var(--rule-light);
+  padding-bottom: 12px;
+}
+
+.sim-step-indicator {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.sim-panel-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+
+.sim-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sim-control-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sim-control-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.sim-control-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+}
+
+.sim-slider {
+  width: 100%;
+  accent-color: var(--teal);
+  cursor: pointer;
+  margin: 4px 0;
+}
+
+.sim-select-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  background: var(--bg-raised);
+  color: var(--ink);
+  font-size: 0.86rem;
+  font-family: 'IBM Plex Sans', sans-serif;
+  cursor: pointer;
+}
+
+.sim-select-input:focus {
+  outline: none;
+  border-color: var(--teal);
+}
+
+.sim-control-footnote {
+  font-size: 0.76rem;
+  color: var(--ink-muted);
+  line-height: 1.35;
+}
+
+/* Modulo Matematico */
+.math-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--rule-light);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.math-card-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.math-code-box {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--bg-card);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule);
+  overflow-x: auto;
+}
+
+.math-subtext {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+}
+
+.math-subtext strong {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--ink);
+  font-size: 0.88rem;
+}
+
+/* Medidor de Probabilidad Dinamico */
+.sim-meter-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.meter-head-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.meter-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.meter-score-highlight {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.35rem;
+  font-weight: 700;
+  transition: color var(--transition-speed);
+}
+
+.meter-score-highlight.safe {
+  color: var(--teal);
+}
+
+.meter-score-highlight.warning {
+  color: var(--gold);
+}
+
+.meter-score-highlight.danger {
+  color: var(--crimson);
+}
+
+.meter-track-container {
+  position: relative;
+  height: 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  overflow: visible;
+}
+
+.meter-bar-progress {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.22s ease-out, background-color var(--transition-speed);
+}
+
+.meter-bar-progress.safe {
+  background-color: var(--teal);
+}
+
+.meter-bar-progress.warning {
+  background-color: var(--gold);
+}
+
+.meter-bar-progress.danger {
+  background-color: var(--crimson);
+}
+
+.meter-threshold-marker {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: var(--crimson);
+  z-index: 2;
+}
+
+.threshold-caption {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--crimson);
+  white-space: nowrap;
+}
+
+/* Tarjeta de Veredicto */
+.sim-verdict-card {
+  padding: 18px 20px;
+  border-radius: var(--radius-md);
+  border-left: 5px solid transparent;
+  transition: background-color var(--transition-speed), border-color var(--transition-speed);
+}
+
+.sim-verdict-card.safe {
+  background: var(--teal-subtle);
+  border-left-color: var(--teal);
+}
+
+.sim-verdict-card.warning {
+  background: var(--gold-subtle);
+  border-left-color: var(--gold);
+}
+
+.sim-verdict-card.danger {
+  background: var(--crimson-subtle);
+  border-left-color: var(--crimson);
+}
+
+.verdict-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.verdict-tag {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+
+.verdict-status-title {
+  font-family: 'Fraunces', serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.sim-verdict-card.safe .verdict-status-title {
+  color: var(--teal);
+}
+
+.sim-verdict-card.warning .verdict-status-title {
+  color: var(--gold);
+}
+
+.sim-verdict-card.danger .verdict-status-title {
+  color: var(--crimson);
+}
+
+.verdict-explanation-text {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
 /* Pie de pagina editorial */
 .site-footer {
   margin-top: 60px;
@@ -1245,6 +1836,18 @@ h1, h2, h3, h4, .serif-font {
   .classification-card {
     grid-template-columns: 1fr;
     gap: 24px;
+  }
+  .ml-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+  .ml-paradigms-grid {
+    grid-template-columns: 1fr;
+  }
+  .lifecycle-steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ml-simulator-panel {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1281,6 +1884,9 @@ h1, h2, h3, h4, .serif-font {
     padding: 16px 16px 50px;
   }
   .concepts-grid {
+    grid-template-columns: 1fr;
+  }
+  .lifecycle-steps-grid {
     grid-template-columns: 1fr;
   }
   .modal-body {

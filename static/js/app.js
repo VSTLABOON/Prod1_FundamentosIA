@@ -96,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const hashMap = {
       sectionAntecedentes: "antecedentes",
       sectionClasificacion: "clasificacion",
+      sectionMachineLearning: "machine-learning",
       sectionGlosario: "glosario"
     };
     if (hashMap[targetSectionId]) {
@@ -118,6 +119,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const hash = window.location.hash.toLowerCase();
     if (hash === "#clasificacion") {
       switchSection("sectionClasificacion");
+    } else if (hash === "#machine-learning" || hash === "#ml") {
+      switchSection("sectionMachineLearning");
     } else if (hash === "#glosario") {
       switchSection("sectionGlosario");
     } else {
@@ -474,10 +477,127 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ==========================================================================
-     9. INICIALIZACION
+     9. SIMULADOR INTERACTIVO DE MACHINE LEARNING (INFERENCIA EN TIEMPO REAL)
+     ========================================================================== */
+  function initMachineLearningSimulator() {
+    const elMonto = document.getElementById("simMonto");
+    const elDistancia = document.getElementById("simDistancia");
+    const elHora = document.getElementById("simHora");
+    const elDispositivo = document.getElementById("simDispositivo");
+
+    const valMonto = document.getElementById("simMontoValue");
+    const valDistancia = document.getElementById("simDistanciaValue");
+    const valHora = document.getElementById("simHoraValue");
+    const valDispositivo = document.getElementById("simDispositivoValue");
+
+    const elMathLogit = document.getElementById("simMathLogit");
+    const elRiskText = document.getElementById("simRiskScoreText");
+    const elRiskBar = document.getElementById("simRiskBar");
+    const elVerdictCard = document.getElementById("simVerdictCard");
+    const elVerdictTitle = document.getElementById("simVerdictTitle");
+    const elVerdictText = document.getElementById("simVerdictText");
+
+    if (!elMonto || !elDistancia || !elHora || !elDispositivo) return;
+
+    function runInference() {
+      const monto = parseFloat(elMonto.value) || 0;
+      const distancia = parseFloat(elDistancia.value) || 0;
+      const hora = parseInt(elHora.value, 10) || 0;
+      const dispositivoNuevo = parseInt(elDispositivo.value, 10) === 1 ? 1 : 0;
+
+      // Actualizar etiquetas de valores de entrada
+      if (valMonto) valMonto.textContent = `$${monto.toLocaleString()} USD`;
+      if (valDistancia) valDistancia.textContent = `${distancia.toLocaleString()} km`;
+
+      let horaStr = `${hora.toString().padStart(2, "0")}:00 hrs`;
+      const esMadrugada = hora >= 2 && hora <= 5;
+      if (esMadrugada) {
+        horaStr += " (Madrugada atipica)";
+      } else if (hora >= 6 && hora <= 12) {
+        horaStr += " (Manana)";
+      } else if (hora >= 13 && hora <= 19) {
+        horaStr += " (Tarde)";
+      } else {
+        horaStr += " (Noche)";
+      }
+      if (valHora) valHora.textContent = horaStr;
+      if (valDispositivo) valDispositivo.textContent = dispositivoNuevo === 1 ? "Nuevo / Desconocido" : "Habitual del Cliente";
+
+      // Parametros matematicos del modelo de Regresion Logistica entrenado
+      const bias = -3.50;
+      const wMonto = 0.00085;
+      const wDistancia = 0.0022;
+      const wHora = esMadrugada ? 1.35 : 0;
+      const wDispositivo = dispositivoNuevo ? 1.65 : 0;
+
+      // Calculo del Logit z
+      const z = bias + (wMonto * monto) + (wDistancia * distancia) + wHora + wDispositivo;
+
+      // Calculo de la funcion logistica (Sigmoide): P = 1 / (1 + e^(-z))
+      const probability = 1 / (1 + Math.exp(-z));
+      const percentage = probability * 100;
+
+      // Actualizar representaciones matematicas en el DOM
+      if (elMathLogit) {
+        const signStr = z >= 0 ? `+${z.toFixed(2)}` : z.toFixed(2);
+        elMathLogit.textContent = signStr;
+      }
+      if (elRiskText) {
+        elRiskText.textContent = `${percentage.toFixed(1)}%`;
+      }
+      if (elRiskBar) {
+        elRiskBar.style.width = `${Math.min(100, Math.max(3, percentage))}%`;
+      }
+
+      // Actualizar clases de alerta
+      [elRiskText, elRiskBar, elVerdictCard].forEach(elem => {
+        if (elem) elem.classList.remove("safe", "warning", "danger");
+      });
+
+      // Evaluacion del veredicto frente al umbral
+      if (percentage < 30) {
+        if (elRiskText) elRiskText.classList.add("safe");
+        if (elRiskBar) elRiskBar.classList.add("safe");
+        if (elVerdictCard) elVerdictCard.classList.add("safe");
+        if (elVerdictTitle) elVerdictTitle.textContent = "TRANSACCION AUTORIZADA";
+        if (elVerdictText) {
+          elVerdictText.textContent = `El score de riesgo estimado (${percentage.toFixed(1)}%) es bajo y se mantiene dentro de los parametros normales. El modelo no detecta anomalias criticas en el patron transaccional.`;
+        }
+      } else if (percentage < 50) {
+        if (elRiskText) elRiskText.classList.add("warning");
+        if (elRiskBar) elRiskBar.classList.add("warning");
+        if (elVerdictCard) elVerdictCard.classList.add("warning");
+        if (elVerdictTitle) elVerdictTitle.textContent = "AUTORIZADA CON ALERTA PREVENTIVA";
+        if (elVerdictText) {
+          elVerdictText.textContent = `El score de riesgo estimado (${percentage.toFixed(1)}%) refleja sospecha moderada cercana al umbral de corte. Se autoriza la transaccion pero se despacha una solicitud de verificacion al dispositivo del usuario.`;
+        }
+      } else {
+        if (elRiskText) elRiskText.classList.add("danger");
+        if (elRiskBar) elRiskBar.classList.add("danger");
+        if (elVerdictCard) elVerdictCard.classList.add("danger");
+        if (elVerdictTitle) elVerdictTitle.textContent = "TRANSACCION BLOQUEADA (FRAUDE DETECTADO)";
+        if (elVerdictText) {
+          elVerdictText.textContent = `El score de riesgo estimado (${percentage.toFixed(1)}%) supera el umbral de decision del 50%. La conjuncion atipica de parametros dispara el protocolo de proteccion bancaria y deniega la operacion.`;
+        }
+      }
+    }
+
+    // Escuchar eventos en tiempo real
+    [elMonto, elDistancia, elHora].forEach(input => {
+      input.addEventListener("input", runInference);
+    });
+    elDispositivo.addEventListener("change", runInference);
+
+    // Computo inicial
+    runInference();
+  }
+
+  /* ==========================================================================
+     10. INICIALIZACION
      ========================================================================== */
   initTheme();
   initNavigation();
   initLightbox();
+  initMachineLearningSimulator();
   loadConcepts();
 });

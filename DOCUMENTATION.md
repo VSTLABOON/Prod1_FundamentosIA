@@ -6,15 +6,20 @@ Este documento describe la arquitectura, las decisiones de diseno, la estructura
 
 ## 1. Resumen General del Sistema
 
-El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizando el microframework **Flask** y una base de datos relacional **SQLite**. Integra tres modulos centrales articulados mediante una barra de navegacion fija:
+El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizando el microframework **Flask** y una base de datos relacional **SQLite**. Integra cuatro modulos centrales articulados mediante una barra de navegacion fija:
 
 1. **Antecedentes Historicos**: Cronologia analitica de 10 hitos seminales (desde la *Ars Magna* de Ramon Llull en 1305 hasta la Conferencia de Dartmouth en 1956) acompasada por su infografia de alta resolucion ampliable mediante visor Lightbox.
 2. **Clasificacion Clasica de la IA**: Explicacion teorica de la taxonomia tripartita (**ANI**, **AGI**, **ASI**) complementada con estudios de caso reales y prospectivos acompanados de sus respectivas infografias tecnicas:
    - **ANI (Inteligencia Artificial Estrecha)**: Caso de estudio real *AlphaFold y el plegamiento de proteinas* (Premio Nobel de Quimica 2024).
    - **AGI (Inteligencia Artificial General)**: Caso de estudio proyectado *Coordinacion global ante una pandemia emergente*.
    - **ASI (Superinteligencia Artificial)**: Caso de estudio proyectado *Aceleracion de la solucion al cambio climatico* y dilemas de alineacion.
-3. **Glosario de Conceptos Clave**: Repositorio relacional de 20 conceptos tecnicos fundamentales con busqueda directa en tiempo real, perspectiva dinamica (3D Tilt) y modal para fichas tecnicas profundas.
-4. **Buscador Global Inteligente**: Ubicado de manera permanente en la barra superior; al escribir un termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
+3. **Machine Learning (Aprendizaje Automatico)**:
+   - Marco teorico formal del aprendizaje inductivo a partir de datos frente a la programacion basada en reglas fijas.
+   - Desglose de los tres grandes paradigmas: *Supervisado*, *No Supervisado* y *Por Refuerzo*.
+   - Ciclo de vida / Pipeline integral de 5 fases (Recoleccion, Feature Engineering, Entrenamiento, Evaluacion, Inferencia).
+   - **Caso de Estudio y Simulador de Inferencia en Tiempo Real**: Demostracion interactiva de clasificacion binaria para deteccion de fraude bancario mediante el calculo en vivo del vector de caracteristicas, el logit ponderado y la funcion logistica (sigmoide).
+4. **Glosario de Conceptos Clave**: Repositorio relacional de 20 conceptos tecnicos fundamentales con busqueda directa en tiempo real, perspectiva dinamica (3D Tilt) y modal para fichas tecnicas profundas.
+5. **Buscador Global Inteligente**: Ubicado de manera permanente en la barra superior; al escribir un termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
 
 ---
 
