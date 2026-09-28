@@ -41,6 +41,11 @@
             Glosario
           </button>
         </li>
+        <li role="none">
+          <button class="nav-link-btn" data-target="sectionEnsayo" role="menuitem">
+            Ensayo
+          </button>
+        </li>
       </ul>
 
       <!-- Herramientas globales: Buscador unificado, Concepto Aleatorio y Modo Oscuro -->
@@ -698,6 +703,554 @@
           </div>
         </article>
         {% endfor %}
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECCION 5: ENSAYO ACADEMICO (ETICA Y ASPECTOS SOCIALES DE LA IA)
+         ==================================================================== -->
+    <section id="sectionEnsayo" class="main-page-section" aria-labelledby="headingEnsayo">
+      
+      <!-- Encabezado Institucional y Portada Academica -->
+      <header class="essay-hero-header">
+        <div class="essay-institution-pill">Universidad Tecnológica de Puebla &bull; Grupo 7°C</div>
+        <h1 id="headingEnsayo" class="essay-main-title">
+          Ética y aspectos sociales de la <span class="accent">inteligencia artificial</span>
+        </h1>
+        <p class="essay-subtitle">
+          Ensayo académico: fundamentos, dilemas y responsabilidad social
+        </p>
+        <div class="essay-meta-bar">
+          <span class="essay-meta-item"><strong>Autor:</strong> Barranco Cervantes Jesús Manuel</span>
+          <span class="essay-meta-item"><strong>Institución:</strong> Universidad Tecnológica de Puebla</span>
+          <span class="essay-meta-item"><strong>Fecha:</strong> Septiembre 2026</span>
+        </div>
+      </header>
+
+      <div class="essay-container-layout">
+
+        <!-- Indice lateral de navegacion rapida -->
+        <aside class="essay-toc-sidebar" aria-label="Indice del ensayo">
+          <div class="essay-toc-box">
+            <h3 class="toc-header-title">Índice del Ensayo</h3>
+            <nav class="toc-nav-menu">
+              <ul class="toc-nav-list">
+                <li><a href="#ensayo-introduccion" class="toc-nav-link">Introducción</a></li>
+                <li class="toc-category-title">Desarrollo</li>
+                <li><a href="#ensayo-sec-1" class="toc-nav-link">1. La IA como sistema técnico, institucional y social</a></li>
+                <li><a href="#ensayo-sec-2" class="toc-nav-link">2. Fundamentos éticos y conflictos entre valores</a></li>
+                <li><a href="#ensayo-sec-3" class="toc-nav-link">3. Privacidad, consentimiento y autonomía</a></li>
+                <li><a href="#ensayo-sec-4" class="toc-nav-link">4. Justicia algorítmica: medición de la desigualdad</a></li>
+                <li><a href="#ensayo-sec-5" class="toc-nav-link">5. Explicaciones y límites de supervisión humana</a></li>
+                <li><a href="#ensayo-sec-6" class="toc-nav-link">6. Caso: costos y necesidad de atención en salud</a></li>
+                <li><a href="#ensayo-sec-7" class="toc-nav-link">7. Trabajo: productividad, autonomía y transición justa</a></li>
+                <li><a href="#ensayo-sec-8" class="toc-nav-link">8. Educación, desigualdad de acceso y juicio</a></li>
+                <li><a href="#ensayo-sec-9" class="toc-nav-link">9. Información, democracia y trabajo creativo</a></li>
+                <li><a href="#ensayo-sec-10" class="toc-nav-link">10. Sostenibilidad: impacto material y territorial</a></li>
+                <li><a href="#ensayo-sec-11" class="toc-nav-link">11. Concentración tecnológica y decisión pública</a></li>
+                <li><a href="#ensayo-sec-12" class="toc-nav-link">12. Dilema aplicado: asignación de becas</a></li>
+                <li><a href="#ensayo-sec-13" class="toc-nav-link">13. Gobernanza durante todo el ciclo de vida</a></li>
+                <li><a href="#ensayo-sec-14" class="toc-nav-link">14. Responsabilidad personal y profesional en TIC</a></li>
+                <li><a href="#ensayo-conclusion" class="toc-nav-link">Conclusión</a></li>
+                <li><a href="#ensayo-referencias" class="toc-nav-link">Referencias Bibliográficas</a></li>
+              </ul>
+            </nav>
+          </div>
+        </aside>
+
+        <!-- Articulo de Lectura Editorial -->
+        <article class="essay-article-content">
+
+          <!-- INTRODUCCION -->
+          <section id="ensayo-introduccion" class="essay-chapter">
+            <h2 class="essay-chapter-title">Introducción</h2>
+            <p>
+              La inteligencia artificial (IA) modifica la forma en que se produce información, se organiza el trabajo y se distribuyen oportunidades. Su importancia ética aparece cuando una predicción o una recomendación comienza a funcionar como una decisión sobre personas: quién recibe una beca, qué paciente obtiene atención adicional, qué candidato pasa a una entrevista o qué información se vuelve visible. En estas situaciones, un error tiene consecuencias distintas de las que tendría en una actividad recreativa. La evaluación de la tecnología necesita considerar esas diferencias y examinar el poder que adquieren las instituciones que la utilizan.
+            </p>
+            <div class="essay-thesis-box">
+              <span class="thesis-badge">Tesis Central</span>
+              <p>
+                Una inteligencia artificial socialmente valiosa requiere tres condiciones inseparables: una finalidad legítima, evidencia suficiente sobre su funcionamiento y mecanismos efectivos de responsabilidad y reparación. Una herramienta puede tener buena exactitud y perseguir un objetivo cuestionable; también puede orientarse a un fin valioso y funcionar mal para quienes más necesitan el servicio. Incluso un sistema técnicamente sólido puede resultar injusto si impide que las personas conozcan, cuestionen y corrijan decisiones que las afectan. La ética debe intervenir en esas tres dimensiones, desde el planteamiento del problema hasta el retiro del sistema.
+              </p>
+            </div>
+            <p>
+              El argumento central reconoce las posibilidades de la IA para ampliar capacidades humanas, pero rechaza que la utilidad se demuestre únicamente mediante rapidez, reducción de costos o resultados promedio. Es necesario preguntar cómo se distribuyen las ventajas, qué grupos soportan los errores y quién decide qué riesgos son aceptables. También corresponde evaluar el costo de no adoptar una tecnología: mantener procedimientos lentos o discrecionales puede causar daños. La comparación relevante debe realizarse entre alternativas concretas, incluida la mejora de los procesos existentes.
+            </p>
+            <p>
+              El ensayo desarrolla una reflexión crítica apoyada en fuentes académicas y documentos de organismos especializados. Se examinan fundamentos éticos, privacidad, justicia algorítmica, explicabilidad, trabajo, educación, información, sostenibilidad y gobernanza. Dos investigaciones documentadas permiten analizar mecanismos de discriminación, mientras un caso hipotético de becas integra las tensiones del conjunto. Las propuestas institucionales y los ejemplos numéricos se presentan como elaboración analítica, diferenciados de los resultados empíricos citados. El propósito es explicar por qué surgen los dilemas, qué respuestas compiten entre sí y bajo qué condiciones puede defenderse una decisión responsable.
+            </p>
+          </section>
+
+          <!-- SECCION 1 -->
+          <section id="ensayo-sec-1" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 1</div>
+            <h2 class="essay-chapter-title">1. La IA como sistema técnico, institucional y social</h2>
+            <p>
+              La expresión inteligencia artificial reúne tecnologías con funciones diferentes. Un clasificador asigna categorías; un sistema de predicción estima un resultado; un recomendador ordena opciones; un modelo generativo produce contenidos. Ninguna de estas operaciones determina por sí misma lo que una institución debería hacer. Predecir que una persona podría abandonar sus estudios no indica automáticamente si corresponde negarle una beca, ofrecerle tutorías o ampliar su apoyo económico. La predicción describe una relación estimada; la intervención incorpora una decisión sobre prioridades, recursos y obligaciones.
+            </p>
+            <p>
+              Esta diferencia resulta decisiva porque los fines sociales suelen traducirse en variables medibles. Una empresa puede sustituir calidad del trabajo por velocidad de respuesta; una escuela, aprendizaje por calificación; una institución médica, necesidad de atención por gasto registrado. La variable es una aproximación que puede ser útil, pero debe justificarse. Cuando se convierte en objetivo sin revisar qué representa, el sistema puede optimizar con eficacia una medida que se aleja de la finalidad original. El problema comienza en la definición de lo que se pretende mejorar.
+            </p>
+            <p>
+              Selbst et al. (2019) advierten que separar las propiedades técnicas de su contexto social puede volver insuficientes las intervenciones de equidad. Su análisis cuestiona tratar la justicia como una característica aislada del modelo e invita a considerar actores, instituciones y prácticas. Esta perspectiva permite ampliar la unidad de evaluación: además de entradas y salidas, interesa quién establece las reglas, cómo se interpreta una recomendación y qué ocurre después de ejecutarla. El comportamiento del conjunto puede ser distinto del observado en una prueba de laboratorio.
+            </p>
+            <p>
+              Considérese una aplicación ficticia que ordena solicitudes de empleo según trayectorias profesionales. Si el empleador solo entrevista los primeros resultados, el ordenamiento adquiere poder de exclusión, aunque el proveedor lo describa como una sugerencia. Si las nuevas contrataciones alimentan el siguiente entrenamiento, las preferencias iniciales pueden reforzarse. Este ejemplo muestra una posible retroalimentación: la herramienta contribuye a producir los datos que después se presentan como evidencia de que sus criterios eran correctos. Evaluar únicamente la exactitud inicial dejaría fuera ese efecto.
+            </p>
+            <p>
+              La documentación de los datos ayuda a detectar estos problemas. Gebru et al. (2021) proponen fichas que describen, entre otros aspectos, motivación, composición, recopilación y usos recomendados de un conjunto de datos. Su aporte consiste en hacer visibles decisiones que suelen permanecer ocultas cuando el archivo circula entre equipos. Como aplicación de esa idea, antes de reutilizar un historial escolar deberían revisarse ausencias, cambios de criterios y poblaciones excluidas. Un registro incompleto puede ser informativo sobre la institución que lo produjo, pero insuficiente para juzgar a todos sus posibles usuarios.
+            </p>
+            <p>
+              Por ello, una pregunta ética inicial es si la tarea necesita IA. Una regla pública sencilla, una mejora administrativa o una ampliación de personal podrían resolver el problema con menor complejidad. La comparación no implica despreciar la innovación; exige demostrar su contribución específica. Introducir un modelo porque resulta novedoso puede añadir dependencia, opacidad y costos de mantenimiento sin mejorar el servicio. La elección responsable comienza por una necesidad demostrable y conserva abierta la posibilidad de utilizar una solución distinta.
+            </p>
+          </section>
+
+          <!-- SECCION 2 -->
+          <section id="ensayo-sec-2" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 2</div>
+            <h2 class="essay-chapter-title">2. Fundamentos éticos y conflictos entre valores</h2>
+            <p>
+              La ética examina las razones que justifican una acción y las obligaciones que existen frente a otros. En la IA, una perspectiva consecuencialista compara beneficios y perjuicios: cuánto mejora un servicio, qué daños se vuelven probables y quién los experimenta. Su fortaleza es exigir atención a los resultados reales. Su límite aparece cuando una mejora agregada se utiliza para justificar perjuicios graves sobre un grupo reducido. El ahorro de miles de horas administrativas no responde por sí solo a la objeción de una persona excluida injustamente de un servicio esencial.
+            </p>
+            <p>
+              Una perspectiva de deberes introduce restricciones sobre el trato aceptable. La dignidad, la privacidad y la posibilidad de ser escuchado no deberían depender únicamente de su rentabilidad. Desde este enfoque, engañar deliberadamente a una persona sobre el papel de una máquina puede resultar incorrecto incluso si aumenta la aceptación del servicio. Su dificultad práctica consiste en resolver conflictos entre obligaciones: proteger datos puede dificultar una auditoría de discriminación, mientras recopilar atributos para esa auditoría puede crear riesgos nuevos. La respuesta requiere justificar necesidad, acceso y límites del tratamiento.
+            </p>
+            <p>
+              La justicia distributiva pregunta cómo se reparten beneficios, cargas y oportunidades. La justicia procedimental examina quién participa y cómo se adoptan decisiones. La justicia del reconocimiento considera si determinados grupos son representados mediante estereotipos o categorías que no respetan su experiencia. Estas dimensiones pueden separarse: una institución podría repartir recursos de forma relativamente equitativa y, aun así, tratar a las personas con desconfianza o impedirles cuestionar sus expedientes. Una evaluación completa necesita atender resultados, procesos y formas de trato.
+            </p>
+            <p>
+              La ética del cuidado añade atención a la vulnerabilidad y a las relaciones concretas. Una persona con responsabilidades familiares, una discapacidad o una trayectoria educativa interrumpida puede necesitar una interpretación contextual de su situación. Esto no significa abandonar criterios comunes ni favorecer decisiones arbitrarias. Significa reconocer que aplicar exactamente la misma regla a circunstancias distintas puede producir cargas desiguales. La consideración del contexto debe documentarse y estar disponible para casos equivalentes, de modo que la flexibilidad también pueda revisarse.
+            </p>
+            <p>
+              La recomendación de la UNESCO (2021) coloca la dignidad y los derechos humanos en el centro de la ética de la IA, junto con principios como proporcionalidad, equidad y supervisión humana. Se trata de una orientación normativa que ayuda a formular preguntas y compromisos; su existencia no convierte automáticamente una aplicación en aceptable. Adoptar principios exige explicar cómo afectan decisiones presupuestales, criterios de diseño y procedimientos de reclamación. De lo contrario, el lenguaje ético puede funcionar como una declaración sin consecuencias prácticas.
+            </p>
+            <p>
+              Una objeción frecuente sostiene que introducir tantas consideraciones paraliza la innovación. El argumento merece atención: controles innecesarios pueden encarecer herramientas útiles y excluir a organizaciones pequeñas. La respuesta defendida aquí es la proporcionalidad, entendida como una exigencia de rigor acorde con la gravedad, escala y reversibilidad del impacto. Una sugerencia de entretenimiento y una evaluación que condiciona una beca necesitan controles diferentes. La proporcionalidad tampoco autoriza a reducir garantías únicamente porque cumplirlas resulte incómodo; exige comparar costos y daños con razones explícitas.
+            </p>
+            <p>
+              La incertidumbre tampoco justifica una aprobación automática ni una prohibición general. Cuando una falla puede corregirse fácilmente, una prueba limitada podría ser razonable. Cuando puede causar daños graves o difíciles de reparar, corresponde exigir evidencia más sólida y restringir el alcance. La pregunta ética es quién asume la incertidumbre y si puede rechazarla. Resulta problemático que una organización conserve los beneficios de experimentar mientras personas sin capacidad de decisión soportan las consecuencias de sus errores.
+            </p>
+          </section>
+
+          <!-- SECCION 3 -->
+          <section id="ensayo-sec-3" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 3</div>
+            <h2 class="essay-chapter-title">3. Privacidad, consentimiento y autonomía</h2>
+            <p>
+              La privacidad suele reducirse a mantener información en secreto. Sin embargo, una persona puede compartir datos en un contexto y objetar razonablemente su reutilización en otro. Nissenbaum (2004) desarrolla la idea de integridad contextual: la protección de la privacidad depende de que los flujos de información respeten las normas pertinentes al contexto. Esta perspectiva desplaza la atención hacia quién comunica, quién recibe, qué información circula y bajo qué condiciones. La disponibilidad de un dato no elimina la necesidad de justificar su circulación.
+            </p>
+            <p>
+              Un ejemplo hipotético ayuda a precisar el problema. Un estudiante comunica dificultades económicas a un área de apoyo para solicitar una beca. Utilizar esa información para valorar la solicitud puede corresponder a la finalidad del trámite. Reutilizarla para dirigir publicidad, clasificar su confiabilidad o compartir un perfil con futuros empleadores implicaría finalidades diferentes. Aunque la base estuviera protegida frente a ataques, el cambio de uso podría ser éticamente cuestionable. La seguridad del almacenamiento y la legitimidad del tratamiento responden a preguntas distintas.
+            </p>
+            <p>
+              El consentimiento requiere más que una casilla. Si rechazarlo significa perder el acceso a educación, atención o trabajo, la libertad de elección es limitada. Además, un aviso extenso puede trasladar al usuario una carga de comprensión desproporcionada. Se propone distinguir tratamientos indispensables de usos opcionales, explicar consecuencias concretas y ofrecer alternativas cuando sea posible. La institución debe asumir responsabilidad por decisiones que el usuario no puede auditar, en lugar de presentar su aceptación como una autorización ilimitada.
+            </p>
+            <p>
+              La IA también permite producir inferencias sobre personas. Una aplicación podría estimar situación económica, hábitos o vulnerabilidades mediante patrones de comportamiento. Que la persona no haya escrito explícitamente esa información no elimina sus posibles consecuencias. En este escenario, la pregunta debe abarcar tanto lo recopilado como lo inferido y las decisiones basadas en ello. Si una inferencia es incierta, presentarla como un hecho puede dañar la reputación o el acceso a servicios. Debería existir una forma de corregir datos y cuestionar interpretaciones.
+            </p>
+            <p>
+              Surge aquí una tensión con la equidad: para identificar diferencias de error entre grupos, puede ser necesario disponer de información sensible. Evitar cualquier recopilación impediría algunos análisis; reunirla sin límites aumentaría exposición y posibilidades de abuso. Una respuesta propuesta consiste en separar la finalidad de auditoría del uso operativo, restringir accesos, reducir conservación y utilizar resultados agregados cuando sean suficientes. También debe revisarse si la categoría utilizada representa adecuadamente a las personas. Estas medidas requieren evaluación concreta; ninguna elimina por sí sola todos los riesgos.
+            </p>
+            <p>
+              La vigilancia continua plantea un problema adicional de autonomía. Si una universidad observara permanentemente expresiones faciales o actividad en pantalla para estimar atención, estudiantes y docentes podrían modificar su comportamiento para satisfacer al sistema. En lugar de aclarar qué facilita el aprendizaje, la institución podría terminar premiando señales de conformidad. La evaluación ética debe examinar la validez de la inferencia y la necesidad de observar. Una tecnología capaz de recopilar más información necesita una justificación de por qué debería hacerlo y qué espacios personales debe respetar.
+            </p>
+          </section>
+
+          <!-- SECCION 4 -->
+          <section id="ensayo-sec-4" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 4</div>
+            <h2 class="essay-chapter-title">4. Justicia algorítmica: cómo se produce y se mide la desigualdad</h2>
+            <p>
+              El sesgo puede aparecer en diferentes momentos. Los datos podrían representar de forma insuficiente a un grupo; las etiquetas podrían reflejar decisiones históricas injustas; una medida podría representar mal el objetivo; el contexto de uso podría diferir del de evaluación. Schwartz et al. (2022) distinguen dimensiones sistémicas, computacionales o estadísticas y humanas del sesgo. Esta clasificación permite entender por qué corregir un archivo no garantiza corregir el sistema. Los incentivos institucionales y los criterios de interpretación también intervienen en el resultado.
+            </p>
+            <p>
+              Eliminar un atributo sensible no garantiza que desaparezca una desventaja. En un escenario de contratación, el lugar de residencia, la escuela o ciertas interrupciones laborales podrían mantener relaciones con condiciones sociales. Tampoco toda diferencia estadística demuestra automáticamente discriminación injusta: es necesario analizar relevancia de las variables, calidad de las mediciones y finalidad de la decisión. Una auditoría responsable evita ambos extremos: asumir neutralidad porque no existe una variable explícita o concluir injusticia sin examinar el mecanismo y el contexto.
+            </p>
+            <p>
+              El estudio Gender Shades evaluó tres sistemas comerciales de clasificación de género mediante imágenes faciales. Encontró tasas de error de hasta 34.7 % para mujeres de piel más oscura, frente a un máximo de 0.8 % para hombres de piel más clara, dentro de las condiciones de aquella evaluación (Buolamwini &amp; Gebru, 2018). Los porcentajes pertenecen a sistemas estudiados en 2018; no describen todos los productos actuales ni equivalen a resultados de cualquier tarea de identificación facial. La precisión de esta distinción evita extrapolar indebidamente un hallazgo.
+            </p>
+            <p>
+              La enseñanza que se extrae aquí es doble. Primero, un buen promedio puede coexistir con errores concentrados. Segundo, mejorar la clasificación no resuelve si resulta legítimo clasificar a las personas de esa manera para un uso particular. Una universidad hipotética podría obtener resultados técnicos más equilibrados y seguir sin justificar por qué necesita inferir género a partir del rostro. La revisión ética debe preguntar por desempeño y finalidad, pues una medición más exacta también puede ampliar la capacidad de vigilancia de una práctica cuestionable.
+            </p>
+            <p>
+              Las métricas de equidad expresan prioridades diferentes. La paridad de selección compara proporciones de personas elegidas; la igualdad de oportunidad compara la detección de quienes cumplen una condición pertinente; la calibración examina si una puntuación corresponde a una frecuencia observada similar. Antes de elegir una métrica debe definirse qué se considera resultado correcto y si esa definición es defendible. Si la etiqueta refleja una injusticia anterior, igualar el desempeño respecto de ella puede conservar el problema en lugar de resolverlo.
+            </p>
+            <p>
+              Kleinberg et al. (2017) demostraron que tres condiciones de equidad para puntuaciones de riesgo no pueden satisfacerse simultáneamente salvo en casos especiales. El resultado tiene supuestos matemáticos específicos y no significa que cualquier mejora de equidad sea imposible. Su relevancia es mostrar que la promesa de un sistema completamente justo requiere precisar el criterio utilizado. A partir de ello, la elección entre métricas debería justificarse públicamente en relación con los daños y fines del contexto, evitando presentarla como una consecuencia inevitable de la técnica.
+            </p>
+            <p>
+              También importa distinguir errores. Un falso negativo puede negar apoyo a quien lo necesita; un falso positivo puede asignarlo a quien no cumple los criterios. Ambas fallas tienen costos, pero no necesariamente equivalentes. En programas limitados por presupuesto, reducir una clase de error puede afectar a otras personas. Por ello, la evaluación propuesta debe describir tasas, cantidades y consecuencias, acompañadas de incertidumbre. Cuando hay pocos casos de un subgrupo, una cifra aparentemente excelente podría ser poco informativa. Reconocer esa limitación es parte de una evaluación honesta.
+            </p>
+          </section>
+
+          <!-- SECCION 5 -->
+          <section id="ensayo-sec-5" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 5</div>
+            <h2 class="essay-chapter-title">5. Explicaciones, confiabilidad y límites de la supervisión humana</h2>
+            <p>
+              La transparencia puede referirse a cuestiones diferentes: informar que se utiliza IA, documentar datos y evaluaciones, explicar un resultado o permitir una revisión independiente. Ninguna de estas medidas sustituye automáticamente a las demás. Publicar código puede ser útil para especialistas y resultar incomprensible para un usuario. Una explicación sencilla puede permitir una reclamación, pero omitir fallas que requieren acceso técnico. La transparencia debería diseñarse según la persona destinataria y la acción que necesita realizar, en lugar de medirse por la cantidad de información publicada.
+            </p>
+            <p>
+              Rudin (2019) cuestiona el uso de explicaciones posteriores de modelos opacos en decisiones de alto impacto cuando existen alternativas interpretables adecuadas. Su argumento invita a comparar modelos que permiten comprender directamente su funcionamiento. No demuestra que cualquier solución sencilla supere a cualquier modelo complejo. La implicación defendida aquí es más concreta: la complejidad necesita una justificación basada en desempeño y contexto. Si dos opciones ofrecen resultados comparables, la posibilidad de comprender, auditar y corregir una de ellas constituye una ventaja ética relevante.
+            </p>
+            <p>
+              Una explicación tampoco equivale a una justificación moral. Decir que una solicitud fue rechazada por ingresos irregulares puede describir la regla utilizada, pero todavía es necesario discutir si esa regla resulta apropiada para el programa. Asimismo, una explicación generada en lenguaje natural podría sonar convincente sin reflejar fielmente el procedimiento real. En consecuencia, conviene separar tres preguntas: qué produjo el resultado, si el resultado está bien sustentado y si la decisión es legítima. Confundirlas transforma la explicación en una apariencia de control.
+            </p>
+            <p>
+              Las tarjetas de modelo propuestas por Mitchell et al. (2019) documentan usos previstos, condiciones de evaluación y limitaciones. Como instrumento de trabajo, permiten examinar si una herramienta fue probada en una población o tarea pertinente. La aplicación institucional de esta idea debería incluir versiones y cambios: aprobar una configuración no autoriza sin revisión cualquier actualización posterior. La documentación aporta evidencia, pero necesita contrastarse con resultados observados. Una ficha completa no garantiza que el uso real respete lo descrito en ella.
+            </p>
+            <p>
+              La confiabilidad de la IA generativa plantea dificultades adicionales. Autio et al. (2024) incluyen entre sus riesgos la confabulación y problemas de integridad de la información. Una respuesta plausible puede contener datos falsos, relaciones incorrectas o referencias inexistentes. Por ello, cuando el resultado sostiene una decisión relevante, debería comprobarse con evidencia externa apropiada. Vincular un sistema con documentos confiables puede ayudar, pero todavía requiere revisar si recuperó la fuente correcta y si la interpretó adecuadamente. La presencia de una cita no demuestra por sí sola que respalde la afirmación.
+            </p>
+            <p>
+              La supervisión humana debe evaluarse como un procedimiento real. Un revisor con demasiados expedientes, escasa información y presión para confirmar recomendaciones puede convertirse en un trámite. Se propone comprobar si dispone de tiempo, formación, acceso a evidencia y autoridad para cambiar el resultado. También conviene observar qué ocurre cuando discrepa: si debe justificar cada excepción mientras las confirmaciones pasan sin examen, el diseño puede favorecer una aceptación rutinaria. La responsabilidad institucional incluye corregir esos incentivos y conservar una alternativa operativa cuando el sistema falla.
+            </p>
+          </section>
+
+          <!-- SECCION 6 -->
+          <section id="ensayo-sec-6" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 6</div>
+            <h2 class="essay-chapter-title">6. Caso documentado: costos y necesidad de atención en salud</h2>
+            <p>
+              Obermeyer et al. (2019) analizaron un algoritmo utilizado para orientar programas de atención adicional en Estados Unidos. El sistema estimaba costos sanitarios como aproximación de necesidades de salud. Los autores encontraron que, para una misma puntuación, los pacientes negros presentaban mayor carga de enfermedad que los pacientes blancos. La diferencia se relacionaba con que el gasto observado reflejaba desigualdades de acceso, por lo que gastar menos no significaba necesitar menos atención. El artículo muestra cómo una variable aparentemente útil puede representar de forma desigual la necesidad que se pretende atender.
+            </p>
+            <p>
+              Los investigadores estimaron que corregir la disparidad elevaría la proporción de pacientes negros identificados para recibir ayuda adicional de 17.7 % a 46.5 % en el análisis correspondiente (Obermeyer et al., 2019). La cifra describe una estimación de selección bajo la corrección analizada; no demuestra por sí sola una mejora clínica ya observada ni representa a todos los sistemas de salud. Distinguir selección, acceso efectivo y resultados de salud permite interpretar el hallazgo sin atribuirle conclusiones que no establece.
+            </p>
+            <p>
+              La inferencia ética desarrollada aquí es que una institución debe validar el significado de sus indicadores antes de optimizarlos. Imaginemos, por analogía, un programa escolar que identifica necesidades de apoyo según el número de solicitudes previas. Quienes desconocen el trámite o carecen de tiempo podrían aparecer como menos necesitados, precisamente porque tienen más dificultades para pedir ayuda. Agregar más registros no resolvería necesariamente el problema si todos se producen mediante el mismo mecanismo. Sería necesario revisar qué personas pueden dejar evidencia de su necesidad.
+            </p>
+            <p>
+              Este razonamiento también obliga a distinguir predicción e intervención. Una herramienta puede identificar a quienes probablemente tendrán un problema, mientras una política necesita saber quién se beneficiaría más de una acción específica. Son preguntas relacionadas, pero distintas. En el ejemplo escolar, ofrecer tutorías podría ayudar a algunos estudiantes y resultar insuficiente para quienes necesitan transporte o apoyo económico. El juicio institucional debe examinar si el servicio responde a la causa pertinente. Una predicción acertada tiene utilidad limitada cuando la intervención disponible no atiende la necesidad detectada.
+            </p>
+            <p>
+              La Organización Mundial de la Salud plantea que la ética y los derechos humanos deben ocupar un lugar central en el diseño, despliegue y uso de IA para la salud, con responsabilidad hacia trabajadores sanitarios y poblaciones afectadas (World Health Organization [WHO], 2021). Como aplicación de ese principio, sería insuficiente evaluar una herramienta únicamente mediante ahorro o número de recomendaciones. Deben considerarse acceso, calidad de la atención y capacidad de revisión. Estos criterios se presentan como orientación ética y de gestión, no como instrucciones clínicas.
+            </p>
+            <p>
+              El caso no obliga a concluir que toda automatización sea perjudicial. Una herramienta bien evaluada podría ayudar a identificar necesidades omitidas en procesos tradicionales. La conclusión más exigente es que la utilidad debe demostrarse mediante una comparación pertinente y conservarse bajo vigilancia. El sistema previo tampoco constituye un punto de referencia moralmente perfecto. La revisión responsable debe preguntar qué alternativa ofrece mejores resultados para las personas y qué garantías permiten detectar errores antes de que se conviertan en una práctica institucional estable.
+            </p>
+          </section>
+
+          <!-- SECCION 7 -->
+          <section id="ensayo-sec-7" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 7</div>
+            <h2 class="essay-chapter-title">7. Trabajo: productividad, autonomía y transición justa</h2>
+            <p>
+              El debate laboral suele plantearse como una competencia entre personas y máquinas. Sin embargo, un empleo agrupa tareas, responsabilidades, conocimientos y relaciones con otros. Automatizar una parte puede transformar las demás: redactar más rápido podría aumentar el tiempo disponible para revisar o elevar la cantidad de entregas exigidas. El efecto depende del diseño del trabajo. Por ello, evaluar IA en una organización requiere observar quién controla el proceso, qué capacidades se desarrollan y cómo se distribuye la productividad obtenida.
+            </p>
+            <p>
+              La Organización Internacional del Trabajo informó en 2025 que aproximadamente una cuarta parte del empleo mundial se encontraba en ocupaciones con algún grado de exposición a IA generativa. El análisis distingue exposición de sustitución y señala que la transformación de tareas es una perspectiva más probable que la automatización completa de muchos empleos (Organización Internacional del Trabajo [OIT], 2025). Estas estimaciones describen potencial tecnológico bajo un método de evaluación; no son una predicción directa del número de personas que perderán su puesto. Su interpretación necesita considerar adopción, costos y decisiones institucionales.
+            </p>
+            <p>
+              El beneficio económico tampoco se distribuye automáticamente. Si una herramienta reduce el tiempo requerido para una tarea, la organización puede mejorar calidad, ampliar cobertura, reducir jornada o intensificar expectativas. El dilema ético aparece cuando los trabajadores deben adaptarse, asumir errores y mantener disponibilidad constante, mientras carecen de voz sobre el cambio. Se propone discutir la implementación con quienes realizan las tareas, incluyendo efectos sobre carga mental, autonomía y oportunidades de aprendizaje. La consulta debería influir en los criterios de éxito.
+            </p>
+            <p>
+              Un ejemplo hipotético es un equipo de desarrollo que utiliza IA para producir código. Medir productividad por cantidad de líneas podría premiar material innecesario y trasladar costos a revisión y mantenimiento. Una evaluación más razonable examinaría defectos, claridad, tiempo de corrección y capacidad del equipo para comprender lo entregado. La persona que firma una solución necesita conservar juicio técnico suficiente para evaluarla. Automatizar una tarea no elimina la responsabilidad por sus consecuencias ni garantiza que el tiempo ahorrado compense el esfuerzo de verificación.
+            </p>
+            <p>
+              Existe además una tensión formativa. Las tareas iniciales permiten que profesionales jóvenes aprendan a reconocer errores y construyan criterio. Si se automatizan sin rediseñar el aprendizaje, podría ser más difícil adquirir las habilidades necesarias para supervisar trabajos complejos. Este es un riesgo que debe comprobarse en cada organización, no una consecuencia inevitable. Como respuesta, se propone mantener ejercicios de comprensión, revisiones acompañadas y progresión de responsabilidades. Una transición justa prepara a las personas para desempeñar nuevas funciones, en lugar de exigir experiencia que el propio proceso impide desarrollar.
+            </p>
+            <p>
+              La capacitación necesita recursos concretos. Ofrecer un curso fuera de horario puede ser insuficiente para quien tiene responsabilidades familiares o jornadas extensas. Si la empresa obtiene beneficios, es razonable que participe en el costo de aprendizaje y ofrezca tiempo para practicar. También deberían revisarse condiciones de quienes etiquetan datos, moderan contenido o corrigen resultados. Una evaluación ética del producto pierde alcance si observa únicamente al usuario final y omite el trabajo humano necesario para sostenerlo.
+            </p>
+          </section>
+
+          <!-- SECCION 8 -->
+          <section id="ensayo-sec-8" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 8</div>
+            <h2 class="essay-chapter-title">8. Educación, desigualdad de acceso y formación del juicio</h2>
+            <p>
+              La IA puede apoyar explicaciones, traducción y adaptación de materiales. Su valor educativo depende de lo que permite comprender y realizar de manera autónoma. Una respuesta correcta obtenida rápidamente no demuestra aprendizaje; tampoco una actividad realizada sin tecnología garantiza comprensión. El criterio principal debería ser la capacidad del estudiante para argumentar, verificar, reconocer errores y transferir conocimientos. Esta orientación permite evaluar usos concretos de la herramienta según el propósito de cada actividad, evitando respuestas generales que no distinguen contextos.
+            </p>
+            <p>
+              Miao y Holmes (2023) proponen una orientación centrada en las personas para incorporar IA generativa en educación e investigación. Su guía destaca la construcción de capacidades y la necesidad de políticas pertinentes. A partir de esa orientación, las instituciones deberían explicar qué habilidades buscan desarrollar y cómo se evaluarán. Una regla puede permitir apoyo para explorar ideas y exigir resolución autónoma en otro ejercicio. La coherencia consiste en relacionar la regla con el objetivo pedagógico y comunicarla antes de aplicar una evaluación.
+            </p>
+            <p>
+              La facilidad de recibir respuestas introduce una tensión entre apoyo y dependencia. Si una herramienta siempre completa el razonamiento, el estudiante puede tener menos oportunidades de identificar por qué una respuesta es válida. Una aplicación pedagógica propuesta consistiría en pedir primero una explicación propia, contrastarla después con otras soluciones y justificar las correcciones. El beneficio provendría del proceso de comparación. Para verificarlo sería necesario evaluar comprensión en tareas nuevas, no solamente satisfacción o velocidad al terminar una actividad.
+            </p>
+            <p>
+              La brecha de acceso comprende conectividad, dispositivos, costos, accesibilidad y dominio del lenguaje. Imponer una plataforma de pago podría convertir el poder adquisitivo en una ventaja académica. Ofrecer acceso gratuito tampoco resuelve por sí solo dificultades para interpretar resultados o utilizar tecnologías de apoyo. Se propone disponer de alternativas equivalentes y evaluar el funcionamiento con la población concreta de la institución. La inclusión requiere observar quién puede participar y quién abandona por barreras que el diseño no había contemplado.
+            </p>
+            <p>
+              En el contexto de una universidad tecnológica en Puebla, un proyecto hipotético debería considerar estudiantes que trabajan, se trasladan largas distancias o dependen de conectividad variable. Un sistema que interpreta escasa actividad nocturna en una plataforma como desinterés podría estar confundiendo circunstancias de acceso con disposición al aprendizaje. La respuesta inicial no debería ser sancionar automáticamente, sino investigar qué representa la señal y qué intervención ayudaría. La tecnología resulta más defendible cuando facilita apoyo y conserva oportunidades de explicar la propia situación.
+            </p>
+            <p>
+              También importa la diversidad cultural. Un modelo puede responder con soltura en una lengua dominante y ofrecer resultados débiles para otras formas de expresión. La evaluación educativa debería reconocer esa posibilidad y evitar presentar una forma de hablar como indicador automático de inteligencia o esfuerzo. Proteger el juicio propio exige que el estudiante pueda cuestionar la herramienta, incluso cuando su respuesta suene autorizada. La formación digital incluye comprender límites y reconocer cuándo conviene recurrir a otra fuente o a una persona especializada.
+            </p>
+          </section>
+
+          <!-- SECCION 9 -->
+          <section id="ensayo-sec-9" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 9</div>
+            <h2 class="essay-chapter-title">9. Información, democracia y reconocimiento del trabajo creativo</h2>
+            <p>
+              Los contenidos generados por IA pueden facilitar comunicación y creación, pero también abaratar la producción de materiales engañosos. Conviene distinguir un error sin intención de engañar de una operación que busca desinformar. Ambos pueden dañar, aunque sus responsabilidades y respuestas difieran. El perfil de riesgos del NIST identifica desafíos de integridad de la información y propiedad intelectual en la IA generativa (Autio et al., 2024). La evaluación debe abarcar producción, distribución y recepción: un contenido falso de escasa circulación puede tener consecuencias diferentes de otro difundido de forma coordinada.
+            </p>
+            <p>
+              En un escenario hipotético, una grabación falsa atribuida a una autoridad escolar anuncia la suspensión de un trámite. Aunque se desmienta después, algunas personas podrían perder tiempo o dejar de participar. La corrección posterior no siempre devuelve la oportunidad original. Por ello, las instituciones necesitan canales reconocibles y procedimientos para verificar avisos relevantes. Del lado de quien publica, una exigencia razonable es comprobar la procedencia antes de amplificar afirmaciones que afectan reputaciones, derechos o servicios.
+            </p>
+            <p>
+              La cuestión democrática también involucra la visibilidad. Un sistema que ordena información determina qué asuntos reciben atención y qué voces pueden encontrarse. La personalización puede reducir saturación, pero también limitar exposición a perspectivas distintas si se optimiza únicamente una señal de interacción. Esta es una posibilidad derivada del objetivo elegido, cuya intensidad debe evaluarse empíricamente. La respuesta propuesta es dar al usuario control comprensible sobre el ordenamiento, permitir opciones y examinar si ciertas comunidades quedan sistemáticamente invisibilizadas.
+            </p>
+            <p>
+              La moderación automatizada enfrenta una tensión real: actuar con rapidez frente a contenidos dañinos y evitar restricciones injustificadas sobre expresión legítima. Un criterio demasiado amplio puede afectar denuncia, sátira o discusión académica; uno demasiado limitado puede dejar circular abusos. La decisión debería atender contexto, gravedad y posibilidades de reparación. En casos controvertidos, se propone revisión accesible y explicación de la regla aplicada. La existencia de un sistema automatizado no debería eliminar la obligación de responder por errores de moderación.
+            </p>
+            <p>
+              En la creación cultural, las preguntas éticas incluyen procedencia de materiales, atribución, consentimiento y distribución del valor. Reconocer el trabajo creativo exige distinguir inspiración, colaboración, imitación engañosa y reproducción. No todas estas situaciones son equivalentes ni tienen una solución jurídica universal. Como posición ética, se defiende documentar condiciones de uso y evitar presentar contenido como obra o declaración de una persona que no lo produjo. También corresponde discutir si quienes aportan recursos culturales tienen capacidad efectiva de negociar los términos de su aprovechamiento.
+            </p>
+            <p>
+              Una objeción sostiene que demasiadas restricciones podrían limitar herramientas creativas accesibles. La preocupación es válida y exige soluciones proporcionadas. Sin embargo, accesibilidad y reconocimiento no son objetivos necesariamente incompatibles: pueden explorarse licencias, acuerdos colectivos, colecciones autorizadas y mecanismos de compensación. Ninguna fórmula garantiza justicia en todos los casos. Lo necesario es hacer visible el reparto de beneficios y permitir participación en su definición, en lugar de asumir que la capacidad técnica de producir un contenido resuelve por sí misma todas las obligaciones hacia otros.
+            </p>
+          </section>
+
+          <!-- SECCION 10 -->
+          <section id="ensayo-sec-10" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 10</div>
+            <h2 class="essay-chapter-title">10. Sostenibilidad: impacto material y distribución territorial</h2>
+            <p>
+              La IA funciona mediante equipos, centros de datos y redes. Por ello, su impacto social incluye recursos físicos y efectos ambientales que suelen quedar fuera de la interfaz. El informe Energy and AI estudia la relación entre el desarrollo de esta tecnología y la demanda energética de los centros de datos (International Energy Agency [IEA], 2025). Es necesario distinguir el consumo del conjunto de centros de datos del atribuible específicamente a IA. Las condiciones de operación también importan: una cifra única por consulta no representa adecuadamente todos los modelos, tareas e infraestructuras.
+            </p>
+            <p>
+              La evaluación debería considerar el servicio completo. Entrenar o adaptar un modelo puede requerir recursos importantes, pero la operación repetida también contribuye al impacto. Asimismo, la energía consumida y las emisiones asociadas son medidas distintas: su relación depende de cómo se obtiene la electricidad. Los equipos tienen fabricación, mantenimiento y fin de vida. Estos elementos no permiten concluir que cualquier uso sea excesivo; indican qué debe medirse para comparar alternativas y evitar que una mejora parcial oculte costos desplazados a otras etapas.
+            </p>
+            <p>
+              La eficiencia plantea una paradoja práctica. Si una tarea consume menos recursos por ejecución, puede volverse más barata y multiplicar su uso. El consumo total podría disminuir, mantenerse o crecer. En un ejemplo hipotético, reducir a la mitad el costo de generar un material no disminuye la demanda total si se produce una cantidad mucho mayor sin necesidad. Por ello, se propone combinar eficiencia con evaluación de utilidad: qué resultados se aprovechan, cuántas repeticiones son necesarias y si una herramienta más pequeña puede satisfacer la tarea.
+            </p>
+            <p>
+              La distribución territorial también merece atención. Los beneficios de un servicio pueden llegar a usuarios lejanos, mientras las comunidades donde se ubica la infraestructura experimentan presión local sobre recursos y servicios. La evaluación propuesta debería incluir consulta, información suficiente y seguimiento de efectos territoriales. Una compensación económica puede atender ciertos costos, pero no responde automáticamente a todas las preocupaciones comunitarias. La sostenibilidad exige que quienes soportan cargas tengan capacidad de participar en las decisiones que las producen.
+            </p>
+            <p>
+              El análisis ambiental debe reconocer beneficios posibles, como optimización de procesos o apoyo a investigación. Sin embargo, estos beneficios necesitan evidencia y comparación con alternativas. Afirmar que una aplicación ayudará al ambiente no demuestra que su efecto neto sea favorable. La posición defendida consiste en valorar el resultado completo y la calidad de la evidencia, con prioridades claras para usos socialmente relevantes. Esta exigencia evita tanto ignorar el impacto material como condenar indiscriminadamente tecnologías que podrían contribuir a resolver problemas concretos.
+            </p>
+          </section>
+
+          <!-- SECCION 11 -->
+          <section id="ensayo-sec-11" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 11</div>
+            <h2 class="essay-chapter-title">11. Concentración tecnológica y capacidad de decisión pública</h2>
+            <p>
+              La autonomía de una institución depende también de sus relaciones con proveedores. Adoptar IA puede ofrecer capacidades difíciles de desarrollar internamente, pero introduce dependencia de precios, disponibilidad, formatos y actualizaciones. Si una organización pierde capacidad de comprender su proceso o trasladarlo a otra solución, puede quedar limitada para defender sus propios criterios. El problema ético no consiste simplemente en utilizar servicios externos; aparece cuando la dependencia impide supervisar decisiones, corregir daños o mantener funciones importantes en condiciones aceptables.
+            </p>
+            <p>
+              Los principios de la Organisation for Economic Co-operation and Development (OECD, 2024) relacionan la IA confiable con derechos, transparencia, robustez y rendición de cuentas. Desde esta perspectiva, una contratación debería evaluar tanto desempeño como condiciones de control. Como propuesta para una institución educativa, sería pertinente exigir información sobre usos de datos, cambios del servicio, registros necesarios para investigar incidentes y condiciones de salida. Las cláusulas carecen de utilidad si nadie dispone de recursos para comprobar su cumplimiento.
+            </p>
+            <p>
+              Una objeción razonable señala que las organizaciones pequeñas no pueden auditar todo un modelo. Por eso, el nivel de acceso y evaluación debe adaptarse al riesgo y combinar documentación, pruebas propias y revisiones independientes cuando proceda. La falta de recursos no transforma cualquier resultado en aceptable. Si una herramienta interviene en decisiones importantes y el proveedor impide obtener evidencia suficiente, la institución debería limitar su función o elegir otra alternativa. Delegar el procesamiento no elimina la responsabilidad frente a sus usuarios.
+            </p>
+            <p>
+              La concentración también plantea preguntas sobre quién define prioridades culturales y económicas. Un modelo entrenado para contextos generales puede no representar necesidades locales, lenguas o formas de organización. Importarlo sin adaptación puede convertir supuestos externos en reglas de un servicio público. Se propone fortalecer capacidades locales para evaluar y negociar, incluso cuando la tecnología se adquiere fuera. La soberanía práctica consiste en poder comprender, modificar o rechazar una solución conforme a necesidades propias, sin suponer que todo deba producirse internamente.
+            </p>
+          </section>
+
+          <!-- SECCION 12 -->
+          <section id="ensayo-sec-12" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 12</div>
+            <h2 class="essay-chapter-title">12. Dilema aplicado: asignación de becas mediante IA</h2>
+            <p>
+              Considérese una universidad ficticia con 200 solicitudes y recursos para conceder 70 becas. Su objetivo declarado es apoyar a estudiantes con necesidad económica. Para reducir retrasos, se propone un modelo entrenado con expedientes y decisiones anteriores. El sistema incluye trayectoria académica, continuidad de inscripción y otras características. Durante la prueba aparecen diferencias entre grupos. El escenario y todas sus cifras son hipotéticos; su finalidad es ilustrar el razonamiento ético y no representar resultados de la Universidad Tecnológica de Puebla ni de otra institución real.
+            </p>
+            <p>
+              El primer conflicto es la definición del objetivo. Si el modelo aprende a reproducir quién recibió apoyo en el pasado, su tarea real es imitar decisiones históricas. Eso puede diferir de identificar necesidad económica actual. Además, una interrupción académica podría interpretarse como riesgo de no concluir, cuando también puede expresar necesidad de trabajar o cuidar a otra persona. La universidad debe decidir qué persigue: premiar desempeño, prevenir abandono o compensar desventajas. Mezclar objetivos sin explicarlos dificulta evaluar cualquier resultado.
+            </p>
+            <p>
+              Para ilustrar una segunda tensión, supóngase que una revisión independiente, basada en criterios publicados de necesidad, identifica 60 personas elegibles en el grupo A y 40 en el grupo B. Cada grupo tiene 100 solicitantes. La clasificación produce los siguientes resultados. Las categorías A y B se utilizan únicamente para comparar comportamientos; no representan identidades reales ni implican que cualquier atributo deba recopilarse.
+            </p>
+
+            <!-- TABLA COMPARATIVA DE RESULTADOS HIPOTETICOS -->
+            <div class="essay-table-container">
+              <div class="essay-table-title">Resultado de la prueba hipotética de asignación de becas</div>
+              <table class="essay-data-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Indicador evaluado</th>
+                    <th scope="col">Grupo A</th>
+                    <th scope="col">Grupo B</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Solicitudes evaluadas</td>
+                    <td>100</td>
+                    <td>100</td>
+                  </tr>
+                  <tr>
+                    <td>Personas elegibles según la revisión</td>
+                    <td>60</td>
+                    <td>40</td>
+                  </tr>
+                  <tr>
+                    <td>Personas elegibles seleccionadas</td>
+                    <td>30</td>
+                    <td>20</td>
+                  </tr>
+                  <tr>
+                    <td>Personas no elegibles seleccionadas</td>
+                    <td>10</td>
+                    <td>10</td>
+                  </tr>
+                  <tr>
+                    <td>Total de personas seleccionadas</td>
+                    <td>40</td>
+                    <td>30</td>
+                  </tr>
+                  <tr class="table-highlight-row">
+                    <td><strong>Tasa de selección sobre todas las solicitudes</strong></td>
+                    <td><strong>40 %</strong></td>
+                    <td><strong>30 %</strong></td>
+                  </tr>
+                  <tr class="table-highlight-row">
+                    <td><strong>Proporción de elegibles seleccionados</strong></td>
+                    <td><strong>50 %</strong></td>
+                    <td><strong>50 %</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p>
+              Ambos grupos tienen la misma proporción de elegibles seleccionados, pero diferente tasa general de selección. Las dos descripciones son correctas porque utilizan denominadores distintos. El resultado no determina por sí solo cuál decisión sería justa. También muestra que se asignarían 20 becas a personas consideradas no elegibles y quedarían fuera 50 elegibles, bajo los supuestos de la tabla. Por tanto, discutir únicamente la diferencia entre grupos omitiría errores relevantes del programa en su conjunto. Igualmente, la revisión utilizada como referencia necesita criterios legítimos y posibilidad de corrección.
+            </p>
+            <p>
+              Una primera alternativa sería implementar sin cambios para cumplir el calendario. Su ventaja es la rapidez; su debilidad es trasladar a los estudiantes un riesgo ya identificado. Una segunda sería ajustar puntuaciones hasta igualar la tasa de selección. Esto podría satisfacer una métrica, pero no garantiza atender necesidad ni corregir la definición del objetivo. Una tercera consistiría en retirar toda automatización y mantener el proceso anterior. Evitaría estos errores del modelo, aunque podría conservar retrasos y decisiones discrecionales. Ninguna alternativa merece aceptación automática por su etiqueta.
+            </p>
+            <p>
+              La cuarta opción, defendida en este ensayo, es limitar inicialmente la herramienta a apoyo administrativo y conservar decisiones revisables mientras se valida una función más amplia. Puede ayudar a organizar documentos o señalar información faltante, con comprobación humana, sin excluir solicitudes por una puntuación. Paralelamente se revisan datos, variables y objetivos, y se compara el proceso con una alternativa administrativa mejorada. La comparación debe medir tiempos y calidad de decisiones, incluyendo las cargas que recaen sobre estudiantes y personal.
+            </p>
+            <p>
+              La resolución necesita criterios previos. La institución debería definir qué daños considera inaceptables, cómo comprobará diferencias entre grupos y qué evidencia requiere antes de ampliar el uso. También debe establecer qué hará con solicitudes incompletas: si la falta de un documento admite corrección, excluir de inmediato puede transformar una dificultad de trámite en pérdida de apoyo. Las reglas de desempate para recursos insuficientes deben ser públicas y coherentes con la finalidad. Una puntuación no debería ocultar que el presupuesto sigue exigiendo decisiones colectivas sobre distribución.
+            </p>
+            <p>
+              La supervisión requiere personal con autoridad para modificar recomendaciones y razones registradas para hacerlo. El canal de reclamación debería permitir presentar contexto y corregir datos antes de que el daño sea irreversible. Si el plazo de respuesta supera la fecha de pago, el recurso puede existir formalmente y fracasar en la práctica. Se propone vigilar tiempos de revisión, decisiones corregidas y patrones de error. Un número bajo de reclamaciones tampoco prueba satisfacción: podría reflejar desconocimiento, dificultad del trámite o temor a cuestionar a la institución.
+            </p>
+            <p>
+              Por último, el programa necesita reglas para detenerse y reparar. Una diferencia grave sin explicación suficiente, una filtración o un cambio no validado justificarían revisar el alcance y, según el caso, suspender la función automatizada. La reparación podría incluir reconsiderar expedientes afectados y corregir el procedimiento, además del modelo. Esta solución tiene costos y no garantiza eliminar toda injusticia. Su ventaja es conservar la capacidad de aprender y corregir sin convertir la primera implementación en una decisión irreversible sobre oportunidades educativas.
+            </p>
+          </section>
+
+          <!-- SECCION 13 -->
+          <section id="ensayo-sec-13" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 13</div>
+            <h2 class="essay-chapter-title">13. Gobernanza durante todo el ciclo de vida</h2>
+            <p>
+              La gobernanza convierte compromisos generales en decisiones, responsabilidades y evidencia. El marco del NIST organiza la gestión de riesgos mediante cuatro funciones: gobernar, contextualizar, medir y gestionar (Tabassi, 2023). Es un marco voluntario para orientar prácticas, no una certificación automática de legitimidad. Su utilidad para este ensayo radica en que la evaluación no termina al desarrollar el modelo. La organización debe conocer el contexto, medir lo pertinente y actuar sobre los resultados durante el uso.
+            </p>
+            <p>
+              La etapa inicial debería documentar problema, población, finalidad y alternativas. Conviene distinguir quién compra, desarrolla, opera, supervisa y autoriza cambios, incluyendo quién tiene facultad de detener una función. Cuando estas responsabilidades no se precisan, cada actor puede suponer que otro evaluó el riesgo. Se propone asignar una persona o área responsable del servicio completo, acompañada por revisión independiente cuando la gravedad lo requiera. La distribución de tareas debe facilitar la coordinación y conservar una respuesta identificable frente al usuario.
+            </p>
+            <p>
+              Antes del despliegue, la evaluación debe representar condiciones reales. Una prueba con datos convenientes puede omitir solicitudes incompletas, lenguaje distinto o cambios en la población. Como propuesta, se deberían incluir casos difíciles, análisis de errores y comparación con una alternativa de referencia. Las métricas necesitan umbrales justificados y un registro de incertidumbre. Probar varias configuraciones y publicar únicamente el mejor resultado puede exagerar la confianza disponible. La honestidad metodológica exige explicar límites y evitar presentar evidencia exploratoria como garantía definitiva.
+            </p>
+            <p>
+              Raji et al. (2020) proponen un marco de auditoría interna a lo largo del desarrollo, con documentación que permite examinar decisiones y sostener la integridad de la revisión. Este enfoque respalda tratar la auditoría como un proceso continuo. Su aplicación institucional debería producir acciones concretas, responsables y fechas de seguimiento. Una revisión que detecta problemas pero no tiene consecuencias puede mejorar la apariencia de control sin disminuir el daño. Además, cuando hay conflictos de interés importantes, la evaluación interna necesita contrapesos pertinentes.
+            </p>
+            <p>
+              Durante la operación conviene observar tanto desempeño como efectos en el servicio. Un aumento de exactitud podría coincidir con más tiempo de reclamación o dificultades para ciertos usuarios. También deben revisarse cambios del modelo, datos y procedimientos. Se propone llevar un registro proporcionado que permita investigar incidentes sin conservar información personal innecesaria. El monitoreo tiene que conducir a decisiones: ajustar, restringir, volver a evaluar o retirar una función. Acumular indicadores sin capacidad de respuesta no constituye una protección suficiente.
+            </p>
+            <p>
+              La reparación completa exige mirar más allá del expediente individual. Corregir una decisión puede beneficiar a una persona, pero dejar intacto un mecanismo que perjudicó a otras. Por ello, cada incidente relevante debería generar una búsqueda de casos similares y una revisión de sus causas. Cuando se decide retirar el sistema, la organización debe mantener continuidad del servicio y resolver qué datos se conservan o eliminan. La responsabilidad termina cuando se han atendido las obligaciones pendientes, no simplemente cuando se apaga la herramienta.
+            </p>
+          </section>
+
+          <!-- SECCION 14 -->
+          <section id="ensayo-sec-14" class="essay-chapter">
+            <div class="chapter-number-pill">Sección 14</div>
+            <h2 class="essay-chapter-title">14. Responsabilidad personal y profesional en las TIC</h2>
+            <p>
+              La ética de la IA también se manifiesta en decisiones cotidianas de quienes desarrollan aplicaciones. Elegir una variable, aceptar una dependencia, configurar permisos o comunicar una limitación son acciones con efectos sobre otras personas. El código de la Association for Computing Machinery (ACM, 2018) vincula la práctica informática con el bienestar social, la prevención del daño, la honestidad y el respeto a la privacidad. Estos deberes recuerdan que saber implementar una función no agota la responsabilidad profesional por ponerla en uso.
+            </p>
+            <p>
+              Para un desarrollador, una práctica defendible consiste en documentar supuestos, verificar resultados relevantes y explicar límites sin exagerar capacidades. Si una aplicación trabaja con expedientes, datos escolares o solicitudes de apoyo, debería existir una razón para cada acceso y una vía para investigar errores. La presión por entregar no elimina la necesidad de advertir fallas importantes. A la vez, la organización debe ofrecer canales de revisión y respaldo para que el profesional pueda plantear objeciones sin depender únicamente de su disposición personal a asumir riesgos laborales.
+            </p>
+            <p>
+              Como usuarios, también tenemos responsabilidades: examinar información antes de compartirla, respetar datos de terceros y conservar capacidad crítica frente a respuestas aparentemente autorizadas. Sin embargo, no es razonable trasladar toda la carga a individuos que desconocen el funcionamiento del servicio. La responsabilidad debe guardar relación con el poder, los conocimientos y el control de cada actor. Quien diseña o administra un sistema a gran escala tiene obligaciones distintas de quien lo utiliza bajo condiciones que no puede negociar.
+            </p>
+          </section>
+
+          <!-- CONCLUSION -->
+          <section id="ensayo-conclusion" class="essay-chapter">
+            <h2 class="essay-chapter-title">Conclusión</h2>
+            <p>
+              La importancia ética y social de la inteligencia artificial reside en su capacidad para reorganizar decisiones, relaciones y oportunidades. La pregunta sobre si un sistema funciona debe complementarse con otras: para qué funciona, con qué evidencia, para quién produce beneficios y quién responde cuando falla. La tesis defendida a lo largo del ensayo vincula una finalidad legítima con desempeño verificable y mecanismos efectivos de responsabilidad. La ausencia de cualquiera de estas condiciones puede convertir una innovación técnicamente competente en una práctica socialmente injustificada.
+            </p>
+            <p>
+              Los casos examinados muestran que el daño no requiere una intención explícita de discriminar. Puede originarse al utilizar una variable que representa mal una necesidad, ocultar diferencias detrás de un promedio o adoptar categorías cuyo uso no se ha justificado. Del mismo modo, una explicación convincente no convierte una regla en justa, y la presencia de un supervisor no garantiza revisión efectiva. La evaluación ética exige analizar mecanismos y condiciones de trabajo, además de principios. Sus propuestas deben ser comprobables en la experiencia de las personas afectadas.
+            </p>
+            <p>
+              En el trabajo, la educación y la cultura, los beneficios dependen de cómo se distribuyen capacidades, reconocimiento y poder de decisión. En sostenibilidad, dependen de comparar impactos completos y escuchar a quienes soportan las cargas materiales. Estos ámbitos comparten un problema: la facilidad de concentrar ventajas mientras se dispersan responsabilidades. Una respuesta adecuada requiere participación, evidencia y capacidad de corregir. La regulación, los estándares y los compromisos profesionales pueden contribuir, pero necesitan prácticas institucionales que hagan efectivas sus finalidades.
+            </p>
+            <p>
+              La cautela tampoco debería convertirse en inmovilismo. Mantener procedimientos injustos o ineficientes tiene consecuencias que deben entrar en la comparación. Una adopción responsable permite pruebas proporcionadas, aprendizaje y mejoras cuando existe evidencia suficiente. También admite limitar o rechazar usos cuya utilidad no compensa sus daños o cuya supervisión resulta inviable. El progreso ético se expresa en poder justificar estas decisiones y revisarlas ante nueva información, sin tratar la expansión tecnológica como un fin obligatorio.
+            </p>
+            <p>
+              Por ello, la formación en TIC debe integrar criterio técnico, comprensión social y responsabilidad profesional. Desarrollar IA implica participar en decisiones sobre la vida de otros. Una tecnología merece confianza cuando sus capacidades y límites pueden examinarse, sus fines pueden discutirse y sus errores pueden corregirse. Bajo esas condiciones, la inteligencia artificial puede ampliar posibilidades humanas y contribuir al bienestar colectivo, conservando en las personas y sus instituciones la capacidad de orientar el futuro que desean construir.
+            </p>
+          </section>
+
+          <!-- REFERENCIAS -->
+          <section id="ensayo-referencias" class="essay-chapter essay-references-section">
+            <h2 class="essay-chapter-title">Referencias</h2>
+            <ul class="essay-ref-list">
+              <li class="essay-ref-item">
+                Association for Computing Machinery. (2018). <em>ACM code of ethics and professional conduct</em>. <a href="https://www.acm.org/code-of-ethics" target="_blank" rel="noopener noreferrer">https://www.acm.org/code-of-ethics</a>
+              </li>
+              <li class="essay-ref-item">
+                Autio, C., Schwartz, R., Dunietz, J., Jain, S., Stanley, M., Tabassi, E., Hall, P., &amp; Roberts, K. (2024). <em>Artificial intelligence risk management framework: Generative artificial intelligence profile</em> (NIST AI 600-1). National Institute of Standards and Technology. <a href="https://doi.org/10.6028/NIST.AI.600-1" target="_blank" rel="noopener noreferrer">https://doi.org/10.6028/NIST.AI.600-1</a>
+              </li>
+              <li class="essay-ref-item">
+                Buolamwini, J., &amp; Gebru, T. (2018). Gender shades: Intersectional accuracy disparities in commercial gender classification. En S. A. Friedler &amp; C. Wilson (Eds.), <em>Proceedings of the 1st Conference on Fairness, Accountability and Transparency</em> (Vol. 81, pp. 77-91). Proceedings of Machine Learning Research. <a href="https://proceedings.mlr.press/v81/buolamwini18a.html" target="_blank" rel="noopener noreferrer">https://proceedings.mlr.press/v81/buolamwini18a.html</a>
+              </li>
+              <li class="essay-ref-item">
+                Gebru, T., Morgenstern, J., Vecchione, B., Vaughan, J. W., Wallach, H., Daumé III, H., &amp; Crawford, K. (2021). Datasheets for datasets. <em>Communications of the ACM</em>, 64(12), 86-92. <a href="https://doi.org/10.1145/3458723" target="_blank" rel="noopener noreferrer">https://doi.org/10.1145/3458723</a>
+              </li>
+              <li class="essay-ref-item">
+                International Energy Agency. (2025). <em>Energy and AI</em>. <a href="https://www.iea.org/reports/energy-and-ai" target="_blank" rel="noopener noreferrer">https://www.iea.org/reports/energy-and-ai</a>
+              </li>
+              <li class="essay-ref-item">
+                Kleinberg, J., Mullainathan, S., &amp; Raghavan, M. (2017). Inherent trade-offs in the fair determination of risk scores. En C. H. Papadimitriou (Ed.), <em>8th Innovations in Theoretical Computer Science Conference (ITCS 2017)</em> (Vol. 67, pp. 43:1-43:23). Schloss Dagstuhl - Leibniz-Zentrum für Informatik. <a href="https://doi.org/10.4230/LIPIcs.ITCS.2017.43" target="_blank" rel="noopener noreferrer">https://doi.org/10.4230/LIPIcs.ITCS.2017.43</a>
+              </li>
+              <li class="essay-ref-item">
+                Miao, F., &amp; Holmes, W. (2023). <em>Guidance for generative AI in education and research</em>. UNESCO. <a href="https://unesdoc.unesco.org/ark:/48223/pf0000386693" target="_blank" rel="noopener noreferrer">https://unesdoc.unesco.org/ark:/48223/pf0000386693</a>
+              </li>
+              <li class="essay-ref-item">
+                Mitchell, M., Wu, S., Zaldivar, A., Barnes, P., Vasserman, L., Hutchinson, B., Spitzer, E., Raji, I. D., &amp; Gebru, T. (2019). Model cards for model reporting. En <em>Proceedings of the Conference on Fairness, Accountability, and Transparency</em> (pp. 220-229). Association for Computing Machinery. <a href="https://doi.org/10.1145/3287560.3287596" target="_blank" rel="noopener noreferrer">https://doi.org/10.1145/3287560.3287596</a>
+              </li>
+              <li class="essay-ref-item">
+                Nissenbaum, H. (2004). Privacy as contextual integrity. <em>Washington Law Review</em>, 79(1), 119-158. <a href="https://digitalcommons.law.uw.edu/wlr/vol79/iss1/10/" target="_blank" rel="noopener noreferrer">https://digitalcommons.law.uw.edu/wlr/vol79/iss1/10/</a>
+              </li>
+              <li class="essay-ref-item">
+                Obermeyer, Z., Powers, B., Vogeli, C., &amp; Mullainathan, S. (2019). Dissecting racial bias in an algorithm used to manage the health of populations. <em>Science</em>, 366(6464), 447-453. <a href="https://doi.org/10.1126/science.aax2342" target="_blank" rel="noopener noreferrer">https://doi.org/10.1126/science.aax2342</a>
+              </li>
+              <li class="essay-ref-item">
+                Organisation for Economic Co-operation and Development. (2024). <em>Recommendation of the Council on Artificial Intelligence</em> (OECD/LEGAL/0449; revisión de 2024). <a href="https://legalinstruments.oecd.org/en/instruments/OECD-LEGAL-0449" target="_blank" rel="noopener noreferrer">https://legalinstruments.oecd.org/en/instruments/OECD-LEGAL-0449</a>
+              </li>
+              <li class="essay-ref-item">
+                Organización Internacional del Trabajo. (2025, 20 de mayo). <em>Uno de cada cuatro empleos en riesgo de transformarse por la IA generativa, revela nuevo índice global de la OIT y NASK</em>. <a href="https://www.ilo.org/es/resource/news/uno-de-cada-cuatro-empleos-en-riesgo-de-transformarse-por-la-ia-generativa" target="_blank" rel="noopener noreferrer">https://www.ilo.org/es/resource/news/uno-de-cada-cuatro-empleos-en-riesgo-de-transformarse-por-la-ia-generativa</a>
+              </li>
+              <li class="essay-ref-item">
+                Raji, I. D., Smart, A., White, R. N., Mitchell, M., Gebru, T., Hutchinson, B., Smith-Loud, J., Theron, D., &amp; Barnes, P. (2020). Closing the AI accountability gap: Defining an end-to-end framework for internal algorithmic auditing. En <em>Proceedings of the 2020 Conference on Fairness, Accountability, and Transparency</em> (pp. 33-44). Association for Computing Machinery. <a href="https://doi.org/10.1145/3351095.3372873" target="_blank" rel="noopener noreferrer">https://doi.org/10.1145/3351095.3372873</a>
+              </li>
+              <li class="essay-ref-item">
+                Rudin, C. (2019). Stop explaining black box machine learning models for high stakes decisions and use interpretable models instead. <em>Nature Machine Intelligence</em>, 1, 206-215. <a href="https://doi.org/10.1038/s42256-019-0048-x" target="_blank" rel="noopener noreferrer">https://doi.org/10.1038/s42256-019-0048-x</a>
+              </li>
+              <li class="essay-ref-item">
+                Schwartz, R., Vassilev, A., Greene, K., Perine, L., Burt, A., &amp; Hall, P. (2022). <em>Towards a standard for identifying and managing bias in artificial intelligence</em> (NIST SP 1270). National Institute of Standards and Technology. <a href="https://doi.org/10.6028/NIST.SP.1270" target="_blank" rel="noopener noreferrer">https://doi.org/10.6028/NIST.SP.1270</a>
+              </li>
+              <li class="essay-ref-item">
+                Selbst, A. D., boyd, d., Friedler, S. A., Venkatasubramanian, S., &amp; Vertesi, J. (2019). Fairness and abstraction in sociotechnical systems. En <em>Proceedings of the Conference on Fairness, Accountability, and Transparency</em> (pp. 59-68). Association for Computing Machinery. <a href="https://doi.org/10.1145/3287560.3287598" target="_blank" rel="noopener noreferrer">https://doi.org/10.1145/3287560.3287598</a>
+              </li>
+              <li class="essay-ref-item">
+                Tabassi, E. (2023). <em>Artificial intelligence risk management framework (AI RMF 1.0)</em> (NIST AI 100-1). National Institute of Standards and Technology. <a href="https://doi.org/10.6028/NIST.AI.100-1" target="_blank" rel="noopener noreferrer">https://doi.org/10.6028/NIST.AI.100-1</a>
+              </li>
+              <li class="essay-ref-item">
+                UNESCO. (2021). <em>Recomendación sobre la ética de la inteligencia artificial</em>. <a href="https://www.unesco.org/es/legal-affairs/recommendation-ethics-artificial-intelligence" target="_blank" rel="noopener noreferrer">https://www.unesco.org/es/legal-affairs/recommendation-ethics-artificial-intelligence</a>
+              </li>
+              <li class="essay-ref-item">
+                World Health Organization. (2021). <em>Ethics and governance of artificial intelligence for health</em>. <a href="https://www.who.int/publications/i/item/9789240029200" target="_blank" rel="noopener noreferrer">https://www.who.int/publications/i/item/9789240029200</a>
+              </li>
+            </ul>
+          </section>
+
+        </article>
       </div>
     </section>
 

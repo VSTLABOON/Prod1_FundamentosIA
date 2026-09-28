@@ -97,7 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
       sectionAntecedentes: "antecedentes",
       sectionClasificacion: "clasificacion",
       sectionMachineLearning: "machine-learning",
-      sectionGlosario: "glosario"
+      sectionGlosario: "glosario",
+      sectionEnsayo: "ensayo"
     };
     if (hashMap[targetSectionId]) {
       history.replaceState(null, "", `#${hashMap[targetSectionId]}`);
@@ -123,6 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
       switchSection("sectionMachineLearning");
     } else if (hash === "#glosario") {
       switchSection("sectionGlosario");
+    } else if (hash === "#ensayo") {
+      switchSection("sectionEnsayo");
     } else {
       switchSection("sectionAntecedentes");
     }
@@ -593,11 +596,53 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ==========================================================================
-     10. INICIALIZACION
+     10. INDICE INTERACTIVO DEL ENSAYO ACADEMICO
+     ========================================================================== */
+  function initEssayToc() {
+    const tocLinks = document.querySelectorAll(".toc-nav-link");
+    const chapters = document.querySelectorAll(".essay-chapter");
+
+    tocLinks.forEach(link => {
+      link.addEventListener("click", (e) => {
+        const href = link.getAttribute("href");
+        if (href && href.startsWith("#")) {
+          e.preventDefault();
+          const targetElem = document.querySelector(href);
+          if (targetElem) {
+            targetElem.scrollIntoView({ behavior: "smooth", block: "start" });
+            history.replaceState(null, "", href);
+          }
+        }
+      });
+    });
+
+    // Observer para resaltar la seccion activa en el indice durante el scroll
+    if ("IntersectionObserver" in window && chapters.length > 0) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            tocLinks.forEach(l => {
+              const matches = l.getAttribute("href") === `#${id}`;
+              l.classList.toggle("active", matches);
+            });
+          }
+        });
+      }, {
+        rootMargin: "-15% 0px -70% 0px"
+      });
+
+      chapters.forEach(ch => observer.observe(ch));
+    }
+  }
+
+  /* ==========================================================================
+     11. INICIALIZACION
      ========================================================================== */
   initTheme();
   initNavigation();
   initLightbox();
   initMachineLearningSimulator();
+  initEssayToc();
   loadConcepts();
 });

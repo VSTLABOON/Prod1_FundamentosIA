@@ -11,6 +11,7 @@ Aplicacion web full-stack construida en Python (Flask + SQLite) disenada para co
    - `Clasificacion Clasica de la IA`: Analisis de ANI, AGI y ASI con casos de estudio reales y prospectivos acompanados de sus respectivas infografias tecnicas.
    - `Machine Learning`: Fundamentos del paradigma inductivo, los 3 grandes paradigmas (Supervisado, No Supervisado, Por Refuerzo), el pipeline de 5 fases y un simulador interactivo de inferencia matematica en tiempo real para deteccion de fraude.
    - `Glosario`: Repositorio relacional de 20 conceptos tecnicos con cuadricula de tarjetas 3D Tilt y modal de fichas tecnicas profundas.
+   - `Ensayo`: Ensayo academico integro *"Etica y aspectos sociales de la inteligencia artificial"* (Barranco Cervantes Jesus Manuel, Universidad Tecnologica de Puebla, Septiembre 2026) con indice interactivo lateral, tabla comparativa de dilema de becas y referencias APA.
 2. **Buscador Global Inteligente**:
    - Ubicado en la barra superior. Al escribir cualquier termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
 3. **Visor Lightbox de Infografias**:
