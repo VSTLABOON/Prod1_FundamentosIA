@@ -1,0 +1,66 @@
+/* ==========================================================================
+   SECCION ALGORITMOS DE BUSQUEDA Y OPTIMIZACION EN IA
+   ========================================================================== */
+
+/* Ajuste fino en barra superior para alojar 6 pestanas comodamente */
+.nav-link-btn {
+  padding: 7px 13px;
+  font-size: 0.85rem;
+}
+
+.search-tuple-box {
+  margin-bottom: 16px;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.search-formal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.search-main-layout {
+  display: grid;
+  grid-template-columns: 430px 1fr;
+  gap: 32px;
+  align-items: start;
+  margin-bottom: 40px;
+}
+
+.search-paradigms-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.search-example-card {
+  grid-template-columns: 1fr;
+  margin-bottom: 40px;
+}
+
+.search-elements-example-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.search-comparison-table-wrap {
+  margin-bottom: 40px;
+}
+
+.search-data-table th:nth-child(n+2),
+.search-data-table td:nth-child(n+2) {
+  text-align: center;
+}
+
+.search-references-card {
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 28px 34px;
+  box-shadow: var(--shadow);
+  margin-bottom: 20px;
+}

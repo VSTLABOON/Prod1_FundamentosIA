@@ -1,0 +1,173 @@
+/* ==========================================================================
+   responsive.css - Diseno Adaptativo para Computadoras, Tablets y Celulares
+   ========================================================================== */
+
+/* Dispositivos de tamano intermedio y laptops (<= 1200px) */
+@media (max-width: 1200px) {
+  .search-main-layout {
+    grid-template-columns: 1fr;
+  }
+  .search-elements-example-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Tablets en orientacion vertical y pantallas medianas (<= 1024px) */
+@media (max-width: 1024px) {
+  .timeline-layout {
+    grid-template-columns: 1fr;
+  }
+  .infographic-preview-card {
+    position: static;
+    margin-bottom: 24px;
+  }
+  .classification-card {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .ml-comparison-grid {
+    grid-template-columns: 1fr;
+  }
+  .ml-paradigms-grid {
+    grid-template-columns: 1fr;
+  }
+  .lifecycle-steps-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ml-simulator-panel {
+    grid-template-columns: 1fr;
+  }
+  .essay-container-layout {
+    grid-template-columns: 1fr;
+  }
+  .essay-toc-sidebar {
+    position: static;
+    max-height: none;
+    margin-bottom: 24px;
+  }
+  .essay-article-content {
+    padding: 32px 28px;
+  }
+}
+
+/* Telefonos moviles y pantallas reducidas (<= 768px) */
+@media (max-width: 768px) {
+  :root {
+    --nav-height: auto;
+  }
+  body {
+    padding-top: 110px;
+  }
+  .top-nav-bar {
+    height: auto;
+    padding: 8px 0;
+  }
+  .nav-inner {
+    flex-direction: column;
+    gap: 8px;
+    padding: 0 12px;
+  }
+  /* Menu con las 6 pestanas con desplazamiento tactil fluido */
+  .nav-menu {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+    gap: 6px;
+  }
+  .nav-menu::-webkit-scrollbar {
+    display: none;
+  }
+  .nav-link-btn {
+    white-space: nowrap;
+    padding: 6px 11px;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+  .nav-actions {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .global-search-wrapper {
+    flex: 1;
+    width: auto !important;
+  }
+  .app-container {
+    padding: 16px 12px 50px;
+  }
+  .section-main-title {
+    font-size: 1.8rem;
+  }
+  .concepts-grid {
+    grid-template-columns: 1fr;
+  }
+  .search-paradigms-grid,
+  .search-elements-example-grid {
+    grid-template-columns: 1fr;
+  }
+  .lifecycle-steps-grid {
+    grid-template-columns: 1fr;
+  }
+  .modal-body {
+    padding: 20px 16px 28px;
+  }
+  .modal-title {
+    font-size: 1.5rem;
+  }
+  .essay-main-title {
+    font-size: 1.6rem;
+  }
+  .essay-article-content {
+    padding: 20px 16px;
+    font-size: 0.95rem;
+  }
+  .essay-chapter-title {
+    font-size: 1.25rem;
+  }
+  /* Tablas con scroll horizontal protegido para no romper el ancho de pantalla */
+  .essay-table-container,
+  .search-comparison-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: var(--radius-md);
+  }
+  .essay-data-table,
+  .search-data-table {
+    min-width: 540px;
+  }
+  .essay-data-table th,
+  .essay-data-table td,
+  .search-data-table th,
+  .search-data-table td {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+  .search-references-card {
+    padding: 18px 14px;
+  }
+}
+
+/* Pantallas ultra compactas (<= 480px) */
+@media (max-width: 480px) {
+  .section-main-title {
+    font-size: 1.5rem;
+  }
+  .section-lead-text {
+    font-size: 0.92rem;
+  }
+  .sim-panel-title {
+    font-size: 1.15rem;
+  }
+  .meter-score-highlight {
+    font-size: 1.15rem;
+  }
+  .essay-meta-bar {
+    flex-direction: column;
+    gap: 6px;
+  }
+}

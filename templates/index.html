@@ -10,85 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- Estilos del proyecto -->
+  <!-- Estilos modulares del proyecto -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-  <!-- Estilos especificos para la seccion de Algoritmos de Busqueda y ajuste de 6 pestanas -->
-  <style>
-    .nav-link-btn {
-      padding: 7px 13px;
-      font-size: 0.85rem;
-    }
-    .search-tuple-box {
-      margin-bottom: 16px;
-      text-align: center;
-      font-size: 0.9rem;
-    }
-    .search-formal-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: auto;
-    }
-    .search-main-layout {
-      display: grid;
-      grid-template-columns: 430px 1fr;
-      gap: 32px;
-      align-items: start;
-      margin-bottom: 40px;
-    }
-    .search-paradigms-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-    .search-example-card {
-      grid-template-columns: 1fr;
-      margin-bottom: 40px;
-    }
-    .search-elements-example-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-    .search-comparison-table-wrap {
-      margin-bottom: 40px;
-    }
-    .search-data-table th:nth-child(n+2),
-    .search-data-table td:nth-child(n+2) {
-      text-align: center;
-    }
-    .search-references-card {
-      background: var(--bg-card);
-      border: 1px solid var(--rule);
-      border-radius: var(--radius-lg);
-      padding: 28px 34px;
-      box-shadow: var(--shadow);
-      margin-bottom: 20px;
-    }
-    @media (max-width: 1200px) {
-      .search-main-layout {
-        grid-template-columns: 1fr;
-      }
-      .search-elements-example-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-    @media (max-width: 768px) {
-      .search-paradigms-grid,
-      .search-elements-example-grid {
-        grid-template-columns: 1fr;
-      }
-      .search-references-card {
-        padding: 20px 18px;
-      }
-    }
-  </style>
 </head>
-<body>
-
-  <!-- Barra de navegacion superior persistente y optimizada -->
 <body>
 
   <!-- Barra de navegacion superior persistente -->

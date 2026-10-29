@@ -18,7 +18,7 @@ Aplicacion web full-stack construida en Python (Flask + SQLite) disenada para co
 3. **Visor Lightbox de Infografias**:
    - Permite ampliar e inspeccionar a pantalla completa las 5 infografias en alta definicion.
 4. **Diseno Editorial Academico**:
-   - Fuentes *Fraunces* e *IBM Plex Sans*, colores institucionales, transicion suave entre Modo Claro y Oscuro y total ausencia de emojis.
+   - Fuentes *Fraunces* e *IBM Plex Sans*, colores institucionales, diseno responsivo para computadoras, tablets y celulares, transicion suave entre Modo Claro y Oscuro y total ausencia de emojis.
 
 ---
 
@@ -39,7 +39,19 @@ Prod1/
 |
 |-- static/
 |   |-- css/
-|   |   `-- style.css          # Estilos editoriales, barra superior, 3D tilt, lightbox
+|   |   |-- style.css          # Orquestador maestro que importa los modulos CSS
+|   |   |-- style.backup.css   # Respaldo de seguridad del CSS original
+|   |   `-- modules/           # Modulos CSS dedicados y responsivos
+|   |       |-- base.css
+|   |       |-- navbar.css
+|   |       |-- antecedentes.css
+|   |       |-- clasificacion.css
+|   |       |-- busqueda.css
+|   |       |-- machine_learning.css
+|   |       |-- glosario.css
+|   |       |-- ensayo.css
+|   |       |-- modals.css
+|   |       `-- responsive.css
 |   |-- js/
 |   |   `-- app.js             # Logica de navegacion, buscador global, lightbox, quiz
 |   `-- images/

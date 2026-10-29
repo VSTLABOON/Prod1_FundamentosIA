@@ -1,0 +1,142 @@
+/* ==========================================================================
+   SECCION 2: CLASIFICACION CLASICA DE LA IA (ANI, AGI, ASI)
+   ========================================================================== */
+.classification-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.classification-card {
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 32px;
+  align-items: center;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.classification-card:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: var(--gold-soft);
+}
+
+.classification-badge {
+  display: inline-block;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.classification-badge.ani {
+  background: var(--teal-subtle);
+  color: var(--teal);
+  border: 1px solid var(--teal-soft);
+}
+
+.classification-badge.agi {
+  background: var(--gold-subtle);
+  color: var(--gold);
+  border: 1px solid var(--gold-soft);
+}
+
+.classification-badge.asi {
+  background: var(--crimson-subtle);
+  color: var(--crimson);
+  border: 1px solid var(--crimson);
+}
+
+.classification-title {
+  font-size: 1.6rem;
+  color: var(--ink);
+  line-height: 1.2;
+  margin-bottom: 3px;
+}
+
+.classification-subtitle {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  font-style: italic;
+  margin-bottom: 14px;
+}
+
+.classification-desc {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.case-study-box {
+  background: var(--bg-raised);
+  border: 1px solid var(--rule-light);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  border-left: 3px solid var(--gold);
+}
+
+.case-study-badge {
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  margin-bottom: 5px;
+}
+
+.case-study-text {
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+  line-height: 1.55;
+  margin: 0 0 10px;
+}
+
+.case-study-highlight {
+  font-size: 0.84rem;
+  color: var(--ink);
+  background: var(--bg-card);
+  padding: 7px 11px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--rule-light);
+  line-height: 1.45;
+}
+
+.classification-media-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.infographic-frame {
+  position: relative;
+  background: var(--bg-raised);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  cursor: zoom-in;
+  max-height: 440px;
+}
+
+.classification-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.infographic-frame:hover .classification-img {
+  transform: scale(1.02);
+}
+
+.infographic-frame:hover .image-zoom-overlay {
+  opacity: 1;
+}
