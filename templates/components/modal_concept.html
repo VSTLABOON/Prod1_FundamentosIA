@@ -1,0 +1,36 @@
+<div id="conceptModal" class="modal-backdrop" role="dialog" aria-modal="true">
+      <div class="modal-window">
+        <div class="modal-header-hero">
+          <img id="modalHeroImage" class="modal-hero-image" src="" alt="" style="display:none;" />
+          <div id="modalPlaceholder" class="card-placeholder-fallback">
+            <div class="placeholder-icon-wrap">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
+            </div>
+            <span class="placeholder-label">Categoria</span>
+          </div>
+          <button id="modalCloseBtn" class="modal-close-btn" title="Cerrar ventana" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <div class="modal-badge-row">
+            <span id="modalCategory" class="category-badge">Categoria</span>
+            <span id="modalDifficulty" class="difficulty-pill">Nivel</span>
+          </div>
+          <h2 id="modalTitle" class="modal-title">Titulo del Concepto</h2>
+          <div id="modalTitleEn" class="modal-title-en">English Title</div>
+
+          <div class="modal-tabs" role="tablist">
+            <button class="modal-tab-item active" data-tab="definition">Definicion Completa</button>
+            <button class="modal-tab-item" data-tab="example">Ejemplo en la Industria</button>
+            <button class="modal-tab-item" data-tab="technical">Mecanismo / Formula</button>
+            <button class="modal-tab-item" data-tab="history">Hito Historico</button>
+          </div>
+
+          <div id="modalTabContent" class="modal-tab-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL LIGHTBOX: VISOR DE INFOGRAFIAS EN ALTA RESOLUCION -->

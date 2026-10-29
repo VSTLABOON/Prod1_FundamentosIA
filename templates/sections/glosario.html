@@ -1,0 +1,66 @@
+<section id="sectionGlosario" class="main-page-section" aria-labelledby="headingGlosario">
+      <header class="section-hero-header compact-glosario-header">
+        <h1 id="headingGlosario" class="section-main-title">
+          Glosario de <span class="accent">Inteligencia Artificial</span>
+        </h1>
+        <p class="section-lead-text">
+          Repositorio de 20 conceptos tecnicos fundamentales con fichas tecnicas profundas.
+        </p>
+      </header>
+
+      <!-- CUADRICULA DIRECTA DE CONCEPTOS -->
+      <div id="conceptsGrid" class="concepts-grid">
+        {% for concept in concepts %}
+        <article class="concept-card" data-id="{{ concept.id }}" tabindex="0">
+          <div class="card-glare"></div>
+          <div class="card-media-wrapper">
+            {% if concept.has_custom_image %}
+            <img class="card-image" src="{{ concept.image_url }}" alt="{{ concept.title }}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+            <div class="card-placeholder-fallback" style="display:none;">
+              <div class="placeholder-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              </div>
+              <span class="placeholder-label">{{ concept.category }}</span>
+            </div>
+            {% else %}
+            <div class="card-placeholder-fallback">
+              <div class="placeholder-icon-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
+              </div>
+              <span class="placeholder-label">{{ concept.category }}</span>
+            </div>
+            {% endif %}
+            <div class="card-floating-meta">
+              <span class="category-badge">{{ concept.category }}</span>
+              <button class="btn-card-favorite {% if concept.is_favorite %}favorited{% endif %}" data-id="{{ concept.id }}" title="Marcar como favorito" aria-label="Favorito">
+                <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+              </button>
+            </div>
+          </div>
+          <div class="card-content">
+            <div class="card-header-line">
+              <h3 class="card-title">{{ concept.title }}</h3>
+              <span class="difficulty-pill {{ concept.difficulty }}">{{ concept.difficulty }}</span>
+            </div>
+            <div class="card-title-en">{{ concept.title_en }}</div>
+            <p class="card-summary">{{ concept.short_desc }}</p>
+            <div class="card-footer">
+              <div class="card-tags">
+                {% for tag in concept.tags.split(',')[:3] %}
+                <span class="tag-label">{{ tag.strip() }}</span>
+                {% endfor %}
+              </div>
+              <span class="card-action-link">
+                Ficha tecnica
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </span>
+            </div>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECCION 5: ENSAYO ACADEMICO (ETICA Y ASPECTOS SOCIALES DE LA IA)
+         ==================================================================== -->

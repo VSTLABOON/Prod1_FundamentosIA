@@ -96,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const hashMap = {
       sectionAntecedentes: "antecedentes",
       sectionClasificacion: "clasificacion",
+      sectionBusqueda: "busqueda",
       sectionMachineLearning: "machine-learning",
       sectionGlosario: "glosario",
       sectionEnsayo: "ensayo"
@@ -120,6 +121,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const hash = window.location.hash.toLowerCase();
     if (hash === "#clasificacion") {
       switchSection("sectionClasificacion");
+    } else if (hash === "#busqueda" || hash === "#algoritmos-busqueda") {
+      switchSection("sectionBusqueda");
     } else if (hash === "#machine-learning" || hash === "#ml") {
       switchSection("sectionMachineLearning");
     } else if (hash === "#glosario") {

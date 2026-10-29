@@ -9,13 +9,14 @@ Aplicacion web full-stack construida en Python (Flask + SQLite) disenada para co
 1. **Barra de Navegacion Superior Persistente**:
    - `Antecedentes`: Linea del tiempo interactiva de 10 hitos seminales (1305 - 1956) e infografia en alta definicion.
    - `Clasificacion Clasica de la IA`: Analisis de ANI, AGI y ASI con casos de estudio reales y prospectivos acompanados de sus respectivas infografias tecnicas.
+   - `Algoritmos de Busqueda`: Marco formal del problema (6-tupla), resolucion paso a paso del caso Puebla-CDMX con A*, infografia oficial (`algoritmos_busqueda.png`), clasificacion en 4 paradigmas y tabla comparativa.
    - `Machine Learning`: Fundamentos del paradigma inductivo, los 3 grandes paradigmas (Supervisado, No Supervisado, Por Refuerzo), el pipeline de 5 fases y un simulador interactivo de inferencia matematica en tiempo real para deteccion de fraude.
    - `Glosario`: Repositorio relacional de 20 conceptos tecnicos con cuadricula de tarjetas 3D Tilt y modal de fichas tecnicas profundas.
    - `Ensayo`: Ensayo academico integro *"Etica y aspectos sociales de la inteligencia artificial"* (Barranco Cervantes Jesus Manuel, Universidad Tecnologica de Puebla, Septiembre 2026) con indice interactivo lateral, tabla comparativa de dilema de becas y referencias APA.
 2. **Buscador Global Inteligente**:
    - Ubicado en la barra superior. Al escribir cualquier termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
 3. **Visor Lightbox de Infografias**:
-   - Permite ampliar e inspeccionar a pantalla completa las 4 infografias en alta definicion.
+   - Permite ampliar e inspeccionar a pantalla completa las 5 infografias en alta definicion.
 4. **Diseno Editorial Academico**:
    - Fuentes *Fraunces* e *IBM Plex Sans*, colores institucionales, transicion suave entre Modo Claro y Oscuro y total ausencia de emojis.
 
@@ -46,10 +47,24 @@ Prod1/
 |       |-- clasificacion_ani.jpg     # Infografia de ANI (AlphaFold)
 |       |-- clasificacion_agi.jpg     # Infografia de AGI (Pandemias)
 |       |-- clasificacion_asi.jpg     # Infografia de ASI (Cambio Climatico)
+|       |-- algoritmos_busqueda.png   # Infografia de Algoritmos de Busqueda
 |       `-- README_IMAGENES.txt       # Guia para las imagenes de los 20 conceptos
 |
 `-- templates/
-    `-- index.html             # Maquetacion semantica con las 3 secciones
+    |-- index.html             # Plantilla principal modular (Jinja2)
+    |-- index.backup.html      # Respaldo inalterado de seguridad
+    |-- components/            # Modulos transversales reutilizables
+    |   |-- navbar.html
+    |   |-- footer.html
+    |   |-- modal_concept.html
+    |   `-- modal_lightbox.html
+    `-- sections/              # Secciones de contenido autocontenidas
+        |-- antecedentes.html
+        |-- clasificacion.html
+        |-- busqueda.html
+        |-- machine_learning.html
+        |-- glosario.html
+        `-- ensayo.html
 ```
 
 ---

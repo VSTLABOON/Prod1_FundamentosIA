@@ -1,0 +1,357 @@
+<section id="sectionBusqueda" class="main-page-section" aria-labelledby="headingBusqueda">
+      <!-- INCISO A: Concepto de Algoritmo de Busqueda -->
+      <header class="section-hero-header">
+        <div class="section-pill">Resolucion Sistematica de Problemas y Optimizacion</div>
+        <h1 id="headingBusqueda" class="section-main-title">
+          Algoritmos de <span class="accent">Busqueda en IA</span>
+        </h1>
+        <p class="section-lead-text">
+          Un algoritmo de busqueda es un procedimiento computacional sistematico que explora un espacio de estados (representado como un grafo o arbol de decision) para resolver un problema encontrando una secuencia de acciones o un estado final que cumpla una meta bajo criterios de optimalidad, tiempo y memoria.
+        </p>
+      </header>
+
+      <!-- INCISO B: Elementos que Intervienen en un Algoritmo de Busqueda -->
+      <div class="ml-comparison-grid">
+        <div class="ml-comparison-card traditional">
+          <div class="comparison-tag">Elementos Formales del Problema</div>
+          <h3 class="comparison-title">Elementos que Intervienen en un Algoritmo de Busqueda</h3>
+          <div class="math-code-box search-tuple-box">
+            P = &langle; S, s<sub>0</sub>, A(s), Result(s, a), GoalTest(s), c(s, a, s') &rangle;
+          </div>
+          <div class="search-formal-list">
+            <div class="detail-row">
+              <span class="detail-label">1. Espacio de estados (S) y 2. Estado inicial (s<sub>0</sub>):</span>
+              <span class="detail-val">Conjunto de todas las configuraciones validas posibles del entorno y el punto de partida exacto desde donde inicia la busqueda el agente.</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">3. Acciones A(s) y 4. Modelo de Transicion Result(s, a):</span>
+              <span class="detail-val">Conjunto de operadores aplicables en un estado s y la funcion formal que devuelve el estado sucesor s' resultante tras ejecutar una accion.</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">5. Prueba de Meta GoalTest(s) y 6. Costo de Paso c(s, a, s'):</span>
+              <span class="detail-val">Condicion booleana que verifica si un estado es solucion y el valor numerico (distancia, tiempo o recursos) acumulado en el costo de ruta g(n).</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ml-comparison-card learning">
+          <div class="comparison-tag accent">Estructuras Operativas y Evaluacion</div>
+          <h3 class="comparison-title">Estructuras de Control y Criterios de Desempeno</h3>
+          <div class="paradigm-pipeline">
+            <span class="pipeline-node">b: Factor de ramificacion</span>
+            <span class="pipeline-plus">&bull;</span>
+            <span class="pipeline-node">d: Profundidad optima</span>
+            <span class="pipeline-plus">&bull;</span>
+            <span class="pipeline-result accent">m: Profundidad maxima</span>
+          </div>
+          <div class="search-formal-list">
+            <div class="detail-row">
+              <span class="detail-label">7. Frontera (Lista Abierta) y Conjunto Explorado (Lista Cerrada):</span>
+              <span class="detail-val">Estructuras de datos (colas FIFO, pilas LIFO o colas de prioridad) que gestionan los nodos pendientes de expansion y evitan bucles infinitos.</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Completitud y Optimalidad:</span>
+              <span class="detail-val">Garantia de hallar una solucion si existe (Completitud) y certeza de que la solucion encontrada posee el menor costo acumulado g(n) posible (Optimalidad).</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Complejidad Temporal y Espacial:</span>
+              <span class="detail-val">Numero total de nodos generados durante el proceso (tiempo) y cantidad maxima de nodos almacenados simultaneamente en memoria RAM (espacio).</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INCISO C: Ejemplo de un Algoritmo de Busqueda Identificando sus Elementos -->
+      <div class="editorial-divider">
+        <h2 class="subheading-editorial">Ejemplo de un Algoritmo de Busqueda Identificando sus Elementos</h2>
+        <span class="divider-line"></span>
+      </div>
+
+      <article class="classification-card search-example-card">
+        <div class="classification-text-col">
+          <div class="classification-badge ani">Caso Practico Desglosado &bull; Algoritmo A* en Navegacion Vial</div>
+          <h2 class="classification-title">Problema: Calculo de Ruta Optima entre Puebla y Ciudad de Mexico</h2>
+          <div class="classification-subtitle">Identificacion explicita de cada elemento formal del algoritmo durante su ejecucion</div>
+          <p class="classification-desc">
+            Para ilustrar como operan e interactuan todos los elementos de un algoritmo de busqueda en un caso real, considerese un agente de navegacion GPS que debe determinar la ruta de menor costo desde la ciudad de <strong>Puebla</strong> hasta la <strong>Ciudad de Mexico</strong> empleando el algoritmo informado <strong>A*</strong>, cuya funcion de evaluacion es <code>f(n) = g(n) + h(n)</code>.
+          </p>
+
+          <div class="search-elements-example-grid">
+            <div class="case-study-box">
+              <div class="case-study-badge">1. Espacio de Estados (S)</div>
+              <p class="case-study-text">
+                El grafo completo conformado por todas las ciudades, intersecciones y casetas conectadas por la red carretera de la region central: <code>S = {Puebla, Cholula, Huejotzingo, San Martin Texmelucan, Atlixco, Rio Frio, Chalco, Cuautla, CDMX}</code>.
+              </p>
+            </div>
+
+            <div class="case-study-box">
+              <div class="case-study-badge">2. Estado Inicial (s<sub>0</sub>)</div>
+              <p class="case-study-text">
+                El nodo raiz o punto de origen donde se encuentra fisicamente el vehiculo al iniciar el calculo de busqueda: <code>s<sub>0</sub> = Puebla</code>, con un costo acumulado inicial de <code>g(s<sub>0</sub>) = 0 km</code>.
+              </p>
+            </div>
+
+            <div class="case-study-box">
+              <div class="case-study-badge">3. Acciones Posibles A(s)</div>
+              <p class="case-study-text">
+                Las carreteras salientes desde el estado actual. Estando en <code>s = Puebla</code>, el conjunto de acciones validas es: <code>A(Puebla) = {Tomar_Autopista_150D_Texmelucan, Tomar_Federal_Cholula, Tomar_Via_Atlixcayotl}</code>.
+              </p>
+            </div>
+
+            <div class="case-study-box">
+              <div class="case-study-badge">4. Modelo de Transicion Result(s, a)</div>
+              <p class="case-study-text">
+                Define el nodo exacto al que llega el agente tras aplicar una accion especifica: <code>Result(Puebla, Tomar_Autopista_150D_Texmelucan) = San Martin Texmelucan</code>.
+              </p>
+            </div>
+
+            <div class="case-study-box">
+              <div class="case-study-badge">5. Prueba de Meta GoalTest(s)</div>
+              <p class="case-study-text">
+                Funcion booleana evaluada al extraer un nodo de la frontera: <code>GoalTest(s) &equiv; (s == Ciudad de Mexico)</code>. Si devuelve <code>True</code>, el algoritmo detiene la busqueda y reconstruye la ruta.
+              </p>
+            </div>
+
+            <div class="case-study-box">
+              <div class="case-study-badge">6. Costo de Paso c(s, a, s') y Heuristica h(n)</div>
+              <p class="case-study-text">
+                <strong>Costo real g(n):</strong> Kilometros recorridos por carretera (ej. <code>c(Puebla, Autopista, Texmelucan) = 38 km</code>).<br>
+                <strong>Heuristica h(n):</strong> Distancia euclidiana en linea recta desde el nodo actual <code>n</code> hasta la CDMX (ej. <code>h(Texmelucan) = 78 km</code>).
+              </p>
+            </div>
+          </div>
+
+          <div class="case-study-highlight">
+            <strong>7. Ejecucion en la Frontera y Camino Solucion Obtenido:</strong> El algoritmo inserta <code>Puebla</code> en la cola de prioridad, expande sus sucesores calculando <code>f(n) = g(n) + h(n)</code> y descarta desvos mas costosos (como ir por Cuautla, cuyo valor <code>f(n) = 195 km</code> supera al de Texmelucan con <code>f(n) = 38 + 78 = 116 km</code>). Finalmente, alcanza la meta y devuelve la secuencia optima: <code>[Puebla &rarr; San Martin Texmelucan (38 km) &rarr; Rio Frio (65 km) &rarr; Chalco (98 km) &rarr; Ciudad de Mexico (132 km)]</code>.
+          </div>
+        </div>
+      </article>
+
+      <!-- INCISOS D y E: Clasificacion de Algoritmos de Busqueda e Infografia -->
+      <div class="editorial-divider">
+        <h2 class="subheading-editorial">Clasificacion de Algoritmos de Busqueda e Infografia Oficial</h2>
+        <span class="divider-line"></span>
+      </div>
+
+      <div class="search-main-layout">
+        <!-- Columna Izquierda: Infografia Oficial Ampliable (Inciso E) -->
+        <div class="infographic-preview-card">
+          <div class="infographic-header">
+            <h2 class="infographic-title">Infografia Oficial: Clasificacion de Busqueda</h2>
+            <button class="btn-expand-lightbox" data-img="/static/images/algoritmos_busqueda.png" data-alt="Infografia: Clasificacion de Algoritmos de Busqueda en Inteligencia Artificial">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+              Ver en Alta Resolucion
+            </button>
+          </div>
+          <div class="infographic-image-wrap zoomable-trigger" data-img="/static/images/algoritmos_busqueda.png" data-alt="Infografia: Clasificacion de Algoritmos de Busqueda en Inteligencia Artificial">
+            <img src="/static/images/algoritmos_busqueda.png" alt="Infografia: Clasificacion de Algoritmos de Busqueda en Inteligencia Artificial" class="infographic-img" loading="lazy">
+            <div class="image-zoom-overlay">
+              <span>Clic para ampliar infografia</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna Derecha: Cuadricula de los 4 Paradigmas (Inciso D) -->
+        <div class="search-paradigms-grid">
+
+          <!-- 1. Busqueda Ciega (No Informada) -->
+          <article class="ml-paradigm-card">
+            <div class="paradigm-card-top">
+              <span class="paradigm-type-pill unsupervised">1. Busqueda Ciega (No Informada)</span>
+              <span class="paradigm-math-tag">O(b<sup>d</sup>) / O(bm)</span>
+            </div>
+            <h3 class="paradigm-card-title">Exploracion Sistematica sin Heuristica</h3>
+            <p class="paradigm-card-summary">
+              Explora el espacio de estados sin ningun conocimiento extra sobre que tan cerca esta la meta, guiandose unicamente por la topologia formal del problema.
+            </p>
+            <div class="paradigm-details">
+              <div class="detail-row">
+                <span class="detail-label">Algoritmos Clave:</span>
+                <span class="detail-val">1. Busqueda en anchura (BFS), 2. Busqueda en profundidad (DFS), 3. Busqueda de costo uniforme (UCS), 4. Busqueda de profundidad limitada (DLS), 5. Profundizacion iterativa (IDDFS) y 6. Busqueda bidireccional.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Caracteristicas Tecnicas:</span>
+                <span class="detail-val">Completa en la mayoria de los casos (DFS no siempre en espacios infinitos o con ciclos). Optima solo en BFS (con costos de paso iguales) y costo uniforme. Costo alto en tiempo y memoria para BFS/UCS O(b<sup>d</sup>), aunque lineal O(bm) en DFS/IDDFS.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Uso Principal:</span>
+                <span class="detail-val">Espacios de estados pequenos o problemas sin informacion heuristica adicional.</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- 2. Busqueda Heuristica (Informada) -->
+          <article class="ml-paradigm-card">
+            <div class="paradigm-card-top">
+              <span class="paradigm-type-pill supervised">2. Busqueda Heuristica (Informada)</span>
+              <span class="paradigm-math-tag">f(n) = g(n) + h(n)</span>
+            </div>
+            <h3 class="paradigm-card-title">Exploracion Guiada por Conocimiento</h3>
+            <p class="paradigm-card-summary">
+              Usa una funcion heuristica h(n) que estima la distancia o costo restante hacia la meta para guiar y priorizar la exploracion del espacio de busqueda.
+            </p>
+            <div class="paradigm-details">
+              <div class="detail-row">
+                <span class="detail-label">Algoritmos Clave:</span>
+                <span class="detail-val">1. Busqueda voraz (primero el mejor), 2. Algoritmo A* (combina f(n) = g(n) + h(n)), 3. A* ponderado, 4. IDA* (A* con profundizacion iterativa), 5. RBFS (busqueda recursiva del mejor primero) y 6. SMA* (A* con memoria limitada).</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Caracteristicas Tecnicas:</span>
+                <span class="detail-val">A* es completo y optimo si la heuristica es <strong>admisible</strong> (en arboles, 0 &le; h(n) &le; h*(n)) y <strong>consistente</strong> (en grafos, h(n) &le; c(n, a, n') + h(n')). Mucho mas eficiente que la busqueda ciega; su calidad depende directamente de la precision de la heuristica.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Uso Principal:</span>
+                <span class="detail-val">Planificacion de rutas, mapas GPS, resolucion de puzzles y pathfinding en videojuegos.</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- 3. Busqueda Local -->
+          <article class="ml-paradigm-card">
+            <div class="paradigm-card-top">
+              <span class="paradigm-type-pill supervised">3. Busqueda Local</span>
+              <span class="paradigm-math-tag">P = e<sup>&Delta;E / T</sup></span>
+            </div>
+            <h3 class="paradigm-card-title">Mejora Iterativa de Estados Vecinos</h3>
+            <p class="paradigm-card-summary">
+              Parte de una solucion inicial y la mejora moviendose hacia estados vecinos. No guarda el camino de transiciones recorrido, sino unicamente el estado actual.
+            </p>
+            <div class="paradigm-details">
+              <div class="detail-row">
+                <span class="detail-label">Algoritmos Clave:</span>
+                <span class="detail-val">1. Escalada (Hill Climbing): simple, maxima pendiente, estocastica y con reinicio aleatorio; 2. Temple simulado (Simulated Annealing); 3. Busqueda tabu; y 4. Busqueda en haz local (Local Beam).</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Caracteristicas Tecnicas:</span>
+                <span class="detail-val">Usa muy poca memoria O(1). Puede quedar atrapada en <strong>maximos locales, mesetas o crestas</strong> y no garantiza solucion optima global, aunque metaheuristicas como el Temple Simulado y la Busqueda Tabu incorporan mecanismos estocasticos y de memoria corta para escapar de ellos.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Uso Principal:</span>
+                <span class="detail-val">Optimizacion combinatoria, calendarizacion y problemas de satisfaccion de restricciones (CSP).</span>
+              </div>
+            </div>
+          </article>
+
+          <!-- 4. Busqueda Evolutiva -->
+          <article class="ml-paradigm-card">
+            <div class="paradigm-card-top">
+              <span class="paradigm-type-pill reinforcement">4. Busqueda Evolutiva</span>
+              <span class="paradigm-math-tag">Seleccion + Cruce + Mutacion</span>
+            </div>
+            <h3 class="paradigm-card-title">Evolucion Poblacional Bioinspirada</h3>
+            <p class="paradigm-card-summary">
+              Mantiene una poblacion de soluciones candidatas que evolucionan por seleccion natural y operadores geneticos a lo largo de generaciones sucesivas.
+            </p>
+            <div class="paradigm-details">
+              <div class="detail-row">
+                <span class="detail-label">Algoritmos y Operadores Clave:</span>
+                <span class="detail-val">1. Algoritmos geneticos, 2. Estrategias evolutivas, 3. Programacion genetica, 4. Evolucion diferencial y 5. Inteligencia de enjambre (optimizacion por enjambre de particulas PSO y colonia de hormigas ACO). Operadores: <strong>Poblacion, Funcion de aptitud, Seleccion, Cruce y Mutacion</strong>.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Caracteristicas Tecnicas:</span>
+                <span class="detail-val">Explora muchas regiones del espacio de busqueda al mismo tiempo y evita mejor los optimos locales. Entrega un resultado aproximado de alta calidad, sin garantia formal de optimalidad exacta.</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Uso Principal:</span>
+                <span class="detail-val">Diseno industrial y estructural, aprendizaje automatico (ajuste de hiperparametros / neuroevolucion) y optimizacion compleja.</span>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+
+      <!-- Tabla Comparativa de Rendimiento -->
+      <div class="editorial-divider">
+        <h2 class="subheading-editorial">Tabla Comparativa de la Clasificacion de Algoritmos de Busqueda</h2>
+        <span class="divider-line"></span>
+      </div>
+
+      <div class="essay-table-container search-comparison-table-wrap">
+        <div class="essay-table-title">Comparativa tecnica de criterios operativos entre Busqueda Ciega, Heuristica, Local y Evolutiva</div>
+        <table class="essay-data-table search-data-table">
+          <thead>
+            <tr>
+              <th scope="col">Criterio</th>
+              <th scope="col">Ciega</th>
+              <th scope="col">Heuristica</th>
+              <th scope="col">Local</th>
+              <th scope="col">Evolutiva</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Usa conocimiento del problema</strong></td>
+              <td>No</td>
+              <td>Si (heuristica h)</td>
+              <td>Si (funcion objetivo)</td>
+              <td>Si (aptitud / fitness)</td>
+            </tr>
+            <tr>
+              <td><strong>Guarda el camino</strong></td>
+              <td>Si</td>
+              <td>Si</td>
+              <td>No</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td><strong>Garantiza optimo</strong></td>
+              <td>Algunas (BFS costos iguales, UCS)</td>
+              <td>A* con heuristica admisible / consistente</td>
+              <td>No</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td><strong>Consumo de memoria</strong></td>
+              <td>Alto (BFS/UCS) / Bajo (DFS/IDDFS)</td>
+              <td>Medio a alto</td>
+              <td>Muy bajo</td>
+              <td>Medio</td>
+            </tr>
+            <tr class="table-highlight-row">
+              <td><strong>Ejemplo estrella</strong></td>
+              <td><strong>BFS</strong></td>
+              <td><strong>A*</strong></td>
+              <td><strong>Hill Climbing</strong></td>
+              <td><strong>Algoritmo genetico</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Referencias Bibliograficas en Formato APA 7 -->
+      <div class="editorial-divider">
+        <h2 class="subheading-editorial">Referencias Bibliograficas (Formato APA 7.a Edicion)</h2>
+        <span class="divider-line"></span>
+      </div>
+
+      <div class="search-references-card">
+        <ul class="essay-ref-list">
+          <li class="essay-ref-item">
+            Dorigo, M., &amp; Stützle, T. (2004). <em>Ant colony optimization</em>. MIT Press.
+          </li>
+          <li class="essay-ref-item">
+            Glover, F., &amp; Laguna, M. (1997). <em>Tabu search</em>. Springer Science &amp; Business Media.
+          </li>
+          <li class="essay-ref-item">
+            Goldberg, D. E. (1989). <em>Genetic algorithms in search, optimization, and machine learning</em>. Addison-Wesley.
+          </li>
+          <li class="essay-ref-item">
+            Kirkpatrick, S., Gelatt, C. D., &amp; Vecchi, M. P. (1983). Optimization by simulated annealing. <em>Science</em>, 220(4598), 671-680. <a href="https://doi.org/10.1126/science.220.4598.671" target="_blank" rel="noopener noreferrer">https://doi.org/10.1126/science.220.4598.671</a>
+          </li>
+          <li class="essay-ref-item">
+            Russell, S., &amp; Norvig, P. (2021). <em>Inteligencia artificial: Un enfoque moderno</em> (4.a ed.). Pearson Educacion.
+          </li>
+          <li class="essay-ref-item">
+            Skiena, S. S. (2020). <em>The algorithm design manual</em> (3.a ed.). Springer. <a href="https://doi.org/10.1007/978-3-030-54256-6" target="_blank" rel="noopener noreferrer">https://doi.org/10.1007/978-3-030-54256-6</a>
+          </li>
+          <li class="essay-ref-item">
+            Wolpert, D. H., &amp; Macready, W. G. (1997). No free lunch theorems for optimization. <em>IEEE Transactions on Evolutionary Computation</em>, 1(1), 67-82. <a href="https://doi.org/10.1109/4235.585893" target="_blank" rel="noopener noreferrer">https://doi.org/10.1109/4235.585893</a>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SECCION 3: MACHINE LEARNING (FUNDAMENTOS, PARADIGMAS Y SIMULADOR)
+         ==================================================================== -->

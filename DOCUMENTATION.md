@@ -6,25 +6,31 @@ Este documento describe la arquitectura, las decisiones de diseno, la estructura
 
 ## 1. Resumen General del Sistema
 
-El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizando el microframework **Flask** y una base de datos relacional **SQLite**. Integra cinco modulos centrales articulados mediante una barra de navegacion fija:
+El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizando el microframework **Flask** y una base de datos relacional **SQLite**. Integra seis modulos centrales articulados mediante una barra de navegacion fija:
 
 1. **Antecedentes Historicos**: Cronologia analitica de 10 hitos seminales (desde la *Ars Magna* de Ramon Llull en 1305 hasta la Conferencia de Dartmouth en 1956) acompasada por su infografia de alta resolucion ampliable mediante visor Lightbox.
 2. **Clasificacion Clasica de la IA**: Explicacion teorica de la taxonomia tripartita (**ANI**, **AGI**, **ASI**) complementada con estudios de caso reales y prospectivos acompanados de sus respectivas infografias tecnicas:
    - **ANI (Inteligencia Artificial Estrecha)**: Caso de estudio real *AlphaFold y el plegamiento de proteinas* (Premio Nobel de Quimica 2024).
    - **AGI (Inteligencia Artificial General)**: Caso de estudio proyectado *Coordinacion global ante una pandemia emergente*.
    - **ASI (Superinteligencia Artificial)**: Caso de estudio proyectado *Aceleracion de la solucion al cambio climatico* y dilemas de alineacion.
-3. **Machine Learning (Aprendizaje Automatico)**:
+3. **Algoritmos de Busqueda y Optimizacion**:
+   - Marco conceptual y formal: tupla formal del problema de busqueda P = &lang; S, s0, A(s), Result(s, a), GoalTest(s), c(s, a, s') &rang;.
+   - Ejemplo formal aplicado: resolucion de ruta optima Puebla &rarr; Ciudad de Mexico con el algoritmo A* guiado por funcion f(n) = g(n) + h(n).
+   - Infografia oficial dedicada (`algoritmos_busqueda.png`) con visor Lightbox en alta definicion.
+   - Clasificacion exhaustiva en 4 paradigmas: *Busqueda Ciega (No Informada)*, *Busqueda Heuristica (Informada)* con criterios de admisibilidad y consistencia, *Busqueda Local* con memoria O(1), y *Busqueda Evolutiva* con operadores geneticos.
+   - Tabla comparativa de criterios operativos y referencias bibliograficas canonicas (Russell & Norvig, Nilsson, Hart et al., Goldberg).
+4. **Machine Learning (Aprendizaje Automatico)**:
    - Marco teorico formal del aprendizaje inductivo a partir de datos frente a la programacion basada en reglas fijas.
    - Desglose de los tres grandes paradigmas: *Supervisado*, *No Supervisado* y *Por Refuerzo*.
    - Ciclo de vida / Pipeline integral de 5 fases (Recoleccion, Feature Engineering, Entrenamiento, Evaluacion, Inferencia).
    - **Caso de Estudio y Simulador de Inferencia en Tiempo Real**: Demostracion interactiva de clasificacion binaria para deteccion de fraude bancario mediante el calculo en vivo del vector de caracteristicas, el logit ponderado y la funcion logistica (sigmoide).
-4. **Glosario de Conceptos Clave**: Repositorio relacional de 20 conceptos tecnicos fundamentales con busqueda directa en tiempo real, perspectiva dinamica (3D Tilt) y modal para fichas tecnicas profundas.
-5. **Ensayo Academico ("Etica y aspectos sociales de la inteligencia artificial")**:
+5. **Glosario de Conceptos Clave**: Repositorio relacional de 20 conceptos tecnicos fundamentales con busqueda directa en tiempo real, perspectiva dinamica (3D Tilt) y modal para fichas tecnicas profundas.
+6. **Ensayo Academico ("Etica y aspectos sociales de la inteligencia artificial")**:
    - Ensayo academico integro de Barranco Cervantes Jesus Manuel (Universidad Tecnologica de Puebla, Grupo 7°C, Septiembre 2026).
-   - Indice interactivo lateral con navegacion rapida por capitulos.
+   - Indice interactivo lateral con navegacion rapida por capitulos y resaltado activo.
    - Tesis de las tres condiciones inseparables (finalidad legitima, evidencia verificable y mecanismos de reparacion).
    - 14 capitulos tematicos analiticos, tabla comparativa de dilema de asignacion de becas (Grupos A y B) y bibliografia academica completa en formato APA.
-6. **Buscador Global Inteligente**: Ubicado de manera permanente en la barra superior; al escribir un termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
+7. **Buscador Global Inteligente**: Ubicado de manera permanente en la barra superior; al escribir un termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
 
 ---
 
@@ -36,7 +42,14 @@ El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizan
   - Almacena de forma relacional y estructurada los 20 conceptos tecnicos con indices en `category` y `slug`.
   - Mecanismo de **auto-inicializacion y siembra automatica** (`ensure_database_ready()` en `app.py`), permitiendo despliegues limpios en servidores en la nube sin requerir comandos de terminal manuales posteriores.
 
-### 2.2 Gestion de Activos e Infografias
+### 2.2 Arquitectura Modular de Plantillas (Jinja2)
+- Para facilitar el mantenimiento y reducir la densidad de codigo de un archivo monolitico, la interfaz se estructura modularmente en:
+  - `templates/components/`: Componentes transversales reutilizables (`navbar.html`, `footer.html`, `modal_concept.html`, `modal_lightbox.html`).
+  - `templates/sections/`: Secciones de contenido autocontenidas (`antecedentes.html`, `clasificacion.html`, `busqueda.html`, `machine_learning.html`, `glosario.html`, `ensayo.html`).
+  - `templates/index.html`: Plantilla raiz ensambladora mediante directivas de inclusion `{% include %}`.
+  - Copia de respaldo historica e inalterada conservada como `templates/index.backup.html`.
+
+### 2.3 Gestion de Activos e Infografias
 - **Ruta física**: `static/images/`
 - **Ruta pública**: `/static/images/<nombre_archivo>`
 - **Infografias incorporadas**:
