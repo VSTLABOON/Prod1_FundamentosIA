@@ -77,13 +77,18 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ==========================================================================
      2. CONTROLADOR DE NAVEGACION POR SECCIONES
      ========================================================================== */
-  function switchSection(targetSectionId) {
+  function switchSection(targetSectionId, scrollTargetId = null) {
     state.currentSection = targetSectionId;
 
     // Actualizar botones de navegacion
     dom.navLinks.forEach(link => {
       const isTarget = link.getAttribute("data-target") === targetSectionId;
-      link.classList.toggle("active", isTarget);
+      const linkScroll = link.getAttribute("data-scroll");
+      if (scrollTargetId) {
+        link.classList.toggle("active", isTarget && linkScroll === scrollTargetId);
+      } else {
+        link.classList.toggle("active", isTarget && !linkScroll);
+      }
     });
 
     // Actualizar visibilidad de secciones
@@ -96,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const hashMap = {
       sectionAntecedentes: "antecedentes",
       sectionClasificacion: "clasificacion",
-      sectionBusqueda: "busqueda",
+      sectionBusqueda: scrollTargetId ? "chatbot-ml" : "busqueda",
       sectionMachineLearning: "machine-learning",
       sectionGlosario: "glosario",
       sectionEnsayo: "ensayo"
@@ -108,19 +113,33 @@ document.addEventListener("DOMContentLoaded", () => {
     if (targetSectionId === "sectionGlosario") {
       renderGrid();
     }
+
+    if (scrollTargetId) {
+      setTimeout(() => {
+        const anchorEl = document.getElementById(scrollTargetId);
+        if (anchorEl) {
+          anchorEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 60);
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   function initNavigation() {
     dom.navLinks.forEach(btn => {
       btn.addEventListener("click", () => {
         const target = btn.getAttribute("data-target");
-        switchSection(target);
+        const scrollId = btn.getAttribute("data-scroll");
+        switchSection(target, scrollId || null);
       });
     });
 
     const hash = window.location.hash.toLowerCase();
     if (hash === "#clasificacion") {
       switchSection("sectionClasificacion");
+    } else if (hash === "#chatbot-ml" || hash === "#chatbot") {
+      switchSection("sectionBusqueda", "chatbotMLAnchor");
     } else if (hash === "#busqueda" || hash === "#algoritmos-busqueda") {
       switchSection("sectionBusqueda");
     } else if (hash === "#machine-learning" || hash === "#ml") {
@@ -640,12 +659,291 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ==========================================================================
-     11. INICIALIZACION
+     11. CHATBOT CLASIFICADOR Y ARGUMENTADOR (ML FOR KIDS - 4 ETIQUETAS)
+     ========================================================================== */
+  function initMLForKidsChatbot() {
+    const form = document.getElementById("chatbotForm");
+    const inputText = document.getElementById("chatbotInputText");
+    const messagesViewport = document.getElementById("chatbotMessagesViewport");
+    const btnClearChat = document.getElementById("btnClearChat");
+    const presetChips = document.querySelectorAll(".chatbot-preset-chip");
+
+    const btnToggleApiKeyPanel = document.getElementById("btnToggleApiKeyPanel");
+    const apiKeyPanel = document.getElementById("chatbotApiKeyPanel");
+    const apiKeyInput = document.getElementById("chatbotApiKeyInput");
+    const btnSaveApiKey = document.getElementById("btnSaveApiKey");
+    const btnClearApiKey = document.getElementById("btnClearApiKey");
+    const engineStatusBadge = document.getElementById("chatbotEngineStatusBadge");
+    const apiKeyFeedback = document.getElementById("chatbotApiKeyFeedback");
+
+    if (!form || !inputText || !messagesViewport) return;
+
+    const savedKey = localStorage.getItem("mlforkids_api_key") || "";
+    if (apiKeyInput) apiKeyInput.value = savedKey;
+    updateEngineBadge(savedKey);
+
+    function updateEngineBadge(key, connectedOnline = null) {
+      if (!engineStatusBadge) return;
+      if (connectedOnline === true) {
+        engineStatusBadge.textContent = "Conectado a ML for Kids";
+      } else if (key && key.trim().length > 0) {
+        engineStatusBadge.textContent = "API Key Configurada";
+      } else {
+        engineStatusBadge.textContent = "Respaldo Local Activo";
+      }
+    }
+
+    if (btnToggleApiKeyPanel && apiKeyPanel) {
+      btnToggleApiKeyPanel.addEventListener("click", () => {
+        const isHidden = apiKeyPanel.hasAttribute("hidden");
+        if (isHidden) {
+          apiKeyPanel.removeAttribute("hidden");
+        } else {
+          apiKeyPanel.setAttribute("hidden", "");
+        }
+      });
+    }
+
+    if (btnSaveApiKey && apiKeyInput) {
+      btnSaveApiKey.addEventListener("click", async () => {
+        const rawVal = apiKeyInput.value.trim();
+        if (apiKeyFeedback) {
+          apiKeyFeedback.removeAttribute("hidden");
+          apiKeyFeedback.textContent = "Verificando conexion con Machine Learning for Kids...";
+        }
+        try {
+          const resp = await fetch("/api/chatbot/verify-key", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ api_key: rawVal })
+          });
+          const json = await resp.json();
+          if (json.status === "success" && json.data) {
+            const cleanKey = json.data.key || "";
+            apiKeyInput.value = cleanKey;
+            if (cleanKey) {
+              localStorage.setItem("mlforkids_api_key", cleanKey);
+            } else {
+              localStorage.removeItem("mlforkids_api_key");
+            }
+            updateEngineBadge(cleanKey, json.data.connected);
+            if (apiKeyFeedback) {
+              apiKeyFeedback.textContent = json.data.message;
+            }
+          }
+        } catch (err) {
+          localStorage.setItem("mlforkids_api_key", rawVal);
+          updateEngineBadge(rawVal);
+          if (apiKeyFeedback) {
+            apiKeyFeedback.textContent = "Llave guardada localmente.";
+          }
+        }
+      });
+    }
+
+    if (btnClearApiKey && apiKeyInput) {
+      btnClearApiKey.addEventListener("click", () => {
+        apiKeyInput.value = "";
+        localStorage.removeItem("mlforkids_api_key");
+        updateEngineBadge("", false);
+        if (apiKeyFeedback) {
+          apiKeyFeedback.removeAttribute("hidden");
+          apiKeyFeedback.textContent = "Modo Sin Cuenta activo: el modelo entrenado integrado esta listo.";
+        }
+      });
+    }
+
+    const trainLabelSelect = document.getElementById("chatbotTrainLabelSelect");
+    const trainTextInput = document.getElementById("chatbotTrainTextInput");
+    const btnAddTrainingExample = document.getElementById("btnAddTrainingExample");
+
+    if (btnAddTrainingExample && trainLabelSelect && trainTextInput) {
+      btnAddTrainingExample.addEventListener("click", async () => {
+        const lbl = trainLabelSelect.value;
+        const txt = trainTextInput.value.trim();
+        if (!txt) return;
+        try {
+          const resp = await fetch("/api/chatbot/train", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ label: lbl, text: txt })
+          });
+          const json = await resp.json();
+          if (apiKeyFeedback) {
+            apiKeyFeedback.removeAttribute("hidden");
+            apiKeyFeedback.textContent = json.message || "Ejemplo entrenado.";
+          }
+          if (json.status === "success") {
+            trainTextInput.value = "";
+          }
+        } catch (err) {
+          if (apiKeyFeedback) {
+            apiKeyFeedback.removeAttribute("hidden");
+            apiKeyFeedback.textContent = "Error al entrenar el ejemplo.";
+          }
+        }
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function formatRichText(text) {
+      let safe = escapeHtml(text || "");
+      safe = safe.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+      safe = safe.replace(/\*(.+?)\*/g, "<em>$1</em>");
+      safe = safe.replace(/`(.+?)`/g, "<code>$1</code>");
+      return safe;
+    }
+
+    function appendUserMessage(text) {
+      const row = document.createElement("div");
+      row.className = "chat-msg-row user";
+      row.innerHTML = `
+        <div class="chat-msg-bubble">
+          <span class="chat-user-label">Consulta ingresada</span>
+          <p class="chat-user-text">${escapeHtml(text)}</p>
+        </div>
+      `;
+      messagesViewport.appendChild(row);
+      messagesViewport.scrollTop = messagesViewport.scrollHeight;
+    }
+
+    function appendBotVerdict(data) {
+      const row = document.createElement("div");
+      row.className = "chat-msg-row bot";
+
+      const label = data.label || "Desconocido";
+      const labelKey = label.toLowerCase();
+      const arg = data.argument || {};
+      const mainReason = arg.main_reason || data.response || "";
+      const multiAnalysis = arg.multi_mention_analysis || null;
+      const foundation = arg.foundation || "";
+
+      const multiBlockHtml = multiAnalysis
+        ? `<div class="chat-disambiguation-box">
+             <strong>Resolucion de menciones multiples en el texto:</strong><br>
+             ${formatRichText(multiAnalysis)}
+           </div>`
+        : "";
+
+      const foundationHtml = foundation
+        ? `<div class="chat-foundation-box">
+             <strong>Analisis especifico (${escapeHtml(arg.title || label)}):</strong> ${formatRichText(foundation)}
+           </div>`
+        : "";
+
+      row.innerHTML = `
+        <div class="chat-msg-bubble">
+          <div class="chat-verdict-header">
+            <span class="chat-author-label">Veredicto del Modelo ML for Kids</span>
+            <span class="chat-verdict-pill etiqueta-${escapeHtml(labelKey)}">Etiqueta: ${escapeHtml(label)}</span>
+          </div>
+          <div class="chat-argument-body">
+            <div>
+              <div class="chat-argument-section-label">Argumento de seleccion</div>
+              <p class="chat-argument-paragraph">${formatRichText(mainReason)}</p>
+            </div>
+            ${multiBlockHtml}
+            ${foundationHtml}
+          </div>
+        </div>
+      `;
+
+      messagesViewport.appendChild(row);
+      messagesViewport.scrollTop = messagesViewport.scrollHeight;
+    }
+
+    async function submitMessage(rawText) {
+      const text = (rawText || "").trim();
+      if (!text) return;
+
+      appendUserMessage(text);
+      inputText.value = "";
+
+      const apiKey = localStorage.getItem("mlforkids_api_key") || "";
+      try {
+        const response = await fetch("/api/chatbot/classify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text, api_key: apiKey })
+        });
+        const json = await response.json();
+        if (json.status === "success" && json.data) {
+          appendBotVerdict(json.data);
+        } else {
+          appendBotVerdict({
+            label: "Desconocido",
+            argument: {
+              main_reason: "No fue posible procesar la solicitud en este momento."
+            }
+          });
+        }
+      } catch (err) {
+        appendBotVerdict({
+          label: "Desconocido",
+          argument: {
+            main_reason: "Error de comunicacion con el servidor de clasificacion."
+          }
+        });
+      }
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitMessage(inputText.value);
+    });
+
+    inputText.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        submitMessage(inputText.value);
+      }
+    });
+
+    presetChips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        const promptText = chip.getAttribute("data-prompt");
+        if (promptText) {
+          submitMessage(promptText);
+        }
+      });
+    });
+
+    if (btnClearChat) {
+      btnClearChat.addEventListener("click", () => {
+        messagesViewport.innerHTML = `
+          <div class="chat-msg-row bot">
+            <div class="chat-msg-bubble">
+              <div class="chat-verdict-header">
+                <span class="chat-author-label">Asistente ML for Kids</span>
+                <span class="chat-verdict-pill etiqueta-heuristica">Listo para clasificar</span>
+              </div>
+              <div class="chat-argument-body">
+                <p class="chat-argument-paragraph">
+                  Conversacion reiniciada. Escribe cualquier enunciado sobre algoritmos de busqueda o selecciona un ejemplo superior para obtener la etiqueta seleccionada y su argumento.
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+  }
+
+  /* ==========================================================================
+     12. INICIALIZACION
      ========================================================================== */
   initTheme();
   initNavigation();
   initLightbox();
   initMachineLearningSimulator();
   initEssayToc();
+  initMLForKidsChatbot();
   loadConcepts();
 });

@@ -37,6 +37,22 @@
   .ml-simulator-panel {
     grid-template-columns: 1fr;
   }
+  .chatbot-body-grid {
+    grid-template-columns: 1fr;
+  }
+  .chatbot-ml-wrapper .simulator-top-banner {
+    flex-direction: column;
+  }
+  .chatbot-ml-wrapper .sim-banner-formula {
+    width: 100%;
+    text-align: left;
+  }
+  .chatbot-top-actions {
+    justify-content: flex-start;
+  }
+  .chatbot-corpus-grid {
+    grid-template-columns: 1fr;
+  }
   .essay-container-layout {
     grid-template-columns: 1fr;
   }
@@ -149,6 +165,23 @@
   }
   .search-references-card {
     padding: 18px 14px;
+  }
+  .chatbot-editorial-card {
+    padding: 20px 16px;
+  }
+  .chatbot-header {
+    flex-direction: column;
+  }
+  .chatbot-input-row {
+    flex-direction: column;
+  }
+  .chatbot-submit-col {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  .chat-msg-bubble,
+  .chat-msg-row.user .chat-msg-bubble {
+    max-width: 96%;
   }
 }
 

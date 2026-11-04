@@ -1,0 +1,118 @@
+<!-- COMPONENTE: CHATBOT CLASIFICADOR Y ARGUMENTADOR (ML FOR KIDS - 4 ETIQUETAS) -->
+<div class="editorial-divider" id="chatbotMLAnchor">
+  <h2 class="subheading-editorial">Chatbot Clasificador de Algoritmos de Busqueda</h2>
+  <span class="divider-line"></span>
+</div>
+
+<div class="chatbot-editorial-card" id="chatbotMLContainer">
+  <!-- Cabecera Editorial Limpia -->
+  <header class="chatbot-header">
+    <div class="chatbot-header-info">
+      <div class="chatbot-label-tags">
+        <span class="chatbot-tag-item tag-heuristica">Heuristica</span>
+        <span class="chatbot-tag-item tag-ciega">Ciega</span>
+        <span class="chatbot-tag-item tag-evolutiva">Evolutiva</span>
+        <span class="chatbot-tag-item tag-desconocido">Desconocido</span>
+      </div>
+      <h3 class="chatbot-title">Asistente de Clasificacion y Argumentacion (ML for Kids)</h3>
+      <p class="chatbot-subtitle">
+        Describe un problema, un algoritmo o una comparacion entre paradigmas. El asistente identificara a cual de las cuatro etiquetas corresponde y redactara el argumento de su veredicto, incluso si mencionas los tres algoritmos en un mismo texto.
+      </p>
+    </div>
+
+    <div class="chatbot-header-actions">
+      <button type="button" class="chatbot-config-trigger" id="btnToggleApiKeyPanel" title="Entrenar ejemplos o configurar modelo ML for Kids">
+        Configurar / Entrenar Modelo
+      </button>
+    </div>
+  </header>
+
+  <!-- Panel discreto de Entrenamiento Sin Cuenta y API Key (oculto por defecto) -->
+  <div class="chatbot-collapsible-panel" id="chatbotApiKeyPanel" hidden>
+    <div class="chatbot-panel-inner">
+      <div class="chatbot-panel-header">
+        <h4>Entrenamiento en Vivo (Modo Sin Cuenta) y Conexion ML for Kids</h4>
+        <span class="chatbot-panel-tag" id="chatbotEngineStatusBadge">Modo Sin Cuenta Activo</span>
+      </div>
+      <p class="chatbot-panel-desc">
+        <strong>1. Entrenar nuevo ejemplo (Sin cuenta):</strong> Agrega frases adicionales a cualquiera de las 4 cubetas para reentrenar el modelo al instante:
+      </p>
+      <div class="chatbot-apikey-row" style="margin-bottom: 14px;">
+        <select id="chatbotTrainLabelSelect" class="sim-select-input" style="max-width: 190px;" aria-label="Seleccionar etiqueta a entrenar">
+          <option value="Heuristica">Cubeta: Heuristica</option>
+          <option value="Ciega">Cubeta: Ciega</option>
+          <option value="Evolutiva">Cubeta: Evolutiva</option>
+          <option value="Desconocido">Cubeta: Desconocido</option>
+        </select>
+        <input type="text" id="chatbotTrainTextInput" class="chatbot-apikey-input" placeholder="Escribe un nuevo ejemplo para entrenar en esta etiqueta..." aria-label="Texto de ejemplo para entrenar">
+        <button type="button" class="chatbot-btn-primary" id="btnAddTrainingExample">Entrenar Ejemplo</button>
+      </div>
+
+      <p class="chatbot-panel-desc">
+        <strong>2. Conexion en la nube (Opcional con cuenta en ML for Kids):</strong> Si tienes una cuenta registrada en <code>machinelearningforkids.co.uk</code> con acceso a la pestaña <em>Make &rarr; Python</em>, pega aqui tu <code>API Key</code>:
+      </p>
+      <div class="chatbot-apikey-row">
+        <input type="text" id="chatbotApiKeyInput" class="chatbot-apikey-input" placeholder="Pegar API Key de Python (opcional si tienes cuenta en la nube)..." aria-label="API Key de Machine Learning for Kids">
+        <button type="button" class="chatbot-btn-secondary" id="btnSaveApiKey">Verificar API Key</button>
+        <button type="button" class="chatbot-btn-secondary" id="btnClearApiKey">Modo Sin Cuenta</button>
+      </div>
+      <div class="chatbot-panel-desc" id="chatbotApiKeyFeedback" style="margin-top: 8px; margin-bottom: 0;" hidden></div>
+    </div>
+  </div>
+
+  <!-- Sugerencias de prueba rapida -->
+  <div class="chatbot-presets-bar">
+    <span class="chatbot-presets-title">Ejemplos para probar (con los 3 algoritmos en el mismo texto):</span>
+    <div class="chatbot-presets-list">
+      <button type="button" class="chatbot-preset-chip" data-prompt="Aunque la busqueda ciega como BFS explora sin informacion y la busqueda evolutiva usa algoritmos geneticos y mutacion, yo necesito encontrar la ruta mas corta en un mapa GPS usando A* y una funcion heuristica h(n).">
+        Caso 1: Menciona los 3 (Enfoque en Heuristica)
+      </button>
+      <button type="button" class="chatbot-preset-chip" data-prompt="No quiero usar una funcion heuristica h(n) como en A* ni tampoco poblaciones con mutacion de busqueda evolutiva; prefiero recorrer el grafo por niveles con busqueda en anchura (BFS) de forma ciega.">
+        Caso 2: Menciona los 3 (Enfoque en Ciega)
+      </button>
+      <button type="button" class="chatbot-preset-chip" data-prompt="Entre la busqueda ciega, la busqueda heuristica y la busqueda evolutiva, ¿cual mantiene una poblacion de soluciones que evolucionan mediante seleccion natural, cruce y mutacion?">
+        Caso 3: Menciona los 3 (Enfoque en Evolutiva)
+      </button>
+      <button type="button" class="chatbot-preset-chip" data-prompt="La busqueda heuristica requiere una funcion h(n) y la busqueda evolutiva no guarda el camino de estados, por eso para este problema pequeno sin informacion adicional implementaremos busqueda ciega en profundidad (DFS).">
+        Caso 4: Descarte deductivo (3 mencionadas)
+      </button>
+      <button type="button" class="chatbot-preset-chip" data-prompt="Ayer fui al cine a ver una pelicula llamada evolucion a ciegas mientras cenaba pizza italiana y veia el partido de futbol.">
+        Caso 5: Fuera de dominio (Desconocido)
+      </button>
+    </div>
+  </div>
+
+  <!-- Ventana de Conversacion -->
+  <div class="chatbot-messages-viewport" id="chatbotMessagesViewport" aria-live="polite">
+    <div class="chat-msg-row bot">
+      <div class="chat-msg-bubble">
+        <div class="chat-verdict-header">
+          <span class="chat-author-label">Asistente ML for Kids</span>
+          <span class="chat-verdict-pill etiqueta-heuristica">Listo para clasificar</span>
+        </div>
+        <div class="chat-argument-body">
+          <p class="chat-argument-paragraph">
+            Escribe cualquier enunciado sobre algoritmos de busqueda o selecciona uno de los ejemplos superiores. Respondere indicando la <strong>etiqueta seleccionada</strong> y el <strong>argumento detallado</strong> de por que se tomo esa decision.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Entrada -->
+  <form class="chatbot-input-form" id="chatbotForm">
+    <div class="chatbot-input-row">
+      <textarea
+        id="chatbotInputText"
+        class="chatbot-textarea"
+        rows="2"
+        placeholder="Escribe aqui tu consulta o caso para clasificar y argumentar..."
+        aria-label="Mensaje para el chatbot clasificador"
+      ></textarea>
+      <div class="chatbot-submit-col">
+        <button type="submit" class="chatbot-btn-primary" id="btnSendChat">Clasificar y Argumentar</button>
+        <button type="button" class="chatbot-btn-clear" id="btnClearChat">Limpiar chat</button>
+      </div>
+    </div>
+  </form>
+</div>

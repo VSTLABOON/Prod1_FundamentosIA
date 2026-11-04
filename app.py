@@ -11,6 +11,7 @@ import os
 from flask import Flask, render_template, jsonify, request
 import database as db
 import seed_db
+import ml_chatbot
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
@@ -160,6 +161,79 @@ def api_get_quiz():
         "status": "success",
         "count": len(questions),
         "data": questions
+    })
+
+
+@app.route("/api/chatbot/classify", methods=["POST"])
+def api_chatbot_classify():
+    """
+    Endpoint REST para clasificar un mensaje mediante el modelo de ML for Kids
+    entrenado con las 4 etiquetas: Heuristica, Ciega, Evolutiva y Desconocido.
+    Incluye desambiguacion discursiva cuando se mencionan multiples algoritmos
+    en un mismo texto.
+    """
+    payload = request.get_json(silent=True) or {}
+    text = payload.get("text", "")
+    api_key = payload.get("api_key", "")
+
+    result = ml_chatbot.classify_message(text=text, api_key=api_key)
+    return jsonify({
+        "status": "success",
+        "data": result
+    })
+
+
+@app.route("/api/chatbot/verify-key", methods=["POST"])
+def api_chatbot_verify_key():
+    """
+    Endpoint REST para verificar y normalizar una API Key o URL de un proyecto
+    entrenado en Machine Learning for Kids (machinelearningforkids.co.uk).
+    """
+    payload = request.get_json(silent=True) or {}
+    raw_key = payload.get("api_key", "")
+    status_info = ml_chatbot.check_mlforkids_status(raw_key)
+    return jsonify({
+        "status": "success",
+        "data": status_info
+    })
+
+
+@app.route("/api/chatbot/training-data", methods=["GET"])
+def api_chatbot_training_data():
+    """
+    Endpoint REST que devuelve el corpus de entrenamiento de las 4 etiquetas
+    (Heuristica, Ciega, Evolutiva, Desconocido) para consulta o carga en ML for Kids.
+    """
+    return jsonify({
+        "status": "success",
+        "labels": list(ml_chatbot.LABELS),
+        "corpus": ml_chatbot.TRAINING_CORPUS
+    })
+
+
+@app.route("/api/chatbot/train", methods=["POST"])
+def api_chatbot_train():
+    """
+    Endpoint REST para agregar un nuevo ejemplo de entrenamiento a una de las
+    4 cubetas (Heuristica, Ciega, Evolutiva, Desconocido) y reentrenar en vivo
+    el modelo local, igual que en el modo sin cuenta de ML for Kids.
+    """
+    payload = request.get_json(silent=True) or {}
+    label = payload.get("label", "")
+    text = payload.get("text", "")
+    added = ml_chatbot.LOCAL_CLASSIFIER.add_example(label, text)
+    if not added:
+        return jsonify({
+            "status": "error",
+            "message": "Por favor ingresa un texto valido y selecciona una de las 4 etiquetas."
+        }), 400
+
+    canon = ml_chatbot.canonicalize_label(label)
+    return jsonify({
+        "status": "success",
+        "label": canon,
+        "total_in_bucket": len(ml_chatbot.TRAINING_CORPUS.get(canon, [])),
+        "message": f"Ejemplo agregado a la cubeta '{canon}' y modelo reentrenado exitosamente."
     })
 
 
