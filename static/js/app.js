@@ -84,10 +84,10 @@ document.addEventListener("DOMContentLoaded", () => {
     dom.navLinks.forEach(link => {
       const isTarget = link.getAttribute("data-target") === targetSectionId;
       const linkScroll = link.getAttribute("data-scroll");
-      if (scrollTargetId) {
-        link.classList.toggle("active", isTarget && linkScroll === scrollTargetId);
-      } else {
-        link.classList.toggle("active", isTarget && !linkScroll);
+      const isActive = scrollTargetId ? (isTarget && linkScroll === scrollTargetId) : (isTarget && !linkScroll);
+      link.classList.toggle("active", isActive);
+      if (isActive) {
+        link.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
       }
     });
 
