@@ -39,3 +39,9 @@ venv.bak/
 *.swp
 *.swo
 *~
+
+# Archives and compressed files
+*.zip
+*.tar.gz
+*.rar
+*.7z

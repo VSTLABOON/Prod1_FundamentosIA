@@ -20,6 +20,10 @@
   transition: box-shadow 0.25s ease, border-color 0.25s ease;
 }
 
+.classification-card > * {
+  min-width: 0;
+}
+
 .classification-card:hover {
   box-shadow: var(--shadow-hover);
   border-color: var(--gold-soft);
@@ -55,7 +59,7 @@
 }
 
 .classification-title {
-  font-size: 1.6rem;
+  font-size: clamp(1.3rem, 2.2vw, 1.6rem);
   color: var(--ink);
   line-height: 1.2;
   margin-bottom: 3px;
@@ -81,6 +85,7 @@
   border-radius: var(--radius-md);
   padding: 16px 18px;
   border-left: 3px solid var(--gold);
+  min-width: 0;
 }
 
 .case-study-badge {
@@ -107,6 +112,7 @@
   border-radius: var(--radius-sm);
   border: 1px solid var(--rule-light);
   line-height: 1.45;
+  overflow-wrap: break-word;
 }
 
 .classification-media-col {

@@ -102,6 +102,11 @@
   box-sizing: border-box;
 }
 
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   padding-top: var(--nav-height);
@@ -111,7 +116,18 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  max-width: 100vw;
+  overflow-x: hidden;
   transition: background var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+img, svg, video, canvas {
+  max-width: 100%;
+}
+
+code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 a {
@@ -128,11 +144,10 @@ h1, h2, h3, h4, .serif-font {
 
 .app-container {
   max-width: 1360px;
+  width: 100%;
   margin: 0 auto;
   padding: 22px 24px 60px;
 }
-
-
 
 /* ==========================================================================
    ESTRUCTURA DE SECCIONES PRINCIPALES Y CABECERAS
@@ -183,7 +198,7 @@ h1, h2, h3, h4, .serif-font {
 }
 
 .section-main-title {
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-size: clamp(1.55rem, 3vw, 2.5rem);
   line-height: 1.15;
   color: var(--ink);
   margin-bottom: 6px;

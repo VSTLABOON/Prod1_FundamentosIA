@@ -8,6 +8,10 @@
   align-items: start;
 }
 
+.timeline-layout > * {
+  min-width: 0;
+}
+
 .infographic-preview-card {
   background: var(--bg-card);
   border: 1px solid var(--rule);
@@ -56,6 +60,7 @@
 .btn-expand-lightbox svg {
   width: 15px;
   height: 15px;
+  flex-shrink: 0;
 }
 
 .infographic-image-wrap {

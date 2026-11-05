@@ -23,7 +23,7 @@ Aplicacion web full-stack academica construida en **Python (Flask + SQLite)** y 
 
 El proyecto integra en una sola plataforma interactiva seis secciones tematicas y herramientas transversales accesibles desde una barra de navegacion superior persistente:
 
-- **Backend**: Microframework **Flask** (`app.py`), motor de base de datos relacional **SQLite** (`database.py`, `seed_db.py`) con auto-inicializacion automatica al arrancar, y motor de lenguaje natural y clasificacion supervisada **ML for Kids** (`ml_chatbot.py`).
+- **Backend**: Microframework **Flask** (`app.py`), motor de base de datos relacional **SQLite** (`database.py`, `seed_db.py`) con auto-inicializacion automatica al arrancar, y paquete modular de lenguaje natural y clasificacion supervisada **ML for Kids** (`chatbot/`, con fachada de compatibilidad en `ml_chatbot.py`).
 - **Frontend**: Plantillas modulares **Jinja2** (`templates/components/` y `templates/sections/`), arquitectura CSS modularizada en 10 hojas de estilo (`static/css/modules/`) y controlador interactivo en JavaScript (`static/js/app.js`).
 - **Principios Visuales**: Estetica editorial universitaria con tipografias *Fraunces*, *IBM Plex Sans* e *IBM Plex Mono*, soporte nativo para **Modo Claro y Modo Oscuro**, diseno 100% responsivo y **ausencia total de emojis** o barras de porcentaje innecesarias.
 
@@ -76,45 +76,57 @@ El proyecto integra en una sola plataforma interactiva seis secciones tematicas 
 
 ## 3. Arquitectura del Chatbot ML for Kids (4 Etiquetas y Desambiguacion Discursiva)
 
-El modulo [`ml_chatbot.py`](ml_chatbot.py) y su interfaz [`templates/components/chatbot_ml.html`](templates/components/chatbot_ml.html) implementan un sistema de clasificacion de texto y argumentacion academica entrenado especificamente con **4 etiquetas**:
+Todo el codigo de Python dedicado exclusivamente al chatbot ha sido estructurado de forma modular e independiente dentro de la carpeta [`chatbot/`](chatbot/README.md), manteniendo [`ml_chatbot.py`](ml_chatbot.py) como fachada de compatibilidad hacia atras e integrando su interfaz en [`templates/components/chatbot_ml.html`](templates/components/chatbot_ml.html):
 
 | Etiqueta | Dominio Conceptual | Indicadores Principales |
 | :--- | :--- | :--- |
-| **`Heuristica`** | Busqueda Informada / Heuristica | $A^*$, $IDA^*$, Busqueda Voraz (*Greedy Best-First*), funciones de evaluacion $f(n)=g(n)+h(n)$, heuristica admisible y consistente, distancia Manhattan / Euclidiana. |
-| **`Ciega`** | Busqueda No Informada / A Ciegas | BFS (anchura, cola FIFO), DFS (profundidad, pila LIFO), Costo Uniforme (UCS), Profundizacion Iterativa (IDDFS), exploracion exhaustiva sin funcion heuristica ($h(n)=0$). |
-| **`Evolutiva`** | Busqueda Evolutiva y Metaheuristicas | Algoritmos Geneticos (AG), poblacion de cromosomas, funcion de aptitud (*fitness*), seleccion por torneo/ruleta, cruza (*crossover*), mutacion, PSO, ACO. |
-| **`Desconocido`** | Fuera de Dominio / Saludos / Trampas Coloquiales | Saludos, preguntas generales de la plataforma, temas ajenos (cocina, deportes, clima, redes neuronales generales) y **frases trampa coloquiales** donde aparecen palabras como *"a ciegas"* o *"evolucion"* fuera del contexto de algoritmos de busqueda. |
+| **`Heuristica`** | Busqueda Informada / Heuristica (100 ejemplos de entrenamiento) | $A^*$, $IDA^*$, Busqueda Voraz (*Greedy Best-First*), funciones de evaluacion $f(n)=g(n)+h(n)$, heuristica admisible y consistente, distancia Manhattan / Euclidiana. |
+| **`Ciega`** | Busqueda No Informada / A Ciegas (120 ejemplos de entrenamiento) | BFS (anchura, cola FIFO), DFS (profundidad, pila LIFO), Costo Uniforme (UCS), Profundizacion Iterativa (IDDFS), exploracion exhaustiva sin funcion heuristica ($h(n)=0$). |
+| **`Evolutiva`** | Busqueda Evolutiva y Metaheuristicas (90 ejemplos de entrenamiento) | Algoritmos Geneticos (AG), poblacion de cromosomas, funcion de aptitud (*fitness*), seleccion por torneo/ruleta, cruza (*crossover*), mutacion, PSO, ACO. |
+| **`Desconocido`** | Fuera de Dominio / Ciencias de la Computacion / Saludos (110 ejemplos) | Saludos, ordenamiento clasico, busqueda binaria, grafos generales, bases de datos SQL, redes TCP/IP y **frases trampa coloquiales** donde aparecen palabras como *"a ciegas"* o *"evolucion"* fuera de algoritmos de busqueda en IA. |
 
-### 3.1 Soporte Dual: Sin Cuenta en ML for Kids y Con Cuenta (Cloud API)
+### 3.1 Estructura Modular del Paquete `chatbot/`
+
+El paquete [`chatbot/`](chatbot/README.md) se compone de modulos especializados con responsabilidad unica:
+- **`chatbot/corpus.py`**: Corpus oficial con **420 enunciados de entrenamiento** (100 Heuristica, 120 Ciega, 90 Evolutiva, 110 Desconocido).
+- **`chatbot/classifier.py`**: Normalizacion de texto, expresiones regulares de dominio (`DOMAIN_PATTERNS`), clasificador local Naive Bayes multinomial con N-gramas (`LocalMLForKidsClassifier`) y cliente HTTP para la API en la nube de ML for Kids.
+- **`chatbot/discourse.py`**: Segmentador discursivo (`split_into_discourse_clauses`) y analizador pragmatico de roles (`analyze_clause_discourse_role`).
+- **`chatbot/argumentation.py`**: Generador de explicaciones vivas y argumentos contextuales (`build_verdict_argument`, `generate_specific_insight`).
+- **`chatbot/engine.py`**: Pipeline unificado (`classify_message`) que conecta todos los modulos.
+- **`chatbot/cli.py`**: Interfaz de terminal y evaluador de precision (`python -m chatbot.cli --test` reporta 420/420, 100% de precision).
+- **`chatbot/__init__.py`**: Fachada de exportacion publica del paquete.
+
+### 3.2 Soporte Dual: Sin Cuenta en ML for Kids y Con Cuenta (Cloud API)
 
 1. **Modo Sin Cuenta (Activo por defecto y con Entrenador en Vivo)**:
    - En `machinelearningforkids.co.uk`, cuando se elige *"Probar sin registrarse"*, el proyecto se guarda en el `localStorage` del navegador (`#!/mlproject/localstorage/...`) y ML for Kids no genera una API Key en la nube para Python.
-   - Para garantizar que funcione sin cuenta desde el primer instante, [`LocalMLForKidsClassifier`](ml_chatbot.py) entrena en memoria un clasificador supervisado Bayesiano Multinomial + N-gramas sobre un corpus curado de **80 ejemplos base** (20 por cada una de las 4 cubetas).
+   - Para garantizar que funcione sin cuenta desde el primer instante, [`LocalMLForKidsClassifier`](chatbot/classifier.py) entrena en memoria un clasificador supervisado Bayesiano Multinomial + N-gramas sobre el corpus oficial de **420 ejemplos**.
    - Ademas, el panel **`Configurar / Entrenar Modelo`** en la interfaz web permite **agregar nuevos ejemplos de texto a cualquiera de las 4 cubetas y reentrenar el modelo en vivo** (`POST /api/chatbot/train`), replicando exactamente la experiencia de entrenamiento de ML for Kids sin necesidad de registrarse.
    - Si el usuario pega por error la URL del navegador de un proyecto sin cuenta (`https://machinelearningforkids.co.uk/#!/mlproject/localstorage/...`), la funcion `extract_mlforkids_key()` detecta el marcador `__BROWSER_LOCALSTORAGE__` y muestra un aviso explicativo manteniendo activo el motor local sin errores.
 2. **Modo Con Cuenta (API Key en la Nube de ML for Kids)**:
    - Si se ingresa una API Key o URL de API de una cuenta registrada de ML for Kids, el sistema consulta directamente el endpoint oficial `https://machinelearningforkids.co.uk/api/scratch/<KEY>/classify` y combina su veredicto con el motor de analisis discursivo para construir el argumento.
 
-### 3.2 Motor de Desambiguacion Discursiva para Menciones Multiples
+### 3.3 Motor de Desambiguacion Discursiva para Menciones Multiples
 
-Uno de los requerimientos centrales es **clasificar correctamente incluso cuando el usuario menciona los 3 algoritmos (`Heuristica`, `Ciega` y `Evolutiva`) dentro de un mismo parrafo**. Para lograrlo sin confundirse por el simple conteo de palabras, [`ml_chatbot.py`](ml_chatbot.py) ejecuta un pipeline de 4 etapas:
+Uno de los requerimientos centrales es **clasificar correctamente incluso cuando el usuario menciona los 3 algoritmos (`Heuristica`, `Ciega` y `Evolutiva`) dentro de un mismo parrafo**. Para lograrlo sin confundirse por el simple conteo de palabras, [`chatbot/discourse.py`](chatbot/discourse.py) y [`chatbot/engine.py`](chatbot/engine.py) ejecutan un pipeline de 4 etapas:
 
 1. **Segmentacion en Clausulas Discursivas (`split_into_discourse_clauses`)**:
    - Divide la oracion compuesta en sub-clausulas utilizando signos de puntuacion, conectores adversativos (*pero, sin embargo, no obstante, sino, en cambio, mientras que*), conectores concesivos (*aunque, a pesar de que, si bien*), marcadores de descarte (*a diferencia de, en lugar de, en vez de, descartando, dejando de lado*), transiciones sin coma (*"A diferencia de la busqueda ciega y la evolutiva usamos A*"*) y comparaciones de superioridad (*"es mejor que", "es mas rapida que"*).
 2. **Asignacion de Rol Pragmatico (`analyze_clause_discourse_role`)**:
    - Cada clausula recibe un rol y un multiplicador de peso:
-     - `foco_principal` (peso `+2.35`): Clausula introducida por un conector adversativo fuerte (*pero, sino, por ello elegimos*), pregunta directa (*"¿cual...?"*) o afirmacion de uso (*"implementamos", "utilizamos", "es mejor"*).
-     - `afirmado` (peso `+1.25`): Clausula declarativa estandar que describe el funcionamiento del algoritmo principal.
-     - `concesivo` (peso `-0.65`): Clausula subordinada que menciona un algoritmo solo como contraste secundario (*"Aunque la busqueda ciega..."*).
-     - `descartado` (peso `-1.45`): Clausula con negacion explicita o preposicion de exclusion (*"A diferencia de los algoritmos geneticos...", "no usamos BFS"*).
+     - `foco_principal` (peso `2.50`): Clausula introducida por un conector adversativo fuerte (*pero, sino, por ello elegimos*), pregunta directa (*"¿cual...?"*) o afirmacion de uso (*"implementamos", "utilizamos", "es mejor"*).
+     - `afirmacion` (peso `1.00`): Clausula declarativa estandar que describe el funcionamiento del algoritmo principal.
+     - `concesion_previa` (peso `0.22`): Premisa previa que queda superada por la conclusion final tras el conector (*pero / por eso*).
+     - `contexto_comparativo` (peso `0.18`): Clausula que solo enumera las opciones antes de lanzar la pregunta principal.
+     - `contraste_o_negacion` (peso `0.06 - 0.12`): Exclusion deliberada (*"en lugar de", "sin usar", "descartando"*).
 3. **Deteccion de Definiciones por Ausencia de Heuristica (`BLIND_ABSENCE_OF_HEURISTIC_REGEX`)**:
    - Si el texto dice *"explora el grafo sin usar una funcion heuristica"* o *"no utiliza conocimiento adicional del dominio"*, el motor reconoce que la negacion de heuristica es precisamente la definicion formal de **Busqueda Ciega (`Ciega`)**, asignandole puntaje positivo a `Ciega` y enmascarando el fragmento para no activar falsamente `Heuristica`.
-4. **Filtro de Usos Coloquiales No Algoritmicos (`NON_ALGORITHMIC_COLLOQUIAL_PATTERNS`)**:
-   - Frases como *"Confio a ciegas en mi equipo"* o *"La evolucion del rock en los anos 80"* son interceptadas antes de puntuar `Ciega` o `Evolutiva`, clasificandose correctamente como **`Desconocido`**.
+4. **Filtro de Usos Coloquiales y Temas Ajenos (`COLLOQUIAL_TRICK_PATTERNS`)**:
+   - Frases como *"Confio a ciegas en mi equipo"* o temas de ingenieria general (ordenamiento, bases de datos SQL, redes TCP/IP) son clasificados con precision en **`Desconocido`**.
 
-### 3.3 Generador Contextual y Dinamico de Argumentos (Sin Frases Frias ni Porcentajes)
+### 3.4 Generador Contextual y Dinamico de Argumentos (Sin Frases Frias ni Porcentajes)
 
-En lugar de devolver respuestas pre-programadas rigidas o saturar la vista con barras de porcentaje, [`generate_specific_insight()`](ml_chatbot.py) y [`build_verdict_argument()`](ml_chatbot.py) construyen una respuesta estructurada en tres bloques limpios:
+En lugar de devolver respuestas pre-programadas rigidas o saturar la vista con barras de porcentaje, [`generate_specific_insight()`](chatbot/argumentation.py) y [`build_verdict_argument()`](chatbot/argumentation.py) construyen una respuesta estructurada en tres bloques limpios:
 
 1. **Argumento de Seleccion**: Explica por que se asigno la etiqueta ganadora citando los indicadores exactos detectados en el mensaje del usuario y adaptando la redaccion segun la intencion (pregunta teorica, caso practico de ingenieria, comparacion, saludo o frase coloquial fuera de dominio).
 2. **Resolucion de Menciones Multiples** *(se muestra cuando el texto menciona 2 o mas paradigmas)*: Cita textualmente en que fragmento el usuario afirmo el algoritmo ganador y en que fragmento descarto o contrasto los otros algoritmos mencionados.
@@ -257,7 +269,7 @@ Todos los endpoints estan definidos en [`app.py`](app.py) y devuelven respuestas
 ```text
 Prod1/
 |-- app.py                          # Servidor Flask, rutas web, endpoints API REST y auto-seed de BD
-|-- ml_chatbot.py                   # Clasificador ML for Kids (4 etiquetas), desambiguador discursivo y generador de argumentos
+|-- ml_chatbot.py                   # Modulo de compatibilidad hacia atras (reexporta desde chatbot/)
 |-- database.py                     # Capa de persistencia SQLite, consultas parametrizadas y generador de Quiz
 |-- seed_db.py                      # Corpus de datos de los 20 conceptos tecnicos de IA
 |-- glossary.db                     # Base de datos relacional SQLite (generada/verificada automaticamente)
@@ -267,6 +279,16 @@ Prod1/
 |-- run.bat                         # Script automatizado para crear entorno virtual, instalar paquetes y arrancar en Windows
 |-- DOCUMENTATION.md                # Documento complementario de arquitectura
 |-- README.md                       # Documentacion maestra integral del proyecto
+|
+|-- chatbot/                        # PAQUETE DEDICADO EXCLUSIVAMENTE AL CHATBOT ML FOR KIDS
+|   |-- __init__.py                 # Fachada de exportacion publica del paquete
+|   |-- corpus.py                   # Corpus oficial (420 enunciados / 4 etiquetas de entrenamiento)
+|   |-- classifier.py               # Naive Bayes con N-gramas, patrones de dominio y cliente API
+|   |-- discourse.py                # Segmentacion en clausulas y analisis retorico de intencion
+|   |-- argumentation.py            # Generador de explicaciones vivas y argumentos contextuales
+|   |-- engine.py                   # Orquestador del pipeline principal (classify_message)
+|   |-- cli.py                      # CLI interactivo y suite de benchmarks (python -m chatbot.cli --test)
+|   `-- README.md                   # Documentacion tecnica detallada del paquete chatbot
 |
 |-- static/
 |   |-- css/

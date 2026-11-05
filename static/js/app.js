@@ -322,27 +322,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function attachCardInteractions() {
     const cards = document.querySelectorAll(".concept-card");
+    const isTouchDevice = window.matchMedia && window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
     cards.forEach(card => {
-      card.addEventListener("mousemove", (e) => {
-        const rect = card.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+      if (!isTouchDevice) {
+        card.addEventListener("mousemove", (e) => {
+          const rect = card.getBoundingClientRect();
+          const mouseX = e.clientX - rect.left;
+          const mouseY = e.clientY - rect.top;
 
-        const rotateX = ((mouseY / rect.height) - 0.5) * -14;
-        const rotateY = ((mouseX / rect.width) - 0.5) * 14;
+          const rotateX = ((mouseY / rect.height) - 0.5) * -14;
+          const rotateY = ((mouseX / rect.width) - 0.5) * 14;
 
-        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px)`;
+          card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateY(-4px)`;
 
-        const glareX = (mouseX / rect.width) * 100;
-        const glareY = (mouseY / rect.height) * 100;
-        card.style.setProperty("--glare-x", `${glareX}%`);
-        card.style.setProperty("--glare-y", `${glareY}%`);
-      });
+          const glareX = (mouseX / rect.width) * 100;
+          const glareY = (mouseY / rect.height) * 100;
+          card.style.setProperty("--glare-x", `${glareX}%`);
+          card.style.setProperty("--glare-y", `${glareY}%`);
+        });
 
-      card.addEventListener("mouseleave", () => {
-        card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)";
-      });
+        card.addEventListener("mouseleave", () => {
+          card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)";
+        });
+      }
 
       card.addEventListener("click", (e) => {
         if (e.target.closest(".btn-card-favorite")) return;
@@ -937,9 +940,29 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ==========================================================================
-     12. INICIALIZACION
+     12. SINCRONIZACION DINAMICA DE ALTURA DE BARRA DE NAVEGACION Y ARRANQUE
      ========================================================================== */
+  function initResponsiveLayout() {
+    const topNav = document.getElementById("topNavBar");
+    if (!topNav) return;
+
+    const updateNavHeight = () => {
+      const h = topNav.offsetHeight;
+      if (h > 0) {
+        document.documentElement.style.setProperty("--nav-height", `${h}px`);
+      }
+    };
+
+    updateNavHeight();
+    window.addEventListener("resize", updateNavHeight);
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(updateNavHeight);
+      ro.observe(topNav);
+    }
+  }
+
   initTheme();
+  initResponsiveLayout();
   initNavigation();
   initLightbox();
   initMachineLearningSimulator();

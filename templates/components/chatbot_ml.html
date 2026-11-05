@@ -37,8 +37,8 @@
       <p class="chatbot-panel-desc">
         <strong>1. Entrenar nuevo ejemplo (Sin cuenta):</strong> Agrega frases adicionales a cualquiera de las 4 cubetas para reentrenar el modelo al instante:
       </p>
-      <div class="chatbot-apikey-row" style="margin-bottom: 14px;">
-        <select id="chatbotTrainLabelSelect" class="sim-select-input" style="max-width: 190px;" aria-label="Seleccionar etiqueta a entrenar">
+      <div class="chatbot-apikey-row chatbot-train-row">
+        <select id="chatbotTrainLabelSelect" class="sim-select-input chatbot-train-select" aria-label="Seleccionar etiqueta a entrenar">
           <option value="Heuristica">Cubeta: Heuristica</option>
           <option value="Ciega">Cubeta: Ciega</option>
           <option value="Evolutiva">Cubeta: Evolutiva</option>
@@ -76,8 +76,11 @@
       <button type="button" class="chatbot-preset-chip" data-prompt="La busqueda heuristica requiere una funcion h(n) y la busqueda evolutiva no guarda el camino de estados, por eso para este problema pequeno sin informacion adicional implementaremos busqueda ciega en profundidad (DFS).">
         Caso 4: Descarte deductivo (3 mencionadas)
       </button>
+      <button type="button" class="chatbot-preset-chip" data-prompt="El metodo Quicksort divide el vector en dos sublistas alrededor de un pivote y la busqueda binaria localiza un numero en un arreglo ordenado en tiempo logaritmico.">
+        Caso 5: Algoritmia fuera de dominio (Desconocido)
+      </button>
       <button type="button" class="chatbot-preset-chip" data-prompt="Ayer fui al cine a ver una pelicula llamada evolucion a ciegas mientras cenaba pizza italiana y veia el partido de futbol.">
-        Caso 5: Fuera de dominio (Desconocido)
+        Caso 6: Frase trampa coloquial (Desconocido)
       </button>
     </div>
   </div>

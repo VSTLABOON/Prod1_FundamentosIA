@@ -11,7 +11,7 @@ import os
 from flask import Flask, render_template, jsonify, request
 import database as db
 import seed_db
-import ml_chatbot
+import chatbot as ml_chatbot
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 

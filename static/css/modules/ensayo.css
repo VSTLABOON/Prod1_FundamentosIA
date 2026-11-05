@@ -27,7 +27,7 @@
 
 .essay-main-title {
   font-family: 'Fraunces', serif;
-  font-size: 2.3rem;
+  font-size: clamp(1.65rem, 3vw, 2.3rem);
   font-weight: 600;
   line-height: 1.25;
   color: var(--ink);
@@ -61,6 +61,10 @@
   grid-template-columns: 300px 1fr;
   gap: 36px;
   align-items: start;
+}
+
+.essay-container-layout > * {
+  min-width: 0;
 }
 
 /* Indice Flotante Lateral */
@@ -147,13 +151,15 @@
   line-height: 1.8;
   color: var(--ink-soft);
   font-size: 1.02rem;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .essay-chapter {
   margin-bottom: 44px;
   padding-bottom: 34px;
   border-bottom: 1px solid var(--rule-light);
-  scroll-margin-top: 80px;
+  scroll-margin-top: calc(var(--nav-height) + 20px);
 }
 
 .essay-chapter:last-of-type {
@@ -221,7 +227,9 @@
   background: var(--bg-raised);
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
-  overflow: hidden;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .essay-table-title {
@@ -287,6 +295,7 @@
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--ink-soft);
+  overflow-wrap: anywhere;
 }
 
 .essay-ref-item a {
