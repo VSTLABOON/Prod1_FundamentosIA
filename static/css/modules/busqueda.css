@@ -75,24 +75,34 @@
    CHATBOT EDITORIAL (ML FOR KIDS - 4 ETIQUETAS Y ARGUMENTACION)
    ========================================================================== */
 
+.chatbot-section-block {
+  scroll-margin-top: calc(var(--nav-height) + 12px);
+}
+
+.chatbot-divider {
+  margin: 32px 0 14px;
+}
+
 .chatbot-editorial-card {
-  max-width: 980px;
+  max-width: 1120px;
   width: 100%;
-  margin: 0 auto 44px auto;
+  margin: 0 auto 36px auto;
   background: var(--bg-card);
   border: 1px solid var(--rule);
   border-radius: var(--radius-lg);
-  padding: 28px 32px;
+  padding: 20px 26px;
   box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
 }
 
 .chatbot-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 20px;
-  padding-bottom: 18px;
-  margin-bottom: 18px;
+  gap: 16px;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
   border-bottom: 1px solid var(--rule);
 }
 
@@ -104,17 +114,17 @@
 .chatbot-label-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 
 .chatbot-tag-item {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  padding: 2px 10px;
+  padding: 2px 9px;
   border-radius: 999px;
 }
 
@@ -144,28 +154,28 @@
 
 .chatbot-title {
   font-family: "Fraunces", serif;
-  font-size: 1.45rem;
+  font-size: 1.28rem;
   color: var(--ink);
-  margin: 0 0 6px 0;
-  line-height: 1.25;
+  margin: 0 0 4px 0;
+  line-height: 1.22;
 }
 
 .chatbot-subtitle {
-  font-size: 0.91rem;
+  font-size: 0.85rem;
   color: var(--ink-soft);
-  line-height: 1.55;
+  line-height: 1.45;
   margin: 0;
 }
 
 .chatbot-config-trigger {
   font-family: "IBM Plex Sans", sans-serif;
-  font-size: 0.76rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--ink-soft);
   background: var(--bg-raised);
   border: 1px solid var(--rule);
   border-radius: var(--radius-sm);
-  padding: 7px 13px;
+  padding: 6px 12px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;
@@ -178,7 +188,7 @@
 
 /* Panel discreto de Entrenamiento Sin Cuenta y API Key */
 .chatbot-collapsible-panel {
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .chatbot-panel-inner {
@@ -186,7 +196,7 @@
   border: 1px solid var(--rule);
   border-left: 3px solid var(--teal);
   border-radius: var(--radius-md);
-  padding: 14px 18px;
+  padding: 12px 16px;
 }
 
 .chatbot-panel-header {
@@ -195,17 +205,17 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .chatbot-panel-header h4 {
-  font-size: 0.96rem;
+  font-size: 0.92rem;
   color: var(--ink);
 }
 
 .chatbot-panel-tag {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.72rem;
+  font-size: 0.71rem;
   font-weight: 600;
   color: var(--teal);
   background: var(--teal-subtle);
@@ -214,10 +224,10 @@
 }
 
 .chatbot-panel-desc {
-  font-size: 0.83rem;
+  font-size: 0.81rem;
   color: var(--ink-soft);
-  margin: 0 0 10px 0;
-  line-height: 1.45;
+  margin: 0 0 8px 0;
+  line-height: 1.42;
 }
 
 .chatbot-apikey-row {
@@ -228,7 +238,7 @@
 }
 
 .chatbot-train-row {
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .chatbot-train-select {
@@ -240,9 +250,9 @@
 .chatbot-apikey-input {
   flex: 1;
   min-width: 200px;
-  padding: 8px 12px;
+  padding: 7px 11px;
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   background: var(--bg-card);
   color: var(--ink);
   border: 1px solid var(--rule);
@@ -259,38 +269,38 @@
   background: var(--bg-raised);
   border: 1px solid var(--rule-light);
   border-radius: var(--radius-md);
-  padding: 12px 16px;
-  margin-bottom: 18px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
 }
 
 .chatbot-presets-title {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--ink-muted);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .chatbot-presets-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
 }
 
 .chatbot-preset-chip {
   font-family: "IBM Plex Sans", sans-serif;
-  font-size: 0.79rem;
+  font-size: 0.76rem;
   font-weight: 500;
   color: var(--ink);
   background: var(--bg-card);
   border: 1px solid var(--rule);
-  border-radius: 999px;
-  padding: 6px 13px;
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
   cursor: pointer;
   text-align: left;
-  line-height: 1.35;
+  line-height: 1.3;
   transition: all 0.2s ease;
 }
 
@@ -300,19 +310,21 @@
   color: var(--teal);
 }
 
-/* Ventana de Conversacion */
+/* Ventana de Conversacion con altura controlada y estable */
 .chatbot-messages-viewport {
   background: var(--bg-raised);
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
-  padding: 20px;
-  min-height: 300px;
-  max-height: 480px;
+  padding: 14px 16px;
+  height: clamp(230px, 33vh, 310px);
+  min-height: 230px;
+  max-height: 310px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
 .chat-msg-row {
@@ -329,10 +341,10 @@
 }
 
 .chat-msg-bubble {
-  max-width: 86%;
+  max-width: 88%;
   min-width: 0;
   overflow-wrap: break-word;
-  padding: 16px 20px;
+  padding: 13px 16px;
   border-radius: var(--radius-md);
   border: 1px solid var(--rule);
   background: var(--bg-card);
@@ -340,25 +352,25 @@
 }
 
 .chat-msg-row.user .chat-msg-bubble {
-  max-width: 78%;
+  max-width: 80%;
   background: var(--teal-subtle);
   border-color: var(--teal-soft);
-  padding: 13px 18px;
+  padding: 10px 15px;
 }
 
 .chat-user-label {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--teal);
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .chat-user-text {
-  font-size: 0.91rem;
-  line-height: 1.55;
+  font-size: 0.87rem;
+  line-height: 1.48;
   color: var(--ink);
   margin: 0;
 }
@@ -369,14 +381,14 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
-  padding-bottom: 10px;
-  margin-bottom: 12px;
+  gap: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 9px;
   border-bottom: 1px solid var(--rule-light);
 }
 
 .chat-author-label {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -385,9 +397,9 @@
 
 .chat-verdict-pill {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  padding: 3px 12px;
+  padding: 2px 10px;
   border-radius: 999px;
   letter-spacing: 0.04em;
 }
@@ -419,11 +431,11 @@
 .chat-argument-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .chat-argument-section-label {
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -432,8 +444,8 @@
 }
 
 .chat-argument-paragraph {
-  font-size: 0.91rem;
-  line-height: 1.6;
+  font-size: 0.87rem;
+  line-height: 1.52;
   color: var(--ink);
   margin: 0;
 }
@@ -442,24 +454,24 @@
   background: var(--bg-raised);
   border-left: 3px solid var(--gold);
   border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  font-size: 0.87rem;
-  line-height: 1.55;
+  padding: 8px 12px;
+  font-size: 0.83rem;
+  line-height: 1.48;
   color: var(--ink-soft);
 }
 
 .chat-foundation-box {
   border-top: 1px solid var(--rule-light);
-  padding-top: 10px;
-  font-size: 0.85rem;
-  line-height: 1.55;
+  padding-top: 8px;
+  font-size: 0.82rem;
+  line-height: 1.48;
   color: var(--ink-soft);
 }
 
 /* Formulario inferior de entrada */
 .chatbot-input-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   align-items: stretch;
 }
 
@@ -467,10 +479,10 @@
   flex: 1;
   min-width: 0;
   resize: none;
-  padding: 12px 15px;
+  padding: 10px 14px;
   font-family: "IBM Plex Sans", sans-serif;
-  font-size: 0.91rem;
-  line-height: 1.45;
+  font-size: 0.88rem;
+  line-height: 1.42;
   color: var(--ink);
   background: var(--bg-raised);
   border: 1px solid var(--rule);
@@ -487,19 +499,19 @@
 .chatbot-submit-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   justify-content: center;
 }
 
 .chatbot-btn-primary {
   font-family: "IBM Plex Sans", sans-serif;
-  font-size: 0.86rem;
+  font-size: 0.83rem;
   font-weight: 600;
   color: #FFFFFF;
   background: var(--teal);
   border: 1px solid var(--teal);
   border-radius: var(--radius-sm);
-  padding: 9px 18px;
+  padding: 7px 16px;
   cursor: pointer;
   white-space: nowrap;
   transition: opacity 0.2s ease;
@@ -512,13 +524,13 @@
 .chatbot-btn-secondary,
 .chatbot-btn-clear {
   font-family: "IBM Plex Sans", sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--ink-soft);
   background: transparent;
   border: 1px solid var(--rule);
   border-radius: var(--radius-sm);
-  padding: 6px 12px;
+  padding: 5px 11px;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.2s ease;

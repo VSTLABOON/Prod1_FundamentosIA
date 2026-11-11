@@ -18,6 +18,9 @@
 /* 5. Seccion Algoritmos de Busqueda y Optimizacion */
 @import "modules/busqueda.css";
 
+/* 5b. Simulador grafico de busqueda (Robot de surtido en almacen) */
+@import "modules/search_visualizer.css";
+
 /* 6. Seccion Machine Learning y Simulador */
 @import "modules/machine_learning.css";
 

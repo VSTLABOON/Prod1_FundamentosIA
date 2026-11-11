@@ -144,7 +144,7 @@
             </button>
           </div>
           <div class="infographic-image-wrap zoomable-trigger" data-img="/static/images/algoritmos_busqueda.png" data-alt="Infografia: Clasificacion de Algoritmos de Busqueda en Inteligencia Artificial">
-            <img src="/static/images/algoritmos_busqueda.png" alt="Infografia: Clasificacion de Algoritmos de Busqueda en Inteligencia Artificial" class="infographic-img" loading="lazy">
+            <img src="/static/images/algoritmos_busqueda.png" alt="Infografia: Clasificacion de Algoritmos de Busqueda en Inteligencia Artificial" class="infographic-img" width="1024" height="1536" decoding="async">
             <div class="image-zoom-overlay">
               <span>Clic para ampliar infografia</span>
             </div>
@@ -318,6 +318,8 @@
           </tbody>
         </table>
       </div>
+
+      {% include 'components/search_visualizer.html' %}
 
       {% include 'components/chatbot_ml.html' %}
 

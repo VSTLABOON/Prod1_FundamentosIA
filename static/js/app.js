@@ -75,33 +75,110 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ==========================================================================
-     2. CONTROLADOR DE NAVEGACION POR SECCIONES
+     2. CONTROLADOR DE NAVEGACION POR SECCIONES Y ACCESO DIRECTO PRECISO
      ========================================================================== */
-  function switchSection(targetSectionId, scrollTargetId = null) {
-    state.currentSection = targetSectionId;
+  let isProgrammaticScroll = false;
+  let programmaticScrollTimer = null;
 
-    // Actualizar botones de navegacion
+  // Sub-anclas de acceso directo dentro de la seccion de Busqueda (en orden del DOM)
+  const SUB_ANCHORS = [
+    { id: "searchVisualizerAnchor", hash: "#simulador-busqueda" },
+    { id: "chatbotMLAnchor", hash: "#chatbot-ml" }
+  ];
+
+  function centerNavButtonHorizontally(link) {
+    if (!link) return;
+    const navMenu = link.closest(".nav-menu");
+    if (!navMenu) return;
+    const targetLeft = link.offsetLeft - (navMenu.clientWidth / 2) + (link.offsetWidth / 2);
+    navMenu.scrollTo({
+      left: Math.max(0, targetLeft),
+      behavior: "smooth"
+    });
+  }
+
+  function updateNavHighlight(targetSectionId, scrollTargetId = null) {
     dom.navLinks.forEach(link => {
       const isTarget = link.getAttribute("data-target") === targetSectionId;
       const linkScroll = link.getAttribute("data-scroll");
-      const isActive = scrollTargetId ? (isTarget && linkScroll === scrollTargetId) : (isTarget && !linkScroll);
+      const isActive = scrollTargetId
+        ? (isTarget && linkScroll === scrollTargetId)
+        : (isTarget && !linkScroll);
       link.classList.toggle("active", isActive);
       if (isActive) {
-        link.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+        centerNavButtonHorizontally(link);
       }
     });
+  }
+
+  function getExactElementScrollTop(anchorEl) {
+    const topNav = document.getElementById("topNavBar");
+    const navHeight = topNav ? topNav.offsetHeight : 60;
+    const rect = anchorEl.getBoundingClientRect();
+    return Math.max(0, Math.round(window.scrollY + rect.top - navHeight - 12));
+  }
+
+  function scrollToAnchorPrecise(scrollTargetId, smooth = true) {
+    const anchorEl = document.getElementById(scrollTargetId);
+    if (!anchorEl) return;
+
+    clearTimeout(programmaticScrollTimer);
+    isProgrammaticScroll = true;
+
+    const performScroll = (useSmooth) => {
+      const exactTop = getExactElementScrollTop(anchorEl);
+      window.scrollTo({
+        top: exactTop,
+        behavior: useSmooth ? "smooth" : "auto"
+      });
+    };
+
+    requestAnimationFrame(() => {
+      performScroll(smooth);
+
+      // Re-verificacion de precision tras estabilizacion de layout
+      setTimeout(() => {
+        const currentDiff = Math.abs(window.scrollY - getExactElementScrollTop(anchorEl));
+        if (!smooth && currentDiff > 2) {
+          performScroll(false);
+        }
+      }, 90);
+
+      programmaticScrollTimer = setTimeout(() => {
+        const finalDiff = Math.abs(window.scrollY - getExactElementScrollTop(anchorEl));
+        if (finalDiff > 4) {
+          performScroll(false);
+        }
+        isProgrammaticScroll = false;
+      }, smooth ? 460 : 180);
+    });
+  }
+
+  function switchSection(targetSectionId, scrollTargetId = null) {
+    const wasSameSection = state.currentSection === targetSectionId;
+    state.currentSection = targetSectionId;
+
+    updateNavHighlight(targetSectionId, scrollTargetId);
 
     // Actualizar visibilidad de secciones
     dom.sections.forEach(sec => {
       const isTarget = sec.id === targetSectionId;
+      if (isTarget && scrollTargetId && !wasSameSection) {
+        // Evitar desfase de coordenadas por transformacion CSS durante acceso directo
+        sec.style.animation = "none";
+        sec.offsetHeight; // Forzar reflow limpio
+      } else if (isTarget && !wasSameSection) {
+        sec.style.animation = "";
+      }
       sec.classList.toggle("active", isTarget);
     });
 
     // Sincronizar hash de la URL
+    const subAnchor = SUB_ANCHORS.find(a => a.id === scrollTargetId);
     const hashMap = {
       sectionAntecedentes: "antecedentes",
       sectionClasificacion: "clasificacion",
-      sectionBusqueda: scrollTargetId ? "chatbot-ml" : "busqueda",
+      sectionBusqueda: subAnchor ? subAnchor.hash.slice(1) : "busqueda",
       sectionMachineLearning: "machine-learning",
       sectionGlosario: "glosario",
       sectionEnsayo: "ensayo"
@@ -115,14 +192,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (scrollTargetId) {
-      setTimeout(() => {
-        const anchorEl = document.getElementById(scrollTargetId);
-        if (anchorEl) {
-          anchorEl.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 60);
+      scrollToAnchorPrecise(scrollTargetId, wasSameSection);
     } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      clearTimeout(programmaticScrollTimer);
+      isProgrammaticScroll = true;
+      window.scrollTo({
+        top: 0,
+        behavior: wasSameSection ? "smooth" : "auto"
+      });
+      programmaticScrollTimer = setTimeout(() => {
+        isProgrammaticScroll = false;
+      }, wasSameSection ? 420 : 100);
     }
   }
 
@@ -135,9 +215,43 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Sincronizacion automatica del boton activo en la barra al hacer scroll dentro de Busqueda
+    // (Algoritmos de Busqueda -> Simulador Grafico -> Chatbot ML)
+    let scrollTicking = false;
+    window.addEventListener("scroll", () => {
+      if (state.currentSection !== "sectionBusqueda" || isProgrammaticScroll) return;
+      if (!scrollTicking) {
+        requestAnimationFrame(() => {
+          scrollTicking = false;
+          if (state.currentSection !== "sectionBusqueda" || isProgrammaticScroll) return;
+          const topNav = document.getElementById("topNavBar");
+          const navHeight = topNav ? topNav.offsetHeight : 60;
+          const threshold = navHeight + Math.min(220, window.innerHeight * 0.35);
+
+          // El ultimo sub-ancla cuyo borde superior ya cruzo el umbral es la zona activa
+          let activeAnchor = null;
+          SUB_ANCHORS.forEach(a => {
+            const el = document.getElementById(a.id);
+            if (el && el.getBoundingClientRect().top <= threshold) {
+              activeAnchor = a;
+            }
+          });
+
+          const targetHash = activeAnchor ? activeAnchor.hash : "#busqueda";
+          if (window.location.hash !== targetHash) {
+            updateNavHighlight("sectionBusqueda", activeAnchor ? activeAnchor.id : null);
+            history.replaceState(null, "", targetHash);
+          }
+        });
+        scrollTicking = true;
+      }
+    }, { passive: true });
+
     const hash = window.location.hash.toLowerCase();
     if (hash === "#clasificacion") {
       switchSection("sectionClasificacion");
+    } else if (hash === "#simulador-busqueda" || hash === "#simulador") {
+      switchSection("sectionBusqueda", "searchVisualizerAnchor");
     } else if (hash === "#chatbot-ml" || hash === "#chatbot") {
       switchSection("sectionBusqueda", "chatbotMLAnchor");
     } else if (hash === "#busqueda" || hash === "#algoritmos-busqueda") {
@@ -814,7 +928,20 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       messagesViewport.appendChild(row);
-      messagesViewport.scrollTop = messagesViewport.scrollHeight;
+      requestAnimationFrame(() => {
+        const rowTop = row.offsetTop - messagesViewport.offsetTop;
+        if (row.offsetHeight > messagesViewport.clientHeight - 24) {
+          messagesViewport.scrollTo({
+            top: Math.max(0, rowTop - 8),
+            behavior: "smooth"
+          });
+        } else {
+          messagesViewport.scrollTo({
+            top: messagesViewport.scrollHeight,
+            behavior: "smooth"
+          });
+        }
+      });
     }
 
     function appendBotVerdict(data) {
@@ -859,7 +986,20 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       messagesViewport.appendChild(row);
-      messagesViewport.scrollTop = messagesViewport.scrollHeight;
+      requestAnimationFrame(() => {
+        const rowTop = row.offsetTop - messagesViewport.offsetTop;
+        if (row.offsetHeight > messagesViewport.clientHeight - 24) {
+          messagesViewport.scrollTo({
+            top: Math.max(0, rowTop - 8),
+            behavior: "smooth"
+          });
+        } else {
+          messagesViewport.scrollTo({
+            top: messagesViewport.scrollHeight,
+            behavior: "smooth"
+          });
+        }
+      });
     }
 
     async function submitMessage(rawText) {
