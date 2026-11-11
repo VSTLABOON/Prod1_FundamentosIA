@@ -1,123 +1,155 @@
-<!-- COMPONENTE: CHATBOT CLASIFICADOR Y ARGUMENTADOR (ML FOR KIDS - 4 ETIQUETAS) -->
+<!-- COMPONENTE: CHATBOT CLASIFICADOR (DISENO MODESTO CON MODAL POR PESTANAS) -->
 <div class="chatbot-section-block" id="chatbotMLAnchor">
-<div class="editorial-divider chatbot-divider">
-  <h2 class="subheading-editorial">Chatbot Clasificador de Algoritmos de Busqueda</h2>
-  <span class="divider-line"></span>
-</div>
-
-<div class="chatbot-editorial-card" id="chatbotMLContainer">
-  <!-- Cabecera Editorial Limpia -->
-  <header class="chatbot-header">
-    <div class="chatbot-header-info">
-      <div class="chatbot-label-tags">
-        <span class="chatbot-tag-item tag-heuristica">Heuristica</span>
-        <span class="chatbot-tag-item tag-ciega">Ciega</span>
-        <span class="chatbot-tag-item tag-evolutiva">Evolutiva</span>
-        <span class="chatbot-tag-item tag-desconocido">Desconocido</span>
-      </div>
-      <h3 class="chatbot-title">Asistente de Clasificacion y Argumentacion (ML for Kids)</h3>
-      <p class="chatbot-subtitle">
-        Describe un problema, un algoritmo o una comparacion entre paradigmas. El asistente identificara a cual de las cuatro etiquetas corresponde y redactara el argumento de su veredicto, incluso si mencionas los tres algoritmos en un mismo texto.
-      </p>
-    </div>
-
-    <div class="chatbot-header-actions">
-      <button type="button" class="chatbot-config-trigger" id="btnToggleApiKeyPanel" title="Entrenar ejemplos o configurar modelo ML for Kids">
-        Configurar / Entrenar Modelo
-      </button>
-    </div>
-  </header>
-
-  <!-- Panel discreto de Entrenamiento Sin Cuenta y API Key (oculto por defecto) -->
-  <div class="chatbot-collapsible-panel" id="chatbotApiKeyPanel" hidden>
-    <div class="chatbot-panel-inner">
-      <div class="chatbot-panel-header">
-        <h4>Entrenamiento en Vivo (Modo Sin Cuenta) y Conexion ML for Kids</h4>
-        <span class="chatbot-panel-tag" id="chatbotEngineStatusBadge">Modo Sin Cuenta Activo</span>
-      </div>
-      <p class="chatbot-panel-desc">
-        <strong>1. Entrenar nuevo ejemplo (Sin cuenta):</strong> Agrega frases adicionales a cualquiera de las 4 cubetas para reentrenar el modelo al instante:
-      </p>
-      <div class="chatbot-apikey-row chatbot-train-row">
-        <select id="chatbotTrainLabelSelect" class="sim-select-input chatbot-train-select" aria-label="Seleccionar etiqueta a entrenar">
-          <option value="Heuristica">Cubeta: Heuristica</option>
-          <option value="Ciega">Cubeta: Ciega</option>
-          <option value="Evolutiva">Cubeta: Evolutiva</option>
-          <option value="Desconocido">Cubeta: Desconocido</option>
-        </select>
-        <input type="text" id="chatbotTrainTextInput" class="chatbot-apikey-input" placeholder="Escribe un nuevo ejemplo para entrenar en esta etiqueta..." aria-label="Texto de ejemplo para entrenar">
-        <button type="button" class="chatbot-btn-primary" id="btnAddTrainingExample">Entrenar Ejemplo</button>
-      </div>
-
-      <p class="chatbot-panel-desc">
-        <strong>2. Conexion en la nube (Opcional con cuenta en ML for Kids):</strong> Si tienes una cuenta registrada en <code>machinelearningforkids.co.uk</code> con acceso a la pestaña <em>Make &rarr; Python</em>, pega aqui tu <code>API Key</code>:
-      </p>
-      <div class="chatbot-apikey-row">
-        <input type="text" id="chatbotApiKeyInput" class="chatbot-apikey-input" placeholder="Pegar API Key de Python (opcional si tienes cuenta en la nube)..." aria-label="API Key de Machine Learning for Kids">
-        <button type="button" class="chatbot-btn-secondary" id="btnSaveApiKey">Verificar API Key</button>
-        <button type="button" class="chatbot-btn-secondary" id="btnClearApiKey">Modo Sin Cuenta</button>
-      </div>
-      <div class="chatbot-panel-desc" id="chatbotApiKeyFeedback" style="margin-top: 8px; margin-bottom: 0;" hidden></div>
-    </div>
+  <div class="editorial-divider chatbot-divider">
+    <h2 class="subheading-editorial">Chatbot Clasificador de Busqueda</h2>
+    <span class="divider-line"></span>
   </div>
 
-  <!-- Sugerencias de prueba rapida -->
-  <div class="chatbot-presets-bar">
-    <span class="chatbot-presets-title">Ejemplos para probar (con los 3 algoritmos en el mismo texto):</span>
-    <div class="chatbot-presets-list">
-      <button type="button" class="chatbot-preset-chip" data-prompt="Aunque la busqueda ciega como BFS explora sin informacion y la busqueda evolutiva usa algoritmos geneticos y mutacion, yo necesito encontrar la ruta mas corta en un mapa GPS usando A* y una funcion heuristica h(n).">
-        Caso 1: Menciona los 3 (Enfoque en Heuristica)
-      </button>
-      <button type="button" class="chatbot-preset-chip" data-prompt="No quiero usar una funcion heuristica h(n) como en A* ni tampoco poblaciones con mutacion de busqueda evolutiva; prefiero recorrer el grafo por niveles con busqueda en anchura (BFS) de forma ciega.">
-        Caso 2: Menciona los 3 (Enfoque en Ciega)
-      </button>
-      <button type="button" class="chatbot-preset-chip" data-prompt="Entre la busqueda ciega, la busqueda heuristica y la busqueda evolutiva, ¿cual mantiene una poblacion de soluciones que evolucionan mediante seleccion natural, cruce y mutacion?">
-        Caso 3: Menciona los 3 (Enfoque en Evolutiva)
-      </button>
-      <button type="button" class="chatbot-preset-chip" data-prompt="La busqueda heuristica requiere una funcion h(n) y la busqueda evolutiva no guarda el camino de estados, por eso para este problema pequeno sin informacion adicional implementaremos busqueda ciega en profundidad (DFS).">
-        Caso 4: Descarte deductivo (3 mencionadas)
-      </button>
-      <button type="button" class="chatbot-preset-chip" data-prompt="El metodo Quicksort divide el vector en dos sublistas alrededor de un pivote y la busqueda binaria localiza un numero en un arreglo ordenado en tiempo logaritmico.">
-        Caso 5: Algoritmia fuera de dominio (Desconocido)
-      </button>
-      <button type="button" class="chatbot-preset-chip" data-prompt="Ayer fui al cine a ver una pelicula llamada evolucion a ciegas mientras cenaba pizza italiana y veia el partido de futbol.">
-        Caso 6: Frase trampa coloquial (Desconocido)
-      </button>
-    </div>
-  </div>
+  <div class="chatbot-editorial-card" id="chatbotMLContainer">
+    <!-- Cabecera simple y directa -->
+    <header class="chatbot-header">
+      <div class="chatbot-header-info">
+        <h3 class="chatbot-title">¿Que tipo de algoritmo de busqueda necesitas?</h3>
+        <p class="chatbot-subtitle">
+          Elige un ejemplo en <strong>1 clic</strong> o escribe tu caso para clasificarlo en <strong>Heuristica</strong>, <strong>Ciega</strong>, <strong>Evolutiva</strong> o <strong>Desconocido</strong>.
+        </p>
+      </div>
 
-  <!-- Ventana de Conversacion -->
-  <div class="chatbot-messages-viewport" id="chatbotMessagesViewport" aria-live="polite">
-    <div class="chat-msg-row bot">
-      <div class="chat-msg-bubble">
-        <div class="chat-verdict-header">
-          <span class="chat-author-label">Asistente ML for Kids</span>
-          <span class="chat-verdict-pill etiqueta-heuristica">Listo para clasificar</span>
-        </div>
-        <div class="chat-argument-body">
+      <div class="chatbot-header-actions">
+        <button type="button" class="sv-btn-accent" id="btnOpenChatbotModal">Guia y Entrenamiento</button>
+        <button type="button" class="chatbot-btn-clear" id="btnClearChat">Limpiar</button>
+      </div>
+    </header>
+
+    <!-- Ejemplos rapidos en 1 clic -->
+    <div class="chatbot-presets-bar">
+      <span class="chatbot-presets-title">Prueba en 1 clic:</span>
+      <div class="chatbot-presets-list">
+        <button type="button" class="chatbot-preset-chip" data-prompt="Aunque BFS explora sin informacion y la busqueda evolutiva usa mutacion, necesito hallar la ruta mas corta en un GPS usando A* con funcion heuristica h(n).">
+          Ruta GPS con A* (Heuristica)
+        </button>
+        <button type="button" class="chatbot-preset-chip" data-prompt="No tengo funcion heuristica h(n) ni poblaciones geneticas; prefiero recorrer el arbol nivel por nivel con busqueda en anchura (BFS).">
+          Recorrer por niveles (Ciega)
+        </button>
+        <button type="button" class="chatbot-preset-chip" data-prompt="Entre busqueda ciega, heuristica y evolutiva, necesito mantener una poblacion de soluciones que mejoren mediante seleccion natural, cruce y mutacion.">
+          Seleccion y mutacion (Evolutiva)
+        </button>
+        <button type="button" class="chatbot-preset-chip" data-prompt="El metodo Quicksort ordena una lista dividiendola con un pivote mientras preparamos una receta de cocina.">
+          Tema fuera de dominio (Desconocido)
+        </button>
+      </div>
+    </div>
+
+    <!-- Ventana de Conversacion limpia -->
+    <div class="chatbot-messages-viewport" id="chatbotMessagesViewport" aria-live="polite">
+      <div class="chat-msg-row bot">
+        <div class="chat-msg-bubble">
+          <div class="chat-verdict-header">
+            <span class="chat-author-label">Asistente</span>
+            <span class="chat-verdict-pill etiqueta-heuristica">Listo</span>
+          </div>
           <p class="chat-argument-paragraph">
-            Escribe cualquier enunciado sobre algoritmos de busqueda o selecciona uno de los ejemplos superiores. Respondere indicando la <strong>etiqueta seleccionada</strong> y el <strong>argumento detallado</strong> de por que se tomo esa decision.
+            Haz clic en cualquiera de los botones de arriba o escribe una frase abajo para ver su clasificacion al instante.
           </p>
         </div>
       </div>
     </div>
+
+    <!-- Barra de Entrada en una sola linea -->
+    <form class="chatbot-input-form" id="chatbotForm">
+      <div class="chatbot-input-row">
+        <textarea
+          id="chatbotInputText"
+          class="chatbot-textarea"
+          rows="1"
+          placeholder="Escribe tu duda o caso aqui y presiona Enter..."
+          aria-label="Mensaje para el chatbot clasificador"
+        ></textarea>
+        <button type="submit" class="chatbot-btn-primary" id="btnSendChat">Clasificar</button>
+      </div>
+    </form>
   </div>
 
-  <!-- Barra de Entrada -->
-  <form class="chatbot-input-form" id="chatbotForm">
-    <div class="chatbot-input-row">
-      <textarea
-        id="chatbotInputText"
-        class="chatbot-textarea"
-        rows="2"
-        placeholder="Escribe aqui tu consulta o caso para clasificar y argumentar..."
-        aria-label="Mensaje para el chatbot clasificador"
-      ></textarea>
-      <div class="chatbot-submit-col">
-        <button type="submit" class="chatbot-btn-primary" id="btnSendChat">Clasificar y Argumentar</button>
-        <button type="button" class="chatbot-btn-clear" id="btnClearChat">Limpiar chat</button>
+  <!-- MODAL COMPACTO POR PESTANAS DEL CHATBOT -->
+  <div class="modal-backdrop" id="chatbotModal" role="dialog" aria-modal="true" aria-labelledby="chatbotModalTitle">
+    <div class="modal-window sv-compact-modal">
+      <div class="sv-modal-top">
+        <div>
+          <span class="category-badge" id="chatbotEngineStatusBadge">Modo Local Activo</span>
+          <h3 class="sv-modal-heading" id="chatbotModalTitle">Centro del Asistente Clasificador</h3>
+        </div>
+        <button type="button" class="sv-modal-close" id="chatbotModalClose" aria-label="Cerrar ventana">&times;</button>
+      </div>
+
+      <!-- Pestañas del Modal -->
+      <div class="modal-tabs sv-modal-tabs" role="tablist">
+        <button type="button" class="modal-tab-item active" data-cb-tab="analysis" role="tab" aria-selected="true">1. Desglose del Resultado</button>
+        <button type="button" class="modal-tab-item" data-cb-tab="labels" role="tab" aria-selected="false">2. Las 4 Etiquetas</button>
+        <button type="button" class="modal-tab-item" data-cb-tab="train" role="tab" aria-selected="false">3. Entrenar / Conectar API</button>
+      </div>
+
+      <!-- Pestaña 1: Desglose de la ultima clasificacion -->
+      <div class="sv-tab-pane active" data-cb-pane="analysis">
+        <div id="chatbotModalAnalysisBody" class="cb-analysis-grid">
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Aun no has clasificado un mensaje</strong></div>
+            <p>Elige cualquiera de los 4 botones rapidos del chat o escribe una consulta para inspeccionar aqui su desglose completo sin saturar la conversacion.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña 2: Guia rapida de las 4 etiquetas -->
+      <div class="sv-tab-pane" data-cb-pane="labels" hidden>
+        <div class="sv-how-grid">
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Heuristica (Informada)</strong><span class="chat-verdict-pill etiqueta-heuristica">h(n)</span></div>
+            <p>Cuando el problema usa una pista o estimacion hacia la meta (distancia, GPS, algoritmo <strong>A*</strong>, busqueda voraz).</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Ciega (No Informada)</strong><span class="chat-verdict-pill etiqueta-ciega">BFS / DFS</span></div>
+            <p>Cuando explora por orden fijo (anchura, profundidad o costo uniforme) sin saber que tan cerca esta la meta.</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Evolutiva</strong><span class="chat-verdict-pill etiqueta-evolutiva">Genetica</span></div>
+            <p>Cuando mantiene una poblacion de soluciones que mejoran por seleccion natural, cruce, mutacion o aptitud.</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Desconocido</strong><span class="chat-verdict-pill etiqueta-desconocido">Otro tema</span></div>
+            <p>Frases cotidianas o algoritmos que no son de busqueda de estados en IA (como Quicksort o recetas de cocina).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña 3: Entrenamiento en vivo y API Key -->
+      <div class="sv-tab-pane" data-cb-pane="train" hidden>
+        <div class="cb-train-stack">
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Entrenar nuevo ejemplo al instante (Sin cuenta)</strong></div>
+            <p style="margin-bottom: 8px;">Agrega una frase a cualquiera de las 4 etiquetas para que el clasificador aprenda de inmediato:</p>
+            <div class="chatbot-apikey-row">
+              <select id="chatbotTrainLabelSelect" class="sim-select-input chatbot-train-select" aria-label="Seleccionar etiqueta a entrenar">
+                <option value="Heuristica">Etiqueta: Heuristica</option>
+                <option value="Ciega">Etiqueta: Ciega</option>
+                <option value="Evolutiva">Etiqueta: Evolutiva</option>
+                <option value="Desconocido">Etiqueta: Desconocido</option>
+              </select>
+              <input type="text" id="chatbotTrainTextInput" class="chatbot-apikey-input" placeholder="Escribe un ejemplo nuevo..." aria-label="Texto de ejemplo para entrenar">
+              <button type="button" class="chatbot-btn-primary" id="btnAddTrainingExample">Entrenar</button>
+            </div>
+          </div>
+
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Conexion opcional con Machine Learning for Kids</strong></div>
+            <p style="margin-bottom: 8px;">Si tienes una API Key en la nube de <code>machinelearningforkids.co.uk</code>, pegala aqui:</p>
+            <div class="chatbot-apikey-row">
+              <input type="text" id="chatbotApiKeyInput" class="chatbot-apikey-input" placeholder="Pegar API Key opcional..." aria-label="API Key de Machine Learning for Kids">
+              <button type="button" class="chatbot-btn-secondary" id="btnSaveApiKey">Verificar</button>
+              <button type="button" class="chatbot-btn-secondary" id="btnClearApiKey">Modo Local</button>
+            </div>
+            <div class="chatbot-panel-desc" id="chatbotApiKeyFeedback" style="margin-top: 8px; margin-bottom: 0;" hidden></div>
+          </div>
+        </div>
       </div>
     </div>
-  </form>
-</div>
+  </div>
 </div>

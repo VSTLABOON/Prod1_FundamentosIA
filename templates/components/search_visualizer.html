@@ -1,126 +1,154 @@
-<!-- COMPONENTE: SIMULADOR GRAFICO DE BUSQUEDA (ROBOT DE SURTIDO EN ALMACEN) -->
+<!-- COMPONENTE: SIMULADOR GRAFICO DE BUSQUEDA (INTUITIVO EN 2 CLICS) -->
 <div class="sv-section-block" id="searchVisualizerAnchor">
-<div class="editorial-divider chatbot-divider">
-  <h2 class="subheading-editorial">Simulador Grafico: Robot de Surtido en un Almacen</h2>
-  <span class="divider-line"></span>
-</div>
-
-<div class="sv-card" id="searchVisualizer">
-  <!-- Cabecera y planteamiento del problema -->
-  <header class="sv-header">
-    <div class="sv-header-info">
-      <span class="sv-kicker">Caso practico original &bull; Logistica de ultima milla interna</span>
-      <h3 class="sv-title">Un robot debe surtir un pedido y llevarlo a empaque por la ruta mas barata</h3>
-      <p class="sv-subtitle">
-        El almacen es el <strong>espacio de estados S</strong> (cada celda es un estado). El robot parte de su
-        <strong>base de carga</strong>, debe llegar al <strong>estante del pedido</strong> y despues a la
-        <strong>zona de empaque</strong>. Los pasillos libres cuestan <code>1</code> y las zonas con montacargas
-        cuestan <code>4</code> (mas lentas y riesgosas). Observa como cada algoritmo explora la frontera hasta encontrar la ruta.
-      </p>
-    </div>
-  </header>
-
-  <!-- Flujo practico de 3 paradas -->
-  <ol class="sv-flow" aria-label="Flujo de la tarea del robot">
-    <li class="sv-flow-step" data-leg="-1"><span class="sv-flow-badge marker-base">B</span>Base de carga (s<sub>0</sub>)</li>
-    <li class="sv-flow-arrow" aria-hidden="true">&rarr;</li>
-    <li class="sv-flow-step" data-leg="0"><span class="sv-flow-badge marker-pick">P</span>Recoger pedido (meta 1)</li>
-    <li class="sv-flow-arrow" aria-hidden="true">&rarr;</li>
-    <li class="sv-flow-step" data-leg="1"><span class="sv-flow-badge marker-pack">E</span>Zona de empaque (meta final)</li>
-  </ol>
-
-  <div class="sv-layout">
-    <!-- Columna del tablero -->
-    <div class="sv-board-col">
-      <div class="sv-toolbar">
-        <label class="sv-field">
-          <span class="sv-field-label">Algoritmo</span>
-          <select id="svAlgorithm" class="sim-select-input sv-select">
-            <option value="astar" selected>A* (heuristica Manhattan)</option>
-            <option value="ucs">Costo uniforme (UCS)</option>
-            <option value="bfs">Anchura (BFS, ignora costos)</option>
-            <option value="greedy">Voraz (primero el mejor)</option>
-          </select>
-        </label>
-        <label class="sv-field sv-field-speed">
-          <span class="sv-field-label">Velocidad <span id="svSpeedValue">6</span>/10</span>
-          <input type="range" id="svSpeed" class="sim-slider" min="1" max="10" value="6">
-        </label>
-      </div>
-
-      <div class="sv-tools" role="radiogroup" aria-label="Herramienta de edicion del almacen">
-        <span class="sv-field-label">Editar almacen:</span>
-        <button type="button" class="sv-tool-btn active" data-tool="shelf" role="radio" aria-checked="true"><span class="sv-swatch swatch-shelf"></span>Estante</button>
-        <button type="button" class="sv-tool-btn" data-tool="congest" role="radio" aria-checked="false"><span class="sv-swatch swatch-congest"></span>Montacargas</button>
-        <button type="button" class="sv-tool-btn" data-tool="erase" role="radio" aria-checked="false"><span class="sv-swatch swatch-free"></span>Borrar</button>
-        <button type="button" class="sv-tool-btn" data-tool="base" role="radio" aria-checked="false"><span class="sv-swatch swatch-base">B</span>Base</button>
-        <button type="button" class="sv-tool-btn" data-tool="pick" role="radio" aria-checked="false"><span class="sv-swatch swatch-pick">P</span>Pedido</button>
-        <button type="button" class="sv-tool-btn" data-tool="pack" role="radio" aria-checked="false"><span class="sv-swatch swatch-pack">E</span>Empaque</button>
-      </div>
-
-      <div class="sv-grid-frame">
-        <div class="sv-grid" id="svGrid" aria-label="Plano del almacen. Haz clic o arrastra para editar."></div>
-      </div>
-
-      <div class="sv-legend" aria-hidden="true">
-        <span><i class="sv-swatch swatch-free"></i>Pasillo (c = 1)</span>
-        <span><i class="sv-swatch swatch-congest"></i>Montacargas (c = 4)</span>
-        <span><i class="sv-swatch swatch-shelf"></i>Estante (bloqueado)</span>
-        <span><i class="sv-swatch swatch-frontier"></i>Frontera</span>
-        <span><i class="sv-swatch swatch-explored"></i>Explorado</span>
-        <span><i class="sv-swatch swatch-path"></i>Ruta solucion</span>
-      </div>
-
-      <div class="sv-controls">
-        <button type="button" class="chatbot-btn-primary" id="svBtnRun">Ejecutar busqueda</button>
-        <button type="button" class="chatbot-btn-secondary" id="svBtnStep">Paso a paso</button>
-        <button type="button" class="chatbot-btn-secondary" id="svBtnReset">Reiniciar recorrido</button>
-        <button type="button" class="chatbot-btn-secondary" id="svBtnCompare">Comparar algoritmos</button>
-        <span class="sv-controls-sep" aria-hidden="true"></span>
-        <button type="button" class="chatbot-btn-clear" id="svBtnDefault">Almacen original</button>
-        <button type="button" class="chatbot-btn-clear" id="svBtnRandom">Almacen aleatorio</button>
-        <button type="button" class="chatbot-btn-clear" id="svBtnClear">Vaciar plano</button>
-      </div>
-    </div>
-
-    <!-- Columna lateral: estado del algoritmo -->
-    <aside class="sv-side-col" aria-live="polite">
-      <div class="sv-status-banner" id="svStatus">Listo. Pulsa <strong>Ejecutar busqueda</strong> o edita el plano.</div>
-
-      <div class="sv-stats">
-        <div class="sv-stat"><span class="sv-stat-label">Tramo</span><span class="sv-stat-value" id="svStatLeg">&mdash;</span></div>
-        <div class="sv-stat"><span class="sv-stat-label">Nodos expandidos</span><span class="sv-stat-value" id="svStatExpanded">0</span></div>
-        <div class="sv-stat"><span class="sv-stat-label">Frontera</span><span class="sv-stat-value" id="svStatFrontier">0</span></div>
-        <div class="sv-stat"><span class="sv-stat-label">Costo de ruta</span><span class="sv-stat-value" id="svStatCost">&mdash;</span></div>
-      </div>
-
-      <div class="sv-node-box">
-        <div class="sv-box-label">Nodo en expansion</div>
-        <div class="sv-node-formula" id="svNodeFormula">f(n) = g(n) + h(n)</div>
-        <div class="sv-node-detail" id="svNodeDetail">Aun no se ha expandido ningun nodo.</div>
-      </div>
-
-      <div class="sv-explain-box">
-        <div class="sv-box-label" id="svExplainTitle">Como decide A*</div>
-        <p class="sv-explain-text" id="svExplainText"></p>
-      </div>
-
-      <div class="sv-log-box">
-        <div class="sv-box-label">Bitacora de ejecucion</div>
-        <ol class="sv-log" id="svLog"></ol>
-      </div>
-
-      <div class="sv-compare-box" id="svCompareBox" hidden>
-        <div class="sv-box-label">Comparativa sobre este mismo almacen</div>
-        <table class="sv-compare-table">
-          <thead>
-            <tr><th scope="col">Algoritmo</th><th scope="col">Expandidos</th><th scope="col">Pasos</th><th scope="col">Costo</th><th scope="col">Tiempo est.</th></tr>
-          </thead>
-          <tbody id="svCompareBody"></tbody>
-        </table>
-        <p class="sv-compare-note" id="svCompareNote"></p>
-      </div>
-    </aside>
+  <div class="editorial-divider chatbot-divider">
+    <h2 class="subheading-editorial">Simulador Visual de Busqueda</h2>
+    <span class="divider-line"></span>
   </div>
-</div>
+
+  <div class="sv-card" id="searchVisualizer">
+    <!-- Cabecera simple y directa -->
+    <div class="sv-top-bar">
+      <div class="sv-intro">
+        <h3 class="sv-title">Ruta de un robot en el almacen: <span class="sv-inline-step"><b class="b-dot">B</b> Inicio</span> &rarr; <span class="sv-inline-step"><b class="p-dot">P</b> Pedido</span> &rarr; <span class="sv-inline-step"><b class="e-dot">E</b> Empaque</span></h3>
+        <p class="sv-subtitle">
+          <strong>En 2 clics:</strong> 1) Elige un algoritmo abajo y 2) haz clic en cualquier casilla si deseas poner o quitar un estante.
+        </p>
+      </div>
+
+      <div class="sv-quick-actions">
+        <button type="button" class="sv-btn-accent" id="svBtnOpenModal">Comparar y Guia</button>
+        <button type="button" class="sv-btn-ghost" id="svBtnRandom" title="Generar otra distribucion de estantes">Cambiar mapa</button>
+        <button type="button" class="sv-btn-ghost" id="svBtnDefault" title="Restaurar el mapa inicial">Reiniciar</button>
+      </div>
+    </div>
+
+    <!-- Paso 1: Selector de algoritmo en 1 clic (ejecuta automaticamente) -->
+    <div class="sv-algo-bar" role="tablist" aria-label="Elegir algoritmo de busqueda">
+      <button type="button" class="sv-algo-pill active" data-algo="astar" role="tab" aria-selected="true">
+        <span class="sv-algo-name">A* (Recomendado)</span>
+        <span class="sv-algo-desc">Usa guia hacia la meta y evita zonas lentas</span>
+      </button>
+      <button type="button" class="sv-algo-pill" data-algo="bfs" role="tab" aria-selected="false">
+        <span class="sv-algo-name">Busqueda Ciega (BFS)</span>
+        <span class="sv-algo-desc">Explora por niveles sin medir el trafico</span>
+      </button>
+      <button type="button" class="sv-algo-pill" data-algo="ucs" role="tab" aria-selected="false">
+        <span class="sv-algo-name">Costo Uniforme</span>
+        <span class="sv-algo-desc">Camino mas barato, pero revisa casi todo</span>
+      </button>
+      <button type="button" class="sv-algo-pill" data-algo="greedy" role="tab" aria-selected="false">
+        <span class="sv-algo-name">Busqueda Voraz</span>
+        <span class="sv-algo-desc">Va directo a la meta sin importar el costo</span>
+      </button>
+    </div>
+
+    <!-- Tablero limpio + Resumen compacto -->
+    <div class="sv-main-stage">
+      <div class="sv-board-wrap">
+        <div class="sv-grid" id="svGrid" aria-label="Mapa interactivo del almacen"></div>
+        <div class="sv-legend">
+          <span><i class="sv-dot dot-free"></i>Pasillo (costo 1)</span>
+          <span><i class="sv-dot dot-slow"></i>Trafico lento (costo 4)</span>
+          <span><i class="sv-dot dot-wall"></i>Estante (clic para editar)</span>
+          <span><i class="sv-dot dot-explored"></i>Casillas revisadas</span>
+          <span><i class="sv-dot dot-path"></i>Ruta elegida</span>
+        </div>
+      </div>
+
+      <!-- Panel lateral modesto con lo esencial -->
+      <div class="sv-summary-panel" aria-live="polite">
+        <button type="button" class="sv-btn-run" id="svBtnRun">Repetir animacion</button>
+
+        <div class="sv-metrics">
+          <div class="sv-metric-card">
+            <span class="sv-metric-label">Casillas revisadas</span>
+            <strong class="sv-metric-val" id="svStatExpanded">0</strong>
+          </div>
+          <div class="sv-metric-card">
+            <span class="sv-metric-label">Esfuerzo de ruta</span>
+            <strong class="sv-metric-val" id="svStatCost">&mdash;</strong>
+          </div>
+        </div>
+
+        <div class="sv-verdict-box" id="svStatus">
+          Selecciona un algoritmo para iniciar.
+        </div>
+
+        <div class="sv-explain-simple" id="svExplainText">
+          A* combina la distancia recorrida con una estimacion hacia la meta: encuentra la mejor ruta revisando pocas casillas.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL COMPACTO POR PESTANAS (SIN SATURACION NI SCROLL LARGO) -->
+  <div class="modal-backdrop" id="svModal" role="dialog" aria-modal="true" aria-labelledby="svModalTitle">
+    <div class="modal-window sv-compact-modal">
+      <div class="sv-modal-top">
+        <div>
+          <span class="category-badge">Guia Interactiva del Simulador</span>
+          <h3 class="sv-modal-heading" id="svModalTitle">Comparativa y Funcionamiento</h3>
+        </div>
+        <button type="button" class="sv-modal-close" id="svModalClose" aria-label="Cerrar ventana">&times;</button>
+      </div>
+
+      <!-- Navegacion por pestañas dentro del modal -->
+      <div class="modal-tabs sv-modal-tabs" role="tablist">
+        <button type="button" class="modal-tab-item active" data-sv-tab="compare" role="tab" aria-selected="true">1. Comparativa en este Mapa</button>
+        <button type="button" class="modal-tab-item" data-sv-tab="how" role="tab" aria-selected="false">2. ¿Como decide cada uno?</button>
+        <button type="button" class="modal-tab-item" data-sv-tab="elements" role="tab" aria-selected="false">3. Elementos del Problema</button>
+      </div>
+
+      <!-- Pestaña 1: Comparativa visual en barras -->
+      <div class="sv-tab-pane active" data-sv-pane="compare">
+        <p class="sv-pane-intro">Resultado de correr los 4 algoritmos sobre tu mapa actual:</p>
+        <div class="sv-compare-cards" id="svCompareCards"></div>
+        <div class="sv-compare-summary" id="svCompareNote"></div>
+      </div>
+
+      <!-- Pestaña 2: Explicacion simple de cada algoritmo -->
+      <div class="sv-tab-pane" data-sv-pane="how" hidden>
+        <div class="sv-how-grid">
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>A* (Heuristica)</strong><span class="sv-tag-win">El mas equilibrado</span></div>
+            <p>Mira cuanto lleva recorrido <code>g(n)</code> y cuanto falta en linea recta <code>h(n)</code>. Evita el trafico lento y va directo hacia la meta.</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Busqueda Ciega (BFS)</strong><span class="sv-tag-neutral">Sin guia</span></div>
+            <p>Avanza como una ola en todas direcciones contando solo el numero de pasos. No distingue si una zona tiene trafico pesado.</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Costo Uniforme (UCS)</strong><span class="sv-tag-neutral">Seguro pero lento</span></div>
+            <p>Siempre elige el paso acumulado mas barato. Garantiza la ruta optima, pero revisa casi todo el almacen porque no sabe donde esta la meta.</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Busqueda Voraz</strong><span class="sv-tag-warn">Impulsivo</span></div>
+            <p>Solo mira que tan cerca parece estar la meta <code>h(n)</code>. Revisa muy pocas casillas, pero suele meterse en zonas de trafico caro.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pestaña 3: Conexion con la teoria del curso -->
+      <div class="sv-tab-pane" data-sv-pane="elements" hidden>
+        <div class="sv-how-grid">
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>1. Espacio de estados (S)</strong></div>
+            <p>Las 135 casillas del almacen. Cada casilla libre por la que puede pasar el robot es un estado valido.</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>2. Estado inicial (s<sub>0</sub>) y Metas</strong></div>
+            <p>El robot inicia en la Base <strong>B</strong>, cumple la primera meta al recoger el Pedido <strong>P</strong> y termina en Empaque <strong>E</strong>.</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>3. Acciones y Transicion</strong></div>
+            <p>Moverse arriba, abajo, izquierda o derecha hacia cualquier casilla vecina que no tenga un estante.</p>
+          </div>
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>4. Costo de paso c(s, a, s')</strong></div>
+            <p>Cruzar un pasillo libre cuesta <strong>1 punto</strong>; cruzar una zona con trafico de montacargas cuesta <strong>4 puntos</strong>.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

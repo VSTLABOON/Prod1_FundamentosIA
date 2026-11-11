@@ -84,13 +84,13 @@
 }
 
 .chatbot-editorial-card {
-  max-width: 1120px;
+  max-width: 1020px;
   width: 100%;
-  margin: 0 auto 36px auto;
+  margin: 0 auto 32px auto;
   background: var(--bg-card);
   border: 1px solid var(--rule);
   border-radius: var(--radius-lg);
-  padding: 20px 26px;
+  padding: 20px 24px;
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
@@ -104,6 +104,12 @@
   padding-bottom: 12px;
   margin-bottom: 12px;
   border-bottom: 1px solid var(--rule);
+}
+
+.chatbot-header-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .chatbot-header-info {
@@ -264,44 +270,41 @@
   border-color: var(--teal);
 }
 
-/* Barra de Ejemplos de Prueba */
+/* Barra de Ejemplos de Prueba en 1 clic */
 .chatbot-presets-bar {
-  background: var(--bg-raised);
-  border: 1px solid var(--rule-light);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
 .chatbot-presets-title {
-  display: block;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
   color: var(--ink-muted);
-  margin-bottom: 6px;
+  margin-right: 2px;
 }
 
 .chatbot-presets-list {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
+  flex: 1;
 }
 
 .chatbot-preset-chip {
   font-family: "IBM Plex Sans", sans-serif;
-  font-size: 0.76rem;
-  font-weight: 500;
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--ink);
-  background: var(--bg-card);
+  background: var(--bg-raised);
   border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
-  padding: 5px 10px;
+  border-radius: 999px;
+  padding: 5px 12px;
   cursor: pointer;
-  text-align: left;
   line-height: 1.3;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .chatbot-preset-chip:hover {
@@ -310,20 +313,20 @@
   color: var(--teal);
 }
 
-/* Ventana de Conversacion con altura controlada y estable */
+/* Ventana de Conversacion limpia y modesta */
 .chatbot-messages-viewport {
   background: var(--bg-raised);
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
   padding: 14px 16px;
-  height: clamp(230px, 33vh, 310px);
-  min-height: 230px;
-  max-height: 310px;
+  height: clamp(200px, 28vh, 260px);
+  min-height: 200px;
+  max-height: 260px;
   overflow-y: auto;
   overscroll-behavior: contain;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-bottom: 12px;
 }
 
@@ -450,22 +453,26 @@
   margin: 0;
 }
 
-.chat-disambiguation-box {
-  background: var(--bg-raised);
-  border-left: 3px solid var(--gold);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 0.83rem;
-  line-height: 1.48;
+.chat-more-details {
+  margin-top: 6px;
+  font-size: 0.8rem;
   color: var(--ink-soft);
 }
 
-.chat-foundation-box {
+.chat-more-details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--teal);
+  user-select: none;
+}
+
+.chat-more-details-body {
+  margin-top: 6px;
+  padding-top: 6px;
   border-top: 1px solid var(--rule-light);
-  padding-top: 8px;
-  font-size: 0.82rem;
-  line-height: 1.48;
-  color: var(--ink-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 /* Formulario inferior de entrada */

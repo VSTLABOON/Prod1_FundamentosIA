@@ -785,8 +785,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnClearChat = document.getElementById("btnClearChat");
     const presetChips = document.querySelectorAll(".chatbot-preset-chip");
 
-    const btnToggleApiKeyPanel = document.getElementById("btnToggleApiKeyPanel");
-    const apiKeyPanel = document.getElementById("chatbotApiKeyPanel");
+    const btnOpenChatbotModal = document.getElementById("btnOpenChatbotModal");
+    const chatbotModal = document.getElementById("chatbotModal");
+    const chatbotModalClose = document.getElementById("chatbotModalClose");
+    const chatbotModalTabs = document.querySelectorAll("[data-cb-tab]");
+    const chatbotModalPanes = document.querySelectorAll("[data-cb-pane]");
+    const chatbotModalAnalysisBody = document.getElementById("chatbotModalAnalysisBody");
+
     const apiKeyInput = document.getElementById("chatbotApiKeyInput");
     const btnSaveApiKey = document.getElementById("btnSaveApiKey");
     const btnClearApiKey = document.getElementById("btnClearApiKey");
@@ -794,6 +799,52 @@ document.addEventListener("DOMContentLoaded", () => {
     const apiKeyFeedback = document.getElementById("chatbotApiKeyFeedback");
 
     if (!form || !inputText || !messagesViewport) return;
+
+    function switchChatbotModalTab(tabKey) {
+      chatbotModalTabs.forEach(t => {
+        const active = t.dataset.cbTab === tabKey;
+        t.classList.toggle("active", active);
+        t.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      chatbotModalPanes.forEach(p => {
+        const active = p.dataset.cbPane === tabKey;
+        p.classList.toggle("active", active);
+        p.hidden = !active;
+      });
+    }
+
+    function openChatbotModal(tabKey = "labels") {
+      if (!chatbotModal) return;
+      switchChatbotModalTab(tabKey);
+      chatbotModal.classList.add("open");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeChatbotModal() {
+      if (!chatbotModal) return;
+      chatbotModal.classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    if (btnOpenChatbotModal) {
+      btnOpenChatbotModal.addEventListener("click", () => openChatbotModal("labels"));
+    }
+    if (chatbotModalClose) {
+      chatbotModalClose.addEventListener("click", closeChatbotModal);
+    }
+    if (chatbotModal) {
+      chatbotModal.addEventListener("click", (e) => {
+        if (e.target === chatbotModal) closeChatbotModal();
+      });
+    }
+    chatbotModalTabs.forEach(t => {
+      t.addEventListener("click", () => switchChatbotModalTab(t.dataset.cbTab));
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && chatbotModal && chatbotModal.classList.contains("open")) {
+        closeChatbotModal();
+      }
+    });
 
     const savedKey = localStorage.getItem("mlforkids_api_key") || "";
     if (apiKeyInput) apiKeyInput.value = savedKey;
@@ -806,19 +857,8 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (key && key.trim().length > 0) {
         engineStatusBadge.textContent = "API Key Configurada";
       } else {
-        engineStatusBadge.textContent = "Respaldo Local Activo";
+        engineStatusBadge.textContent = "Modo Local Activo";
       }
-    }
-
-    if (btnToggleApiKeyPanel && apiKeyPanel) {
-      btnToggleApiKeyPanel.addEventListener("click", () => {
-        const isHidden = apiKeyPanel.hasAttribute("hidden");
-        if (isHidden) {
-          apiKeyPanel.removeAttribute("hidden");
-        } else {
-          apiKeyPanel.setAttribute("hidden", "");
-        }
-      });
     }
 
     if (btnSaveApiKey && apiKeyInput) {
@@ -955,35 +995,56 @@ document.addEventListener("DOMContentLoaded", () => {
       const multiAnalysis = arg.multi_mention_analysis || null;
       const foundation = arg.foundation || "";
 
-      const multiBlockHtml = multiAnalysis
-        ? `<div class="chat-disambiguation-box">
-             <strong>Resolucion de menciones multiples en el texto:</strong><br>
-             ${formatRichText(multiAnalysis)}
-           </div>`
-        : "";
+      function populateAnalysisModal() {
+        if (!chatbotModalAnalysisBody) return;
+        chatbotModalAnalysisBody.innerHTML = `
+          <div class="sv-how-card">
+            <div class="sv-how-head">
+              <strong>Veredicto Principal</strong>
+              <span class="chat-verdict-pill etiqueta-${escapeHtml(labelKey)}">${escapeHtml(label)}</span>
+            </div>
+            <p>${formatRichText(mainReason)}</p>
+          </div>
+          ${multiAnalysis ? `
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Desambiguacion de Menciones</strong></div>
+            <p>${formatRichText(multiAnalysis)}</p>
+          </div>` : ""}
+          ${foundation ? `
+          <div class="sv-how-card">
+            <div class="sv-how-head"><strong>Fundamento Teorico (${escapeHtml(arg.title || label)})</strong></div>
+            <p>${formatRichText(foundation)}</p>
+          </div>` : ""}
+        `;
+      }
 
-      const foundationHtml = foundation
-        ? `<div class="chat-foundation-box">
-             <strong>Analisis especifico (${escapeHtml(arg.title || label)}):</strong> ${formatRichText(foundation)}
-           </div>`
+      populateAnalysisModal();
+
+      const hasExtra = Boolean(multiAnalysis || foundation);
+      const modalTriggerHtml = hasExtra
+        ? `<button type="button" class="chat-open-modal-btn">Ver desglose por pestañas</button>`
         : "";
 
       row.innerHTML = `
         <div class="chat-msg-bubble">
           <div class="chat-verdict-header">
-            <span class="chat-author-label">Veredicto del Modelo ML for Kids</span>
-            <span class="chat-verdict-pill etiqueta-${escapeHtml(labelKey)}">Etiqueta: ${escapeHtml(label)}</span>
+            <span class="chat-author-label">Clasificacion</span>
+            <span class="chat-verdict-pill etiqueta-${escapeHtml(labelKey)}">${escapeHtml(label)}</span>
           </div>
           <div class="chat-argument-body">
-            <div>
-              <div class="chat-argument-section-label">Argumento de seleccion</div>
-              <p class="chat-argument-paragraph">${formatRichText(mainReason)}</p>
-            </div>
-            ${multiBlockHtml}
-            ${foundationHtml}
+            <p class="chat-argument-paragraph">${formatRichText(mainReason)}</p>
+            ${modalTriggerHtml}
           </div>
         </div>
       `;
+
+      const openBtn = row.querySelector(".chat-open-modal-btn");
+      if (openBtn) {
+        openBtn.addEventListener("click", () => {
+          populateAnalysisModal();
+          openChatbotModal("analysis");
+        });
+      }
 
       messagesViewport.appendChild(row);
       requestAnimationFrame(() => {
