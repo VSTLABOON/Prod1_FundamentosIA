@@ -181,7 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
       sectionBusqueda: subAnchor ? subAnchor.hash.slice(1) : "busqueda",
       sectionMachineLearning: "machine-learning",
       sectionGlosario: "glosario",
-      sectionEnsayo: "ensayo"
+      sectionEnsayo: "ensayo",
+      sectionBrazo: "brazo-robotico"
     };
     if (hashMap[targetSectionId]) {
       history.replaceState(null, "", `#${hashMap[targetSectionId]}`);
@@ -262,6 +263,8 @@ document.addEventListener("DOMContentLoaded", () => {
       switchSection("sectionGlosario");
     } else if (hash === "#ensayo") {
       switchSection("sectionEnsayo");
+    } else if (hash === "#brazo-robotico" || hash === "#brazo") {
+      switchSection("sectionBrazo");
     } else {
       switchSection("sectionAntecedentes");
     }

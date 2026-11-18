@@ -19,10 +19,12 @@ DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "glossary.db"
 def get_db_connection() -> sqlite3.Connection:
     """
     Establece y retorna una conexion a la base de datos SQLite.
-    Configura row_factory para obtener resultados accesibles como diccionarios.
+    Configura row_factory para obtener resultados accesibles como diccionarios
+    y timeout de espera para soportar concurrencia en Gunicorn/Render.
     """
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=15.0)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA busy_timeout = 5000")
     return conn
 
 

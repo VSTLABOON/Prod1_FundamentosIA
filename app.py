@@ -12,6 +12,8 @@ from flask import Flask, render_template, jsonify, request
 import database as db
 import seed_db
 import chatbot as ml_chatbot
+import robot_arm_search
+import arm_storage
 
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
@@ -28,6 +30,7 @@ def ensure_database_ready() -> None:
     """
     try:
         db.init_db()
+        arm_storage.init_arm_tables()
         total = db.count_concepts()
         if total < 20:
             print(f"[INICIALIZACION] Se detectaron {total} conceptos. Ejecutando siembra inicial...")
@@ -235,6 +238,225 @@ def api_chatbot_train():
         "total_in_bucket": len(ml_chatbot.TRAINING_CORPUS.get(canon, [])),
         "message": f"Ejemplo agregado a la cubeta '{canon}' y modelo reentrenado exitosamente."
     })
+
+
+@app.route("/api/arm/presets", methods=["GET"])
+def api_arm_presets():
+    """
+    Endpoint REST que entrega los escenarios reales de planta automotriz
+    y la geometria del brazo robotico 2D.
+    """
+    return jsonify({
+        "status": "success",
+        "data": robot_arm_search.get_presets_payload()
+    })
+
+
+@app.route("/api/arm/solve", methods=["POST"])
+def api_arm_solve():
+    """
+    Endpoint REST que ejecuta en Python la planificacion de movimiento del
+    brazo robotico 2D (astar, ucs, greedy, bfs, dfs) en el Espacio de Configuraciones.
+    """
+    payload = request.get_json(silent=True) or {}
+    algorithm = payload.get("algorithm", "astar")
+    start_deg = payload.get("start_deg", [165, 340])
+    target = payload.get("target", [335.0, 130.0])
+    obstacles = payload.get("obstacles")
+
+    try:
+        parsed_start = robot_arm_search.validate_start_deg(start_deg)
+        result = robot_arm_search.solve_arm_motion(
+            algorithm=algorithm,
+            start_deg=parsed_start,
+            target=target,
+            raw_obstacles=obstacles,
+        )
+    except (ValueError, TypeError, IndexError, KeyError) as err:
+        return jsonify({"status": "error", "message": str(err)}), 400
+
+    return jsonify({
+        "status": "success",
+        "data": result
+    })
+
+
+@app.route("/api/arm/compare", methods=["POST"])
+def api_arm_compare():
+    """
+    Endpoint REST que compara en Python los 5 algoritmos sobre la celda
+    robotica actual (mostrando eficiencia y posibles fallos).
+    """
+    payload = request.get_json(silent=True) or {}
+    start_deg = payload.get("start_deg", [165, 340])
+    target = payload.get("target", [335.0, 130.0])
+    obstacles = payload.get("obstacles")
+
+    try:
+        parsed_start = robot_arm_search.validate_start_deg(start_deg)
+        if not isinstance(target, (list, tuple)) or len(target) < 2:
+            raise ValueError("target debe contener [x, y]")
+        cmp_data = robot_arm_search.compare_arm_algorithms(
+            start_deg=parsed_start,
+            target=(
+                robot_arm_search._finite_float(target[0], "target[0]"),
+                robot_arm_search._finite_float(target[1], "target[1]"),
+            ),
+            raw_obstacles=obstacles,
+        )
+    except (ValueError, TypeError, IndexError, KeyError) as err:
+        return jsonify({"status": "error", "message": str(err)}), 400
+
+    return jsonify({
+        "status": "success",
+        "data": cmp_data
+    })
+
+
+@app.route("/api/arm/solve-sequence", methods=["POST"])
+def api_arm_solve_sequence():
+    """
+    Endpoint REST que ejecuta en Python una tarea practica multi-etapa
+    (Pick & Place, Soldadura multi-punto o recalculo tras obstaculo imprevisto).
+    Integra Memoria de Rutas SQL (CBR) y registro automatico en SQLite.
+    """
+    payload = request.get_json(silent=True) or {}
+    algorithm = payload.get("algorithm", "astar")
+    start_deg = payload.get("start_deg", [170, 15])
+    waypoints = payload.get("waypoints")
+    obstacles = payload.get("obstacles")
+    task_id = payload.get("task_id", "pick_and_place")
+    task_name = payload.get("task_name", "Pick & Place")
+    had_unexpected = bool(payload.get("had_unexpected", False))
+    use_memory = bool(payload.get("use_memory", True))
+    record_run = bool(payload.get("record_run", True))
+
+    try:
+        parsed_start = robot_arm_search.validate_start_deg(start_deg)
+        effective_waypoints = robot_arm_search.validate_waypoints(waypoints)
+        raw_obs = obstacles if obstacles is not None else [
+            vars(o) for o in robot_arm_search.TASK_PRESETS["pick_and_place"]["obstacles"]
+        ]
+        parsed_obs = robot_arm_search.parse_obstacles(raw_obs)
+        effective_obstacles = [vars(o) for o in parsed_obs]
+
+        algo_clean = str(algorithm or "astar").strip().lower()
+        if algo_clean not in robot_arm_search.ALGORITHMS_INFO:
+            raise ValueError(f"Algoritmo no soportado: '{algorithm}'")
+
+        scene_hash = arm_storage.compute_scene_hash(parsed_start, effective_waypoints, effective_obstacles)
+        result = None
+
+        if use_memory:
+            result = arm_storage.lookup_cached_sequence(scene_hash, algo_clean)
+
+        if result is None:
+            result = robot_arm_search.solve_arm_sequence(
+                algorithm=algo_clean,
+                start_deg=parsed_start,
+                waypoints=effective_waypoints,
+                raw_obstacles=effective_obstacles,
+            )
+            result["from_cache"] = False
+            if use_memory and result.get("found"):
+                arm_storage.save_cached_sequence(scene_hash, algo_clean, task_name, result)
+
+        if record_run:
+            scene_snapshot = {
+                "task_id": task_id,
+                "task_name": task_name,
+                "algorithm_id": algo_clean,
+                "start_deg": list(parsed_start),
+                "waypoints": effective_waypoints,
+                "obstacles": effective_obstacles,
+                "had_unexpected": had_unexpected,
+            }
+            result["run_id"] = arm_storage.log_arm_run(
+                task_id=task_id,
+                task_name=task_name,
+                result=result,
+                scene_payload=scene_snapshot,
+                had_unexpected=had_unexpected,
+            )
+    except (ValueError, TypeError, IndexError, KeyError) as err:
+        return jsonify({"status": "error", "message": str(err)}), 400
+
+    return jsonify({
+        "status": "success",
+        "data": result
+    })
+
+
+@app.route("/api/arm/history", methods=["GET"])
+def api_arm_get_history():
+    """
+    Endpoint REST para consultar la bitacora SQLite de corridas, fallos
+    y entradas almacenadas en la memoria de rutas (CBR).
+    """
+    filter_mode = request.args.get("filter", "all")
+    limit = request.args.get("limit", default=40, type=int)
+    data = arm_storage.get_arm_history(filter_mode=filter_mode, limit=limit)
+    return jsonify({"status": "success", "data": data})
+
+
+@app.route("/api/arm/history", methods=["DELETE"])
+def api_arm_clear_history():
+    """
+    Endpoint REST para limpiar la bitacora SQL o la memoria de rutas.
+    """
+    scope = request.args.get("scope", "runs")
+    try:
+        deleted = arm_storage.clear_arm_storage(scope=scope)
+    except ValueError as err:
+        return jsonify({"status": "error", "message": str(err)}), 400
+    return jsonify({"status": "success", "data": deleted})
+
+
+@app.route("/api/arm/rag", methods=["POST"])
+def api_arm_rag():
+    """
+    Endpoint REST del consultor Mini-RAG sobre los registros SQLite de arm_runs.
+    """
+    payload = request.get_json(silent=True) or {}
+    question = payload.get("question", "")
+    rag_res = arm_storage.query_arm_rag(question)
+    return jsonify({"status": "success", "data": rag_res})
+
+
+@app.route("/api/arm/compare-sequence", methods=["POST"])
+def api_arm_compare_sequence():
+    """
+    Endpoint REST que compara las 5 estrategias en Python ejecutando la
+    secuencia practica completa (Pick & Place o Soldadura multi-punto).
+    """
+    payload = request.get_json(silent=True) or {}
+    start_deg = payload.get("start_deg", [170, 15])
+    waypoints = payload.get("waypoints")
+    obstacles = payload.get("obstacles")
+
+    try:
+        parsed_start = robot_arm_search.validate_start_deg(start_deg)
+        raw_obs = obstacles if obstacles is not None else [
+            vars(o) for o in robot_arm_search.TASK_PRESETS["pick_and_place"]["obstacles"]
+        ]
+        cmp_data = robot_arm_search.compare_arm_sequences(
+            start_deg=parsed_start,
+            waypoints=waypoints,
+            raw_obstacles=raw_obs,
+        )
+    except (ValueError, TypeError, IndexError, KeyError) as err:
+        return jsonify({"status": "error", "message": str(err)}), 400
+
+    return jsonify({
+        "status": "success",
+        "data": cmp_data
+    })
+
+
+@app.route("/health", methods=["GET"])
+def health_check():
+    """Endpoint ligero de verificacion de salud para despliegues en Render."""
+    return jsonify({"status": "ok"}), 200
 
 
 if __name__ == "__main__":

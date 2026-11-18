@@ -30,6 +30,9 @@
 /* 8. Seccion Ensayo Academico */
 @import "modules/ensayo.css";
 
+/* 8b. Seccion Exclusiva: Brazo Robotico 2D */
+@import "modules/brazo_robotico.css";
+
 /* 9. Ventanas modales y Lightbox */
 @import "modules/modals.css";
 

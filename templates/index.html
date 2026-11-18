@@ -38,6 +38,9 @@
     <!-- SECCION 6: ENSAYO ACADEMICO -->
     {% include 'sections/ensayo.html' %}
 
+    <!-- SECCION 7: BRAZO ROBOTICO 2D (PLANTA AUTOMOTRIZ PUEBLA) -->
+    {% include 'sections/brazo_robotico.html' %}
+
     <!-- VENTANA MODAL: FICHA TECNICA PROFUNDA DEL CONCEPTO -->
     {% include 'components/modal_concept.html' %}
 
@@ -52,5 +55,6 @@
   <!-- Scripts interactivos -->
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   <script src="{{ url_for('static', filename='js/search_visualizer.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/brazo_robotico.js') }}"></script>
 </body>
 </html>

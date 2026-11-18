@@ -1,0 +1,256 @@
+<section id="sectionBrazo" class="main-page-section" aria-labelledby="headingBrazo">
+  <header class="section-hero-header">
+    <div class="section-pill">Caso Practico en Python &bull; Planta Automotriz Puebla</div>
+    <h1 id="headingBrazo" class="section-main-title">
+      Brazo Robotico <span class="accent">Autonomo 3D</span>
+    </h1>
+    <p class="section-lead-text">
+      Observa al robot realizar tareas reales de fabrica (recoger piezas o soldar varios puntos) esquivando maquinas y reaccionando a imprevistos.
+    </p>
+  </header>
+
+  <div class="arm-card" id="robotArmCard">
+    <!-- Barra superior: Tareas reales y acciones -->
+    <div class="arm-topbar">
+      <div class="arm-presets" id="armPresetButtons" role="group" aria-label="Tareas practicas de planta"></div>
+
+      <div class="arm-actions">
+        <button type="button" class="arm-btn-emergency" id="armBtnEmergency" title="Colocar un obstaculo inesperado y obligar al robot a recalcular">Obstaculo imprevisto</button>
+        <button type="button" class="sv-btn-ghost" id="armBtnHistory">Bitacora SQL <span class="arm-count-pill" id="armHistoryCount">0</span></button>
+        <button type="button" class="sv-btn-accent" id="armBtnCompare">Comparar los 5</button>
+        <button type="button" class="sv-btn-ghost" id="armBtnReset">Reiniciar</button>
+      </div>
+    </div>
+
+    <!-- Selector de estrategias en lenguaje claro -->
+    <div class="arm-algo-bar" role="tablist" aria-label="Elegir estrategia de busqueda">
+      <button type="button" class="arm-algo-pill active" data-algo="astar" role="tab" aria-selected="true">
+        <span class="arm-algo-head">
+          <span class="arm-algo-name">A* (Inteligente)</span>
+          <i class="arm-algo-dot dot-smart"></i>
+        </span>
+        <span class="arm-algo-desc">El mas equilibrado: va directo sin chocar</span>
+      </button>
+      <button type="button" class="arm-algo-pill" data-algo="ucs" role="tab" aria-selected="false">
+        <span class="arm-algo-head">
+          <span class="arm-algo-name">Costo Uniforme</span>
+          <i class="arm-algo-dot dot-safe"></i>
+        </span>
+        <span class="arm-algo-desc">Ahorra energia, pero revisa casi todo</span>
+      </button>
+      <button type="button" class="arm-algo-pill" data-algo="greedy" role="tab" aria-selected="false">
+        <span class="arm-algo-head">
+          <span class="arm-algo-name">Voraz (Apresurado)</span>
+          <i class="arm-algo-dot dot-fast"></i>
+        </span>
+        <span class="arm-algo-desc">Corre directo; puede dar rodeos largos</span>
+      </button>
+      <button type="button" class="arm-algo-pill" data-algo="bfs" role="tab" aria-selected="false">
+        <span class="arm-algo-head">
+          <span class="arm-algo-name">Anchura (Paso a paso)</span>
+          <i class="arm-algo-dot dot-blind"></i>
+        </span>
+        <span class="arm-algo-desc">Prueba todas las opciones poco a poco</span>
+      </button>
+      <button type="button" class="arm-algo-pill" data-algo="dfs" role="tab" aria-selected="false">
+        <span class="arm-algo-head">
+          <span class="arm-algo-name">Profundidad (Impulsivo)</span>
+          <i class="arm-algo-dot dot-risk"></i>
+        </span>
+        <span class="arm-algo-desc">Toma un rumbo fijo; suele perderse</span>
+      </button>
+    </div>
+
+    <!-- Barra de reproduccion con progreso y velocidad -->
+    <div class="arm-playback-bar">
+      <div class="arm-playback-left">
+        <button type="button" class="arm-play-btn" id="armBtnPlayPause">Pausar</button>
+        <button type="button" class="sv-btn-ghost" id="armBtnReplay">Repetir</button>
+        <div class="arm-phase-wrap">
+          <span class="arm-phase-badge" id="armPhaseBadge">Preparando...</span>
+          <div class="arm-phase-progress"><div class="arm-phase-fill" id="armPhaseFill"></div></div>
+        </div>
+      </div>
+
+      <div class="arm-speed-group" role="group" aria-label="Velocidad de animacion">
+        <span class="arm-speed-label">Velocidad:</span>
+        <button type="button" class="arm-speed-btn" data-speed="0.45">0.5&times; Lento</button>
+        <button type="button" class="arm-speed-btn active" data-speed="1">1&times; Normal</button>
+        <button type="button" class="arm-speed-btn" data-speed="2.2">2&times; Rapido</button>
+      </div>
+    </div>
+
+    <!-- Doble vista sincronizada -->
+    <div class="arm-dual-stage">
+      <div class="arm-panel arm-panel-3d">
+        <div class="arm-panel-head">
+          <span class="arm-panel-title">Celda Industrial 3D</span>
+          <span class="arm-panel-hint">Arrastra maquinas o puntos &bull; Rueda para zoom</span>
+        </div>
+        <div class="arm-3d-wrap" id="arm3dContainer" aria-label="Escena 3D interactiva del brazo robotico">
+          <div class="arm-cam-hud" role="group" aria-label="Camara 3D">
+            <button type="button" class="arm-cam-btn active" data-cam="iso">Vista 3D</button>
+            <button type="button" class="arm-cam-btn" data-cam="top">Desde arriba</button>
+          </div>
+          <div class="arm-hover-hud" id="armHoverHud" hidden></div>
+        </div>
+      </div>
+
+      <div class="arm-panel arm-panel-cspace">
+        <div class="arm-panel-head">
+          <span class="arm-panel-title">Lo que piensa el robot</span>
+          <span class="arm-panel-hint">Pasa el cursor aqui para verlo en 3D</span>
+        </div>
+        <div class="arm-canvas-wrap arm-cspace-wrap">
+          <canvas id="armCspaceCanvas" class="arm-canvas arm-cspace-canvas" width="400" height="400" aria-label="Mapa visual de posturas del brazo"></canvas>
+        </div>
+        <div class="arm-legend">
+          <span><i class="arm-dot dot-free"></i>Libre</span>
+          <span><i class="arm-dot dot-obs"></i>Choca</span>
+          <span><i class="arm-dot dot-exp"></i>Probado</span>
+          <span><i class="arm-dot dot-path"></i>Elegido</span>
+          <span><i class="arm-dot dot-goal"></i>Meta</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Franja inferior limpia -->
+    <div class="arm-bottom-strip" aria-live="polite">
+      <div class="arm-kpis">
+        <div class="arm-kpi">
+          <span class="arm-kpi-label">Posturas probadas</span>
+          <strong class="arm-kpi-val" id="armStatExpanded">&mdash;</strong>
+        </div>
+        <div class="arm-kpi">
+          <span class="arm-kpi-label">Energia</span>
+          <strong class="arm-kpi-val" id="armStatEnergy">&mdash;</strong>
+        </div>
+        <div class="arm-kpi" id="armKpiStatusBox">
+          <span class="arm-kpi-label">Produccion</span>
+          <strong class="arm-kpi-val" id="armStatStatus">&mdash;</strong>
+        </div>
+      </div>
+
+      <div class="arm-verdict-box" id="armVerdictBox">
+        <span id="armVerdictText">Calculando ciclo de trabajo en Python...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Comparativo de los 5 Algoritmos -->
+  <div class="modal-backdrop" id="armCompareModal" role="dialog" aria-modal="true" aria-labelledby="armCompareTitle">
+    <div class="modal-window sv-compact-modal arm-compare-modal">
+      <div class="sv-modal-top">
+        <div>
+          <span class="category-badge">Comparativa en Vivo (Python)</span>
+          <h3 class="sv-modal-heading" id="armCompareTitle">¿Cual estrategia rinde mejor en planta?</h3>
+        </div>
+        <button type="button" class="sv-modal-close" id="armCompareClose" aria-label="Cerrar comparativa">&times;</button>
+      </div>
+
+      <p class="sv-pane-intro">
+        Resultado de ejecutar toda la tarea practica con cada una de las 5 estrategias:
+      </p>
+
+      <div class="arm-compare-cards" id="armCompareCards"></div>
+      <div class="sv-compare-summary" id="armCompareSummary"></div>
+    </div>
+  </div>
+
+  <!-- Modal con Pestanas: Consultor RAG | Bitacora SQL | Memoria de Rutas -->
+  <div class="modal-backdrop" id="armLogModal" role="dialog" aria-modal="true" aria-labelledby="armLogTitle">
+    <div class="modal-window sv-compact-modal arm-log-modal">
+      <div class="sv-modal-top">
+        <div>
+          <span class="category-badge">SQLite + Mini-RAG Local (glossary.db)</span>
+          <h3 class="sv-modal-heading" id="armLogTitle">Registro y Memoria del Robot</h3>
+        </div>
+        <button type="button" class="sv-modal-close" id="armLogClose" aria-label="Cerrar bitacora">&times;</button>
+      </div>
+
+      <!-- Pestanas limpias dentro del modal -->
+      <div class="modal-tabs sv-modal-tabs arm-log-tabs" role="tablist">
+        <button type="button" class="modal-tab-item active" data-arm-tab="rag" role="tab" aria-selected="true">1. Consultor RAG</button>
+        <button type="button" class="modal-tab-item" data-arm-tab="history" role="tab" aria-selected="false">2. Bitacora SQL</button>
+        <button type="button" class="modal-tab-item" data-arm-tab="memory" role="tab" aria-selected="false">3. Memoria de Rutas</button>
+      </div>
+
+      <!-- Pestana 1: Consultor Mini-RAG -->
+      <div class="arm-log-pane active" data-arm-pane="rag">
+        <p class="sv-pane-intro">
+          Pregunta en lenguaje natural sobre las corridas registradas en SQLite. Python busca los registros mas relevantes y sintetiza la respuesta.
+        </p>
+
+        <div class="arm-rag-chips">
+          <button type="button" class="arm-rag-chip" data-rag-q="¿Que estrategia fallo mas veces?">¿Que fallo mas?</button>
+          <button type="button" class="arm-rag-chip" data-rag-q="¿Cual gasto menos energia?">¿Cual gasto menos energia?</button>
+          <button type="button" class="arm-rag-chip" data-rag-q="¿Como respondio ante obstaculo imprevisto?">¿Como fue con imprevisto?</button>
+        </div>
+
+        <form class="arm-rag-form" id="armRagForm">
+          <input type="text" class="arm-rag-input" id="armRagInput" placeholder="Ej. ¿Que estrategia fue mejor en Pick & Place?" aria-label="Pregunta sobre el historial del robot">
+          <button type="submit" class="arm-play-btn">Consultar</button>
+        </form>
+
+        <div class="arm-rag-answer" id="armRagAnswer">
+          Haz clic en una pregunta rapida o escribe tu consulta sobre el historial del robot.
+        </div>
+
+        <div class="arm-modal-scroll arm-rag-sources" id="armRagSources"></div>
+      </div>
+
+      <!-- Pestana 2: Bitacora SQL con filtros y scroll -->
+      <div class="arm-log-pane" data-arm-pane="history" hidden>
+        <div class="arm-log-kpis">
+          <div class="arm-log-kpi">
+            <span>Corridas</span>
+            <strong id="armSqlTotal">0</strong>
+          </div>
+          <div class="arm-log-kpi">
+            <span>Fallos</span>
+            <strong id="armSqlFailures">0</strong>
+          </div>
+          <div class="arm-log-kpi">
+            <span>De Memoria</span>
+            <strong id="armSqlCached">0</strong>
+          </div>
+          <div class="arm-log-kpi">
+            <span>Ahorro A*</span>
+            <strong id="armSqlSavings">&mdash;</strong>
+          </div>
+        </div>
+
+        <div class="arm-log-toolbar">
+          <div class="arm-log-filters" role="group" aria-label="Filtrar bitacora">
+            <button type="button" class="arm-filter-btn active" data-sql-filter="all">Todos</button>
+            <button type="button" class="arm-filter-btn" data-sql-filter="failed">Solo fallos</button>
+            <button type="button" class="arm-filter-btn" data-sql-filter="unexpected">Con imprevisto</button>
+          </div>
+          <button type="button" class="sv-btn-ghost" id="armBtnClearRuns">Limpiar historial</button>
+        </div>
+
+        <div class="arm-modal-scroll arm-runs-list" id="armRunsList"></div>
+      </div>
+
+      <!-- Pestana 3: Memoria de Rutas (CBR en SQL) -->
+      <div class="arm-log-pane" data-arm-pane="memory" hidden>
+        <div class="arm-memory-banner">
+          <label class="arm-memory-switch">
+            <input type="checkbox" id="armToggleMemory" checked>
+            <span><strong>Usar Memoria SQL al calcular</strong> (recupera rutas repetidas en ~1 ms sin reexplorar)</span>
+          </label>
+          <button type="button" class="sv-btn-ghost" id="armBtnClearCache">Vaciar memoria</button>
+        </div>
+
+        <p class="sv-pane-intro" id="armCacheIntro">
+          Escenas guardadas en la tabla <code>arm_route_cache</code> para reutilizacion inmediata:
+        </p>
+
+        <div class="arm-modal-scroll arm-cache-list" id="armCacheList"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Three.js para la escena 3D -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
