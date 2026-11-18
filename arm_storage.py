@@ -67,12 +67,19 @@ def init_arm_tables() -> None:
                 cycle_seconds REAL NOT NULL,
                 had_unexpected INTEGER NOT NULL,
                 from_cache INTEGER NOT NULL DEFAULT 0,
+                within_budget INTEGER NOT NULL DEFAULT 1,
                 reason TEXT NOT NULL,
                 scene_json TEXT NOT NULL,
                 summary_doc TEXT NOT NULL
             )
             """
         )
+        # Migracion segura si arm_runs ya existia en disco sin within_budget
+        cursor.execute("PRAGMA table_info(arm_runs)")
+        existing_cols = {row[1] for row in cursor.fetchall()}
+        if "within_budget" not in existing_cols:
+            cursor.execute("ALTER TABLE arm_runs ADD COLUMN within_budget INTEGER NOT NULL DEFAULT 1")
+
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_arm_runs_algo ON arm_runs(algorithm_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_arm_runs_found ON arm_runs(found)")
 
@@ -239,6 +246,7 @@ def _build_summary_doc(record: Dict[str, Any]) -> str:
         if record["found"] and record["is_optimal"]
         else ("completado rodeo no optimo" if record["found"] else "fallo detenido error bloqueo")
     )
+    sla = "dentro presupuesto esperado" if record["within_budget"] else "fuera expectativas excedio presupuesto 900"
     imprevisto = "con obstaculo imprevisto emergencia" if record["had_unexpected"] else "sin imprevistos normal"
     memoria = "recuperado memoria cache sql" if record["from_cache"] else "calculado desde cero"
     algo_alias = "astar a*" if record["algorithm_id"] == "astar" else record["algorithm_id"]
@@ -246,7 +254,7 @@ def _build_summary_doc(record: Dict[str, Any]) -> str:
     return (
         f"Tarea {record['task_name']} ({record['task_id']}). "
         f"Estrategia {record['algorithm_name']} ({algo_alias}). "
-        f"Resultado {estado}. Etapas {record['completed_stages']} de {record['total_stages']}. "
+        f"Resultado {estado}. {sla}. Etapas {record['completed_stages']} de {record['total_stages']}. "
         f"Posturas probadas {record['nodes_expanded']}. Energia {record['energy']}. "
         f"Tiempo ciclo {record['cycle_seconds']} segundos. {imprevisto}. {memoria}. {reason_part}"
     ).strip()
@@ -277,6 +285,7 @@ def log_arm_run(
         "cycle_seconds": float(result.get("cycle_seconds", 0.0)),
         "had_unexpected": 1 if had_unexpected else 0,
         "from_cache": 1 if result.get("from_cache") else 0,
+        "within_budget": 1 if result.get("within_budget", True) else 0,
         "reason": str(result.get("reason", "")),
     }
     summary_doc = _build_summary_doc(record)
@@ -291,8 +300,8 @@ def log_arm_run(
                 task_id, task_name, algorithm_id, algorithm_name,
                 found, is_optimal, completed_stages, total_stages,
                 nodes_expanded, energy, steps, cycle_seconds,
-                had_unexpected, from_cache, reason, scene_json, summary_doc
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                had_unexpected, from_cache, within_budget, reason, scene_json, summary_doc
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 record["task_id"],
@@ -309,6 +318,7 @@ def log_arm_run(
                 record["cycle_seconds"],
                 record["had_unexpected"],
                 record["from_cache"],
+                record["within_budget"],
                 record["reason"],
                 scene_str,
                 summary_doc,
@@ -371,7 +381,7 @@ def get_arm_history(filter_mode: str = "all", limit: int = 50) -> Dict[str, Any]
             SELECT id, created_at, task_id, task_name, algorithm_id, algorithm_name,
                    found, is_optimal, completed_stages, total_stages,
                    nodes_expanded, energy, steps, cycle_seconds,
-                   had_unexpected, from_cache, reason, scene_json
+                   had_unexpected, from_cache, within_budget, reason, scene_json
             FROM arm_runs
             {where_clause}
             ORDER BY id DESC
@@ -386,6 +396,7 @@ def get_arm_history(filter_mode: str = "all", limit: int = 50) -> Dict[str, Any]
             item["is_optimal"] = bool(item["is_optimal"])
             item["had_unexpected"] = bool(item["had_unexpected"])
             item["from_cache"] = bool(item["from_cache"])
+            item["within_budget"] = bool(item["within_budget"])
             try:
                 item["scene"] = json.loads(item.pop("scene_json"))
             except (ValueError, TypeError):
@@ -537,7 +548,7 @@ def query_arm_rag(question: str) -> Dict[str, Any]:
             SELECT id, created_at, task_id, task_name, algorithm_id, algorithm_name,
                    found, is_optimal, completed_stages, total_stages,
                    nodes_expanded, energy, steps, cycle_seconds,
-                   had_unexpected, from_cache, reason, summary_doc
+                   had_unexpected, from_cache, within_budget, reason, summary_doc
             FROM arm_runs
             ORDER BY id DESC
             LIMIT 200
@@ -576,26 +587,31 @@ def query_arm_rag(question: str) -> Dict[str, Any]:
             break
 
     failures = [r for r in scoped_rows if r["found"] == 0]
+    over_budget_runs = [r for r in scoped_rows if r["found"] == 1 and r.get("within_budget", 1) == 0]
     successes = [r for r in scoped_rows if r["found"] == 1]
     unexpected_runs = [r for r in scoped_rows if r["had_unexpected"] == 1]
     cached_runs = [r for r in scoped_rows if r["from_cache"] == 1]
 
     parts: List[str] = []
-    if any(w in q_norm for w in ("fallo", "falla", "error", "detuvo", "pierde", "bloque")):
-        if not failures:
+    if any(w in q_norm for w in ("fallo", "falla", "error", "detuvo", "pierde", "bloque", "expectativa", "presupuesto", "900")):
+        if not failures and not over_budget_runs:
             parts.append(
-                f"De {len(scoped_rows)} ejecuciones guardadas{scoped_name}, ninguna ha fallado todavia. "
-                "Prueba 'Profundidad (Impulsivo)' para observar y registrar un fallo real."
+                f"De {len(scoped_rows)} ejecuciones guardadas{scoped_name}, ninguna fallo ni supero las expectativas (>900 posturas)."
             )
         else:
-            by_algo = Counter(r["algorithm_name"] for r in failures)
+            flagged = failures + over_budget_runs
+            by_algo = Counter(r["algorithm_name"] for r in flagged)
             top_algo, top_cnt = by_algo.most_common(1)[0]
-            reason = failures[0]["reason"] or "limite de posturas o bloqueo en escena"
             parts.append(
-                f"Se registraron {len(failures)} fallos de {len(scoped_rows)} corridas{scoped_name}. "
-                f"La estrategia que mas fallo fue {top_algo} ({top_cnt} veces). "
-                f"Ultimo fallo (#{failures[0]['id']} en {failures[0]['task_name']}): {reason}"
+                f"Se detectaron {len(failures)} fallos totales y {len(over_budget_runs)} corridas fuera de expectativas (>900 posturas) "
+                f"de {len(scoped_rows)} registros{scoped_name}. La estrategia mas problematica fue {top_algo} ({top_cnt} veces)."
             )
+            if failures:
+                reason = failures[0]["reason"] or "limite de posturas o bloqueo"
+                parts.append(f"Ultimo fallo (#{failures[0]['id']}): {reason}")
+            elif over_budget_runs:
+                ob = over_budget_runs[0]
+                parts.append(f"Ejemplo fuera de expectativas (#{ob['id']}): probo {ob['nodes_expanded']} posturas con energia {ob['energy']}.")
     elif any(w in q_norm for w in ("imprevisto", "emergencia", "inesperado", "caja", "carrito")):
         if not unexpected_runs:
             parts.append(

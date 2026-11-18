@@ -34,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     camBtns: card.querySelectorAll(".arm-cam-btn"),
     container3d: document.getElementById("arm3dContainer"),
     hoverHud: document.getElementById("armHoverHud"),
+    telemetryHud: document.getElementById("armTelemetryHud"),
     csCanvas: document.getElementById("armCspaceCanvas"),
     statExpanded: document.getElementById("armStatExpanded"),
     statEnergy: document.getElementById("armStatEnergy"),
@@ -766,6 +767,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function setRobotAnglesDeg(deg1, deg2) {
     state.liveDeg = [deg1, deg2];
+    if (el.telemetryHud && !state.cspaceHover) {
+      el.telemetryHud.textContent = `Hombro ${Math.round(deg1)}° · Codo ${Math.round(deg2)}°`;
+    }
     if (!three.shoulderGroup || !three.elbowGroup) return;
     three.shoulderGroup.rotation.y = (deg1 * Math.PI) / 180;
     three.elbowGroup.rotation.y = (deg2 * Math.PI) / 180;
@@ -1023,6 +1027,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  /**
+   * Clasifica el resultado de una corrida evitando penalizar a A* como
+   * "fuera de expectativas" en geometrias complejas donde ya es el minimo optimo.
+   */
+  function classifyRunOutcome(row) {
+    const algoId = row.algorithm_id || (row.algorithm && row.algorithm.id) || "";
+    const budgetLimit = row.budget_limit || 900;
+    const withinBudget = row.within_budget !== false;
+
+    if (!row.found) {
+      return { kind: "fail", tone: "is-fail", badgeTone: "fail", budgetLimit, overBudget: false };
+    }
+    if (row.is_optimal && (withinBudget || algoId === "astar")) {
+      return { kind: "optimal", tone: "is-ok", badgeTone: "ok", budgetLimit, overBudget: !withinBudget };
+    }
+    if (!withinBudget) {
+      return { kind: "over_budget", tone: "is-warn", badgeTone: "warn", budgetLimit, overBudget: true };
+    }
+    return { kind: "detour", tone: "is-warn", badgeTone: "warn", budgetLimit, overBudget: false };
+  }
+
   function updateSummary(data, offsetWaypoints = 0) {
     const doneTotal = offsetWaypoints + data.completed_stages;
     const fullTotal = offsetWaypoints + data.total_stages;
@@ -1033,22 +1058,33 @@ document.addEventListener("DOMContentLoaded", () => {
     el.kpiStatusBox.classList.remove("is-ok", "is-warn", "is-fail");
     el.verdictBox.classList.remove("is-warn", "is-fail");
 
-    if (!data.found) {
+    const outcome = classifyRunOutcome(data);
+    const memNote = data.from_cache ? " (Recuperado al instante desde Memoria SQL)" : "";
+
+    if (outcome.kind === "fail") {
       el.statStatus.textContent = `Fallo (${doneTotal}/${fullTotal})`;
       el.kpiStatusBox.classList.add("is-fail");
       el.verdictBox.classList.add("is-fail");
       el.verdictText.textContent = data.reason || "El robot se detuvo porque no encontro camino libre.";
-    } else if (data.is_optimal) {
+    } else if (outcome.kind === "optimal") {
       el.statStatus.textContent = `${fullTotal}/${fullTotal} · ${data.cycle_seconds} s`;
       el.kpiStatusBox.classList.add("is-ok");
-      const memNote = data.from_cache ? " (Recuperado al instante desde Memoria SQL)" : "";
+      const geometryNote = outcome.overBudget
+        ? ` (obstaculo estrecho exigio superar el margen base de ${outcome.budgetLimit}, pero sigue siendo el minimo optimo)`
+        : "";
       el.verdictText.textContent =
-        `Ciclo optimo completado en ${data.cycle_seconds} s con energia minima (${data.energy}) probando ${data.nodes_expanded} posturas.${memNote}`;
+        `Ciclo optimo completado en ${data.cycle_seconds} s con energia minima (${data.energy}) probando ${data.nodes_expanded} posturas.${geometryNote}${memNote}`;
+    } else if (outcome.kind === "over_budget") {
+      el.statStatus.textContent = `Fuera exp. (> ${outcome.budgetLimit})`;
+      el.kpiStatusBox.classList.add("is-warn");
+      el.verdictBox.classList.add("is-warn");
+      const routeNote = data.is_optimal ? "encontro ruta minima" : `dio rodeos (energia ${data.energy})`;
+      el.verdictText.textContent =
+        `Fuera de expectativas: ${routeNote}, pero probo ${data.nodes_expanded} posturas y supero el margen esperado de ${outcome.budgetLimit}.${memNote}`;
     } else {
       el.statStatus.textContent = `${fullTotal}/${fullTotal} · ${data.cycle_seconds} s`;
       el.kpiStatusBox.classList.add("is-warn");
       el.verdictBox.classList.add("is-warn");
-      const memNote = data.from_cache ? " (Recuperado desde Memoria SQL)" : "";
       el.verdictText.textContent =
         `Completo la tarea, pero dio rodeos que elevaron la energia a ${data.energy} (ciclo de ${data.cycle_seconds} s).${memNote}`;
     }
@@ -1229,16 +1265,44 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     el.btnCompare.addEventListener("click", openCompareModal);
-    el.compareClose.addEventListener("click", () => el.compareModal.classList.remove("open"));
+    el.compareClose.addEventListener("click", closeCompareModal);
     el.compareModal.addEventListener("click", (e) => {
-      if (e.target === el.compareModal) el.compareModal.classList.remove("open");
+      if (e.target === el.compareModal) closeCompareModal();
     });
 
     // Modal Bitacora SQL + Mini-RAG + Memoria
     el.btnHistory.addEventListener("click", openLogModal);
-    el.logClose.addEventListener("click", () => el.logModal.classList.remove("open"));
+    el.logClose.addEventListener("click", closeLogModal);
     el.logModal.addEventListener("click", (e) => {
-      if (e.target === el.logModal) el.logModal.classList.remove("open");
+      if (e.target === el.logModal) closeLogModal();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        let closed = false;
+        if (el.compareModal.classList.contains("open")) {
+          closeCompareModal();
+          closed = true;
+        }
+        if (el.logModal.classList.contains("open")) {
+          closeLogModal();
+          closed = true;
+        }
+        if (closed) e.preventDefault();
+        return;
+      }
+
+      if (e.code === "Space") {
+        const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
+        const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON" || tag === "A";
+        const modalOpen = el.compareModal.classList.contains("open") || el.logModal.classList.contains("open");
+        const armSection = card.closest("#brazo-robotico");
+        const sectionActive = !armSection || armSection.classList.contains("active");
+        if (!isTyping && !modalOpen && sectionActive) {
+          e.preventDefault();
+          el.btnPlayPause.click();
+        }
+      }
     });
     el.logTabs.forEach((tab) => {
       tab.addEventListener("click", () => switchLogTab(tab.dataset.armTab));
@@ -1266,8 +1330,8 @@ document.addEventListener("DOMContentLoaded", () => {
       state.useMemory = el.toggleMemory.checked;
     });
 
-    // Hover en el mapa C-Space -> mueve el brazo fantasma 3D al instante
-    el.csCanvas.addEventListener("pointermove", (e) => {
+    // Hover o toque en el mapa C-Space -> mueve el brazo fantasma 3D al instante
+    const previewCspacePointer = (e) => {
       if (!state.lastResult || !state.lastResult.stages[state.stageIdx]) return;
       const st = state.lastResult.stages[state.stageIdx];
       const rect = el.csCanvas.getBoundingClientRect();
@@ -1291,20 +1355,34 @@ document.addEventListener("DOMContentLoaded", () => {
       const d2 = i2 * state.meta.step_deg;
       state.cspaceHover = { i1, i2, val };
       setGhostAnglesDeg(d1, d2, true, val === 1);
+      if (el.telemetryHud) {
+        el.telemetryHud.textContent = `Vista previa: Hombro ${d1}° · Codo ${d2}°`;
+      }
       el.hoverHud.textContent = val === 1
         ? `Postura (${d1}°, ${d2}°) — ¡Choca con una maquina!`
         : val === 2
           ? `Postura (${d1}°, ${d2}°) — Alcanza el punto objetivo`
           : `Postura (${d1}°, ${d2}°) — Movimiento libre`;
       el.hoverHud.hidden = false;
-    });
+    };
 
-    el.csCanvas.addEventListener("pointerleave", () => {
+    const clearCspacePreview = () => {
       state.cspaceHover = null;
       setGhostAnglesDeg(0, 0, false);
+      if (el.telemetryHud) {
+        el.telemetryHud.textContent = `Hombro ${Math.round(state.liveDeg[0])}° · Codo ${Math.round(state.liveDeg[1])}°`;
+      }
       el.hoverHud.hidden = true;
       state.lastTickTime = performance.now();
+    };
+
+    el.csCanvas.addEventListener("pointerdown", previewCspacePointer);
+    el.csCanvas.addEventListener("pointermove", previewCspacePointer);
+    el.csCanvas.addEventListener("pointerup", (e) => {
+      if (e.pointerType !== "mouse") clearCspacePreview();
     });
+    el.csCanvas.addEventListener("pointercancel", clearCspacePreview);
+    el.csCanvas.addEventListener("pointerleave", clearCspacePreview);
 
     // Interaccion 3D (arrastrar obstaculos/waypoints o girar camara)
     const domEl = three.renderer ? three.renderer.domElement : null;
@@ -1433,8 +1511,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function syncModalLock() {
+    const anyOpen = el.compareModal.classList.contains("open") || el.logModal.classList.contains("open");
+    document.documentElement.classList.toggle("arm-modal-lock", anyOpen);
+    document.body.classList.toggle("arm-modal-lock", anyOpen);
+  }
+
+  function closeCompareModal() {
+    el.compareModal.classList.remove("open");
+    syncModalLock();
+  }
+
+  function closeLogModal() {
+    el.logModal.classList.remove("open");
+    syncModalLock();
+  }
+
   async function openCompareModal() {
     el.compareModal.classList.add("open");
+    syncModalLock();
     el.compareCards.innerHTML = `<p class="sv-pane-intro">Ejecutando la tarea completa con las 5 estrategias en Python...</p>`;
 
     try {
@@ -1458,16 +1553,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const expPct = Math.round((row.nodes_expanded / maxExp) * 100);
         const enPct = row.found ? Math.round((row.energy / maxEn) * 100) : 100;
 
-        let cardCls = "";
-        let badgeHtml = `<span class="arm-cmp-badge fail">Fallo (${row.completed_stages}/${row.total_stages})</span>`;
-        if (row.found && row.is_optimal) {
-          cardCls = row.algorithm_id === "astar" ? "is-winner" : "";
-          badgeHtml = `<span class="arm-cmp-badge ok">Optima · ${row.cycle_seconds} s</span>`;
-        } else if (row.found) {
-          badgeHtml = `<span class="arm-cmp-badge warn">Rodeo · ${row.cycle_seconds} s</span>`;
-        } else {
-          cardCls = "is-failed";
-        }
+        const outcome = classifyRunOutcome(row);
+        const cardCls = outcome.kind === "fail"
+          ? "is-failed"
+          : (outcome.kind === "optimal" && row.algorithm_id === "astar")
+            ? "is-winner"
+            : "";
+        const badgeLabel = outcome.kind === "fail"
+          ? `Fallo (${row.completed_stages}/${row.total_stages})`
+          : outcome.kind === "optimal"
+            ? `Optima · ${row.cycle_seconds} s`
+            : outcome.kind === "over_budget"
+              ? `Fuera exp. (&gt;${outcome.budgetLimit})`
+              : `Rodeo · ${row.cycle_seconds} s`;
+        const badgeHtml = `<span class="arm-cmp-badge ${outcome.badgeTone}">${badgeLabel}</span>`;
 
         return `
           <div class="arm-cmp-card ${cardCls}">
@@ -1498,11 +1597,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const astar = rows.find((r) => r.algorithm_id === "astar");
       const ucs = rows.find((r) => r.algorithm_id === "ucs");
       const failed = rows.filter((r) => !r.found).map((r) => r.algorithm_name);
+      const overBudget = rows
+        .filter((r) => classifyRunOutcome(r).kind === "over_budget")
+        .map((r) => r.algorithm_name);
       if (astar && ucs && astar.found) {
-        const failText = failed.length ? ` En contraste, ${failed.join(", ")} no logro completar el lote.` : "";
+        const failText = failed.length ? ` No logro terminar: ${failed.join(", ")}.` : "";
+        const budgetText = overBudget.length ? ` Fuera de expectativas (>900 posturas): ${overBudget.join(", ")}.` : "";
         el.compareSummary.textContent =
           `Resumen de produccion: A* completo la tarea en ${astar.cycle_seconds} s con energia minima (${astar.energy}) ` +
-          `probando ${astar.nodes_expanded} posturas, frente a ${ucs.nodes_expanded} de Costo Uniforme.${failText}`;
+          `probando ${astar.nodes_expanded} posturas, frente a ${ucs.nodes_expanded} de Costo Uniforme.${budgetText}${failText}`;
       } else {
         el.compareSummary.textContent = "Con los obstaculos actuales no es posible completar la secuencia.";
       }
@@ -1544,6 +1647,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function openLogModal() {
     el.logModal.classList.add("open");
+    syncModalLock();
     await loadHistoryData();
   }
 
@@ -1574,21 +1678,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     el.runsList.innerHTML = runs.map((r) => {
-      const tagCls = !r.found ? "is-fail" : r.is_optimal ? "is-ok" : "is-warn";
-      const tagText = !r.found
+      const outcome = classifyRunOutcome(r);
+      const tagText = outcome.kind === "fail"
         ? `Fallo (${r.completed_stages}/${r.total_stages})`
-        : r.is_optimal
+        : outcome.kind === "optimal"
           ? `Optima · ${r.cycle_seconds} s`
-          : `Rodeo · ${r.cycle_seconds} s`;
+          : outcome.kind === "over_budget"
+            ? `Fuera exp. · ${r.cycle_seconds} s`
+            : `Rodeo · ${r.cycle_seconds} s`;
       const memTag = r.from_cache ? `<span class="arm-run-tag is-ok">Memoria SQL</span>` : "";
       const unexpTag = r.had_unexpected ? `<span class="arm-run-tag is-warn">Imprevisto</span>` : "";
+      const budgetTag = outcome.kind === "over_budget"
+        ? `<span class="arm-run-tag is-warn">&gt;${outcome.budgetLimit} exp.</span>`
+        : "";
 
       return `
         <div class="arm-run-card">
           <div class="arm-run-main">
             <div class="arm-run-title">
               <span>#${r.id} · ${escapeHtml(r.task_name)}</span>
-              <span class="arm-run-tag ${tagCls}">${tagText}</span>
+              <span class="arm-run-tag ${outcome.tone}">${tagText}</span>
+              ${budgetTag}
               ${memTag}
               ${unexpTag}
             </div>
@@ -1655,7 +1765,7 @@ document.addEventListener("DOMContentLoaded", () => {
     el.btnEmergency.classList.toggle("active", state.unexpectedActive);
     el.btnEmergency.textContent = state.unexpectedActive ? "Quitar imprevisto" : "Obstaculo imprevisto";
 
-    el.logModal.classList.remove("open");
+    closeLogModal();
     rebuildThreeObstaclesAndWaypoints();
     runPythonSequence();
   }

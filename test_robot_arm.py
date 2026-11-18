@@ -48,7 +48,7 @@ class TestRobotArmSearch(unittest.TestCase):
         for i in range(1, len(path)):
             d1 = robot_arm_search.circular_step_dist(path[i][0], path[i - 1][0])
             d2 = robot_arm_search.circular_step_dist(path[i][1], path[i - 1][1])
-            self.assertEqual(d1 + d2, 1)
+            self.assertEqual(max(d1, d2), 1)
 
     def test_unreachable_goal_detected_cleanly(self):
         res = robot_arm_search.solve_arm_motion("astar", (165, 340), (430.0, 360.0), [])
@@ -60,6 +60,9 @@ class TestRobotArmSearch(unittest.TestCase):
             obs = [vars(o) for o in task["obstacles"]]
             astar = robot_arm_search.solve_arm_sequence("astar", task["start_deg"], task["waypoints"], obs)
             self.assertTrue(astar["found"], f"A* fallo en tarea practica {tid}")
+            self.assertTrue(astar["is_optimal"], f"A* debe ser optimo en {tid}")
+            if tid == "pick_and_place":
+                self.assertTrue(astar["within_budget"], "A* debe mantenerse bajo 900 en pick_and_place")
             self.assertEqual(astar["completed_stages"], len(task["waypoints"]))
 
             astar_unexp = robot_arm_search.solve_arm_sequence(
@@ -68,7 +71,11 @@ class TestRobotArmSearch(unittest.TestCase):
             self.assertTrue(astar_unexp["found"], f"A* fallo con imprevisto en {tid}")
 
             dfs = robot_arm_search.solve_arm_sequence("dfs", task["start_deg"], task["waypoints"], obs)
-            self.assertFalse(dfs["found"], f"Se esperaba fallo de DFS en {tid}")
+            self.assertFalse(dfs["within_budget"], f"Se esperaba DFS fuera de margen (900) en {tid}")
+            if tid == "pick_and_place":
+                self.assertTrue(dfs["found"])
+            else:
+                self.assertFalse(dfs["found"], f"Se esperaba fallo de DFS en {tid}")
 
 
 class TestFlaskArmEndpoints(unittest.TestCase):
@@ -175,7 +182,33 @@ class TestFlaskArmEndpoints(unittest.TestCase):
         self.assertEqual(r2.status_code, 200)
         self.assertTrue(r2.get_json()["data"]["from_cache"])
 
+        multi_task = robot_arm_search.TASK_PRESETS["multi_weld"]
         r3 = self.client.post(
+            "/api/arm/solve-sequence",
+            json={
+                "task_id": "multi_weld",
+                "task_name": multi_task["name"],
+                "algorithm": "dfs",
+                "start_deg": list(multi_task["start_deg"]),
+                "waypoints": multi_task["waypoints"],
+                "obstacles": [vars(o) for o in multi_task["obstacles"]],
+                "use_memory": True,
+                "record_run": True,
+            },
+        )
+        self.assertEqual(r3.status_code, 200)
+        self.assertFalse(r3.get_json()["data"]["found"])
+        self.assertFalse(r3.get_json()["data"]["within_budget"])
+
+        hist = self.client.get("/api/arm/history?filter=all")
+        self.assertEqual(hist.status_code, 200)
+        hdata = hist.get_json()["data"]
+        self.assertEqual(hdata["kpis"]["total_runs"], 3)
+        self.assertEqual(hdata["kpis"]["total_failures"], 1)
+        self.assertEqual(hdata["kpis"]["total_from_cache"], 1)
+        self.assertEqual(hdata["kpis"]["cache_count"], 1)
+
+        r4 = self.client.post(
             "/api/arm/solve-sequence",
             json={
                 "task_id": "pick_and_place",
@@ -186,20 +219,17 @@ class TestFlaskArmEndpoints(unittest.TestCase):
                 "record_run": True,
             },
         )
-        self.assertEqual(r3.status_code, 200)
-        self.assertFalse(r3.get_json()["data"]["found"])
-
-        hist = self.client.get("/api/arm/history?filter=all")
-        self.assertEqual(hist.status_code, 200)
-        hdata = hist.get_json()["data"]
-        self.assertEqual(hdata["kpis"]["total_runs"], 3)
-        self.assertEqual(hdata["kpis"]["total_failures"], 1)
-        self.assertEqual(hdata["kpis"]["total_from_cache"], 1)
-        self.assertEqual(hdata["kpis"]["cache_count"], 1)
+        self.assertEqual(r4.status_code, 200)
+        self.assertTrue(r4.get_json()["data"]["found"])
+        self.assertFalse(r4.get_json()["data"]["within_budget"])
 
         rag_fail = self.client.post("/api/arm/rag", json={"question": "¿Que estrategia fallo mas?"})
         self.assertEqual(rag_fail.status_code, 200)
         self.assertIn("Profundidad", rag_fail.get_json()["data"]["answer"])
+
+        rag_budget = self.client.post("/api/arm/rag", json={"question": "¿Que quedo fuera de expectativas?"})
+        self.assertEqual(rag_budget.status_code, 200)
+        self.assertIn("900", rag_budget.get_json()["data"]["answer"])
 
         rag_energy = self.client.post("/api/arm/rag", json={"question": "¿Cual gasto menos energia?"})
         self.assertEqual(rag_energy.status_code, 200)

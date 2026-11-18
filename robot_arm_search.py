@@ -35,6 +35,12 @@ GOAL_TOLERANCE = 15.0
 
 COST_SHOULDER = 1.6
 COST_ELBOW = 1.0
+COST_DIAG = 1.9  # Movimiento simultaneo de hombro y codo (~sqrt(1.6^2 + 1.0^2))
+
+# Umbral esperado (SLA de planta): 900 posturas (~17% del espacio 72x72 = 5,184)
+EXPECTED_MAX_EXPANSIONS = 900
+MAX_DFS_EXPANSIONS = 2400
+MAX_GREEDY_EXPANSIONS = 2200
 
 
 @dataclass(frozen=True)
@@ -362,26 +368,50 @@ def angular_heuristic(
     node: Tuple[int, int],
     goals: Set[Tuple[int, int]],
 ) -> float:
-    """Heuristica admisible de energia minima hasta la configuracion meta mas cercana."""
+    """
+    Heuristica octil ponderada admisible y consistente para movimientos de 8 direcciones
+    (hombro=1.6, codo=1.0, simultaneo=1.9).
+    """
     if not goals:
         return 0.0
     i1, i2 = node
     best = float("inf")
     for g1, g2 in goals:
-        h = COST_SHOULDER * circular_step_dist(i1, g1) + COST_ELBOW * circular_step_dist(i2, g2)
+        d1 = circular_step_dist(i1, g1)
+        d2 = circular_step_dist(i2, g2)
+        diag = min(d1, d2)
+        h = COST_DIAG * diag + COST_SHOULDER * max(0, d1 - diag) + COST_ELBOW * max(0, d2 - diag)
         if h < best:
             best = h
     return best
 
 
-def _neighbors(i1: int, i2: int) -> Tuple[Tuple[int, int, float], ...]:
-    """4 vecinos en el espacio toroidal (theta1, theta2) con su costo energetico."""
-    return (
+def _valid_neighbors(cspace: List[List[int]], i1: int, i2: int) -> List[Tuple[int, int, float]]:
+    """
+    8 movimientos validos en el espacio toroidal (theta1, theta2):
+    4 ortogonales (1 articulacion) + 4 diagonales (hombro y codo simultaneos)
+    evitando cruzar esquinas de colision.
+    """
+    out: List[Tuple[int, int, float]] = []
+    # Ortogonales primero (prioridad limpia)
+    orth = (
         ((i1 + 1) % GRID_N, i2, COST_SHOULDER),
         ((i1 - 1) % GRID_N, i2, COST_SHOULDER),
         (i1, (i2 + 1) % GRID_N, COST_ELBOW),
         (i1, (i2 - 1) % GRID_N, COST_ELBOW),
     )
+    for n1, n2, cost in orth:
+        if cspace[n1][n2] != 1:
+            out.append((n1, n2, cost))
+
+    # Diagonales (movimiento simultaneo suave de ambas articulaciones)
+    for di1 in (1, -1):
+        for di2 in (1, -1):
+            n1 = (i1 + di1) % GRID_N
+            n2 = (i2 + di2) % GRID_N
+            if cspace[n1][n2] != 1 and (cspace[n1][i2] != 1 or cspace[i1][n2] != 1):
+                out.append((n1, n2, COST_DIAG))
+    return out
 
 
 def _reconstruct(
@@ -402,9 +432,13 @@ def _path_energy(path: List[Tuple[int, int]]) -> float:
     for idx in range(1, len(path)):
         p1, p2 = path[idx - 1]
         c1, c2 = path[idx]
-        if c1 != p1:
+        moved1 = c1 != p1
+        moved2 = c2 != p2
+        if moved1 and moved2:
+            energy += COST_DIAG
+        elif moved1:
             energy += COST_SHOULDER
-        if c2 != p2:
+        elif moved2:
             energy += COST_ELBOW
     return round(energy, 1)
 
@@ -456,6 +490,8 @@ def solve_arm_motion(
         "energy": stage_res["energy"],
         "steps": stage_res["steps"],
         "is_optimal": stage_res["is_optimal"],
+        "within_budget": stage_res["within_budget"],
+        "budget_limit": EXPECTED_MAX_EXPANSIONS,
         "execution_time_ms": elapsed_ms,
     }
 
@@ -476,8 +512,8 @@ def _quick_astar_energy(
         if curr in goals:
             return round(g_val, 1)
         closed.add(curr)
-        for n1, n2, step_e in _neighbors(*curr):
-            if cspace[n1][n2] == 1 or (n1, n2) in closed:
+        for n1, n2, step_e in _valid_neighbors(cspace, *curr):
+            if (n1, n2) in closed:
                 continue
             new_g = g_val + step_e
             if new_g < best_g.get((n1, n2), float("inf")):
@@ -641,6 +677,7 @@ def _solve_stage_on_cspace(
             "energy": 0.0,
             "steps": 0,
             "is_optimal": False,
+            "within_budget": False,
         }
 
     if not goals:
@@ -664,6 +701,7 @@ def _solve_stage_on_cspace(
             "energy": 0.0,
             "steps": 0,
             "is_optimal": False,
+            "within_budget": False,
         }
 
     explored_order: List[Tuple[int, int]] = []
@@ -680,19 +718,18 @@ def _solve_stage_on_cspace(
             if curr in goals:
                 found_goal = curr
                 break
-            for n1, n2, _ in _neighbors(*curr):
-                if cspace[n1][n2] != 1 and (n1, n2) not in seen:
+            for n1, n2, _ in _valid_neighbors(cspace, *curr):
+                if (n1, n2) not in seen:
                     seen.add((n1, n2))
                     parents[(n1, n2)] = curr
                     q.append((n1, n2))
 
     elif algo == "dfs":
-        max_dfs = 900
         stack: List[Tuple[Tuple[int, int], Optional[Tuple[int, int]]]] = [(start, None)]
         visited: Set[Tuple[int, int]] = set()
         while stack:
-            if len(explored_order) >= max_dfs:
-                failure_reason = f"Se perdio dando vueltas y agoto su limite de {max_dfs} posturas."
+            if len(explored_order) >= MAX_DFS_EXPANSIONS:
+                failure_reason = f"Se perdio dando vueltas y agoto su limite maximo de {MAX_DFS_EXPANSIONS} posturas."
                 break
             curr, parent_node = stack.pop()
             if curr in visited:
@@ -703,8 +740,8 @@ def _solve_stage_on_cspace(
             if curr in goals:
                 found_goal = curr
                 break
-            for n1, n2, _ in reversed(_neighbors(*curr)):
-                if cspace[n1][n2] != 1 and (n1, n2) not in visited:
+            for n1, n2, _ in reversed(_valid_neighbors(cspace, *curr)):
+                if (n1, n2) not in visited:
                     stack.append(((n1, n2), curr))
 
     else:
@@ -714,7 +751,7 @@ def _solve_stage_on_cspace(
         heap: List[Tuple[float, int, Tuple[int, int], float]] = [(f0, counter, start, 0.0)]
         best_g: Dict[Tuple[int, int], float] = {start: 0.0}
         closed: Set[Tuple[int, int]] = set()
-        max_exp = 1800 if algo == "greedy" else 6000
+        max_exp = MAX_GREEDY_EXPANSIONS if algo == "greedy" else 6000
 
         while heap:
             if len(explored_order) >= max_exp:
@@ -731,8 +768,8 @@ def _solve_stage_on_cspace(
                 found_goal = curr
                 break
 
-            for n1, n2, step_e in _neighbors(*curr):
-                if cspace[n1][n2] == 1 or (n1, n2) in closed:
+            for n1, n2, step_e in _valid_neighbors(cspace, *curr):
+                if (n1, n2) in closed:
                     continue
                 new_g = g_val + step_e
                 if algo == "greedy":
@@ -777,6 +814,9 @@ def _solve_stage_on_cspace(
     if found_goal is None and not failure_reason:
         failure_reason = "No existe ningun camino libre hacia el siguiente objetivo."
 
+    nodes_exp = len(explored_order)
+    within_budget = found_goal is not None and nodes_exp <= EXPECTED_MAX_EXPANSIONS
+
     return {
         "status": "solved" if found_goal is not None else "failed",
         "found": found_goal is not None,
@@ -787,10 +827,11 @@ def _solve_stage_on_cspace(
         "path": [list(pt) for pt in path],
         "path_frames": path_frames,
         "end_node": list(found_goal) if found_goal is not None else None,
-        "nodes_expanded": len(explored_order),
+        "nodes_expanded": nodes_exp,
         "energy": energy,
         "steps": max(0, len(path) - 1),
         "is_optimal": is_optimal,
+        "within_budget": within_budget,
     }
 
 
@@ -861,12 +902,15 @@ def solve_arm_sequence(
 
     elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 2)
     completed_stages = sum(1 for s in stages if s["found"])
+    within_budget = all_found and all(s["within_budget"] for s in stages)
     cycle_seconds = round(total_steps * 0.08 + total_expanded * 0.0012, 1)
 
     return {
         "algorithm": ALGORITHMS_INFO[algo],
         "found": all_found,
         "is_optimal": all_found and all_optimal,
+        "within_budget": within_budget,
+        "budget_limit": EXPECTED_MAX_EXPANSIONS,
         "reason": failure_reason,
         "completed_stages": completed_stages,
         "total_stages": len(valid_waypoints),
@@ -903,6 +947,8 @@ def compare_arm_sequences(
             "algorithm_name": res["algorithm"]["name"],
             "found": res["found"],
             "is_optimal": res["is_optimal"],
+            "within_budget": res["within_budget"],
+            "budget_limit": res["budget_limit"],
             "reason": res["reason"],
             "completed_stages": res["completed_stages"],
             "total_stages": res["total_stages"],
