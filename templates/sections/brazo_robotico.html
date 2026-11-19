@@ -99,11 +99,13 @@
           <span class="arm-panel-hint">Arrastra maquinas o gira la vista</span>
         </div>
         <div class="arm-3d-wrap" id="arm3dContainer" aria-label="Escena 3D interactiva del brazo robotico">
-          <div class="arm-cam-hud" role="group" aria-label="Camara 3D">
-            <button type="button" class="arm-cam-btn active" data-cam="iso">3D</button>
-            <button type="button" class="arm-cam-btn" data-cam="top">Planta</button>
+          <div class="arm-top-huds">
+            <div class="arm-cam-hud" role="group" aria-label="Camara 3D">
+              <button type="button" class="arm-cam-btn active" data-cam="iso">3D</button>
+              <button type="button" class="arm-cam-btn" data-cam="top">Planta</button>
+            </div>
+            <div class="arm-telemetry-hud" id="armTelemetryHud">170° / 15° &middot; Pinza libre</div>
           </div>
-          <div class="arm-telemetry-hud" id="armTelemetryHud">170° / 15° &middot; Pinza libre</div>
           <div class="arm-hover-hud" id="armHoverHud" hidden></div>
         </div>
       </div>

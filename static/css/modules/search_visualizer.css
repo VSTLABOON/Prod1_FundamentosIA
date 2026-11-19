@@ -337,6 +337,7 @@
 .sv-metric-val {
   font-family: "IBM Plex Mono", monospace;
   font-size: 1.12rem;
+  font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
 
@@ -349,6 +350,7 @@
   border-left: 3px solid var(--teal);
   border-radius: var(--radius-sm);
   padding: 10px 12px;
+  min-height: 62px;
 }
 
 .sv-verdict-box.success {
@@ -621,5 +623,16 @@
   }
   .sv-compact-modal {
     padding: 18px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sv-grid {
+    gap: 2px;
+    padding: 5px;
+  }
+  .sv-cell {
+    font-size: 0.64rem;
+    border-radius: 3px;
   }
 }

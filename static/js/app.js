@@ -298,18 +298,26 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ==========================================================================
      4. MODAL LIGHTBOX PARA AMPLIAR INFOGRAFIAS EN ALTA RESOLUCION
      ========================================================================== */
+  function syncGlobalModalLock() {
+    const anyOpen = Boolean(document.querySelector(".modal-backdrop.open, .lightbox-backdrop.open"));
+    document.documentElement.classList.toggle("arm-modal-lock", anyOpen);
+    document.body.classList.toggle("arm-modal-lock", anyOpen);
+    document.body.style.overflow = "";
+  }
+  window.syncGlobalModalLock = syncGlobalModalLock;
+
   function openLightbox(imageSrc, imageAlt) {
     if (!dom.lightboxModal || !dom.lightboxImage) return;
     dom.lightboxImage.src = imageSrc;
     dom.lightboxImage.alt = imageAlt || "Infografia ampliada";
     dom.lightboxModal.classList.add("open");
-    document.body.style.overflow = "hidden";
+    syncGlobalModalLock();
   }
 
   function closeLightbox() {
     if (!dom.lightboxModal) return;
     dom.lightboxModal.classList.remove("open");
-    document.body.style.overflow = "";
+    syncGlobalModalLock();
     if (dom.lightboxImage) dom.lightboxImage.src = "";
   }
 
@@ -533,12 +541,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     setActiveModalTab("definition");
     dom.modalBackdrop.classList.add("open");
-    document.body.style.overflow = "hidden";
+    syncGlobalModalLock();
   }
 
   function closeModal() {
     dom.modalBackdrop.classList.remove("open");
-    document.body.style.overflow = "";
+    syncGlobalModalLock();
     activeModalConcept = null;
   }
 
@@ -820,13 +828,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!chatbotModal) return;
       switchChatbotModalTab(tabKey);
       chatbotModal.classList.add("open");
-      document.body.style.overflow = "hidden";
+      syncGlobalModalLock();
     }
 
     function closeChatbotModal() {
       if (!chatbotModal) return;
       chatbotModal.classList.remove("open");
-      document.body.style.overflow = "";
+      syncGlobalModalLock();
     }
 
     if (btnOpenChatbotModal) {

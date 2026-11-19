@@ -90,12 +90,16 @@ document.addEventListener("DOMContentLoaded", () => {
     lastResult: null,
     stageIdx: 0,
     completedWaypoints: 0,
+    fromWaypointOffset: 0,
     carryingPart: false,
     deliveredPart: false,
     reqSeq: 0,
     speed: 1.0,
     paused: false,
-    phase: "idle", // 'exploring' | 'moving' | 'done' | 'failed'
+    phase: "idle", // 'idle' | 'exploring' | 'moving' | 'dwell' | 'done' | 'failed'
+    dwellLeftMs: 0,
+    pendingNextStage: null,
+    activated: false,
     expCursor: 0,
     pathCursor: 0,
     liveDeg: [170, 15],
@@ -103,6 +107,12 @@ document.addEventListener("DOMContentLoaded", () => {
     lastTickTime: 0,
     rafId: null
   };
+
+  const cspaceBaseCanvas = document.createElement("canvas");
+  cspaceBaseCanvas.width = el.csCanvas.width;
+  cspaceBaseCanvas.height = el.csCanvas.height;
+  const cspaceBaseCtx = cspaceBaseCanvas.getContext("2d");
+  let cachedBaseStageKey = "";
 
   const three = {
     ready: false,
@@ -167,6 +177,40 @@ document.addEventListener("DOMContentLoaded", () => {
     return { x: x3 * SCALE + BASE_2D[0], y: z3 * SCALE + BASE_2D[1] };
   }
 
+  function isBrazoSectionActive() {
+    const sec = document.getElementById("sectionBrazo");
+    return !sec || sec.classList.contains("active");
+  }
+
+  function resizeThreeRenderer() {
+    if (!three.renderer || !three.camera || !el.container3d) return;
+    const nw = el.container3d.clientWidth;
+    const nh = el.container3d.clientHeight;
+    if (nw > 10 && nh > 10) {
+      three.camera.aspect = nw / nh;
+      three.camera.updateProjectionMatrix();
+      three.renderer.setSize(nw, nh);
+    }
+  }
+
+  async function ensureBrazoActivated() {
+    if (!state.meta) return;
+    if (!state.activated) {
+      state.activated = true;
+      if (!three.ready) {
+        initThreeScene();
+        bindEvents();
+      }
+      requestAnimationFrame(() => {
+        resizeThreeRenderer();
+      });
+      await runPythonSequence();
+    } else {
+      resizeThreeRenderer();
+      state.lastTickTime = performance.now();
+    }
+  }
+
   async function init() {
     try {
       const resp = await fetch("/api/arm/presets");
@@ -176,9 +220,21 @@ document.addEventListener("DOMContentLoaded", () => {
       state.meta = json.data;
       renderPresetButtons();
       loadTask("pick_and_place", false);
-      initThreeScene();
-      bindEvents();
-      await runPythonSequence();
+      refreshHistoryBadge();
+
+      const sec = document.getElementById("sectionBrazo");
+      if (isBrazoSectionActive()) {
+        await ensureBrazoActivated();
+      } else if (sec && typeof MutationObserver !== "undefined") {
+        const obs = new MutationObserver(() => {
+          if (isBrazoSectionActive()) {
+            ensureBrazoActivated();
+          }
+        });
+        obs.observe(sec, { attributes: true, attributeFilter: ["class"] });
+      } else {
+        await ensureBrazoActivated();
+      }
     } catch (err) {
       el.verdictText.textContent = "Error al conectar con el backend Python.";
     }
@@ -318,14 +374,9 @@ document.addEventListener("DOMContentLoaded", () => {
     three.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     three.renderer.toneMappingExposure = 1.08;
 
-    const camHud = el.container3d.querySelector(".arm-cam-hud");
-    const telemetryHud = el.telemetryHud;
-    const hoverHud = el.hoverHud;
-    el.container3d.innerHTML = "";
-    el.container3d.appendChild(three.renderer.domElement);
-    if (camHud) el.container3d.appendChild(camHud);
-    if (telemetryHud) el.container3d.appendChild(telemetryHud);
-    if (hoverHud) el.container3d.appendChild(hoverHud);
+    const existingCanvas = el.container3d.querySelector("canvas");
+    if (existingCanvas) existingCanvas.remove();
+    el.container3d.insertBefore(three.renderer.domElement, el.container3d.firstChild);
 
     three.raycaster = new THREE.Raycaster();
     three.floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -575,60 +626,61 @@ document.addEventListener("DOMContentLoaded", () => {
     torchCollar.position.set(L2_3D, -0.05, 0);
     three.elbowGroup.add(torchCollar);
 
-    const torchNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.045, 0.68, 16), chromeMat);
-    torchNozzle.position.set(L2_3D, -0.46, 0);
+    const torchNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.042, 0.48, 16), chromeMat);
+    torchNozzle.position.set(L2_3D, -0.38, 0);
     torchNozzle.castShadow = true;
     three.elbowGroup.add(torchNozzle);
 
     [-0.08, 0.08].forEach((rz) => {
-      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.66, 8), steelMid);
-      rod.position.set(L2_3D, -0.45, rz);
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.46, 8), steelMid);
+      rod.position.set(L2_3D, -0.38, rz);
       three.elbowGroup.add(rod);
     });
 
     const copperTip = new THREE.Mesh(
-      new THREE.SphereGeometry(0.075, 14, 14),
+      new THREE.SphereGeometry(0.06, 14, 14),
       new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
     );
-    copperTip.position.set(L2_3D, -0.78, 0);
+    copperTip.position.set(L2_3D, -0.64, 0);
     three.elbowGroup.add(copperTip);
 
-    // Pinza mecanica paralela (mordazas izquierda y derecha que se cierran al transportar carga)
+    // Pinza mecanica paralela (mordazas calibradas debajo de la barra sin interpenetracion)
     const jawMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.85, roughness: 0.22 });
-    const jawBar = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.62), steelDark);
-    jawBar.position.set(L2_3D, -0.82, 0);
+    const jawBar = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.06, 0.62), steelDark);
+    jawBar.position.set(L2_3D, -0.73, 0);
     three.elbowGroup.add(jawBar);
 
-    three.gripperLeft = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.28, 0.07), jawMat);
-    three.gripperLeft.position.set(L2_3D, -0.98, 0.28);
+    three.gripperLeft = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.36, 0.065), jawMat);
+    three.gripperLeft.position.set(L2_3D, -0.95, 0.28);
     three.gripperLeft.castShadow = true;
     three.elbowGroup.add(three.gripperLeft);
 
-    three.gripperRight = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.28, 0.07), jawMat);
-    three.gripperRight.position.set(L2_3D, -0.98, -0.28);
+    three.gripperRight = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.36, 0.065), jawMat);
+    three.gripperRight.position.set(L2_3D, -0.95, -0.28);
     three.gripperRight.castShadow = true;
     three.elbowGroup.add(three.gripperRight);
 
     three.clampHalo = new THREE.Mesh(
-      new THREE.TorusGeometry(0.38, 0.028, 12, 32),
+      new THREE.TorusGeometry(0.36, 0.024, 12, 32),
       new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
     );
     three.clampHalo.rotation.x = Math.PI / 2;
-    three.clampHalo.position.set(L2_3D, -0.92, 0);
+    three.clampHalo.position.set(L2_3D, -0.91, 0);
     three.clampHalo.visible = false;
     three.elbowGroup.add(three.clampHalo);
 
     three.cargoLaser = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.035, 0.14, 0.36, 16, 1, true),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
+      new THREE.CylinderGeometry(0.035, 0.11, 0.22, 16, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.20, side: THREE.DoubleSide })
     );
-    three.cargoLaser.position.set(L2_3D, -1.24, 0);
+    three.cargoLaser.position.set(L2_3D, -0.95, 0);
     three.cargoLaser.visible = false;
     three.elbowGroup.add(three.cargoLaser);
 
-    // Grupo 3D de la carga sujetada por la pinza durante el traslado
+    // Grupo 3D de la carga sujetada entre ambas mordazas sin tocar la barra superior
     three.carriedPartMesh = new THREE.Group();
     three.carriedPartMesh.position.set(L2_3D, -1.03, 0);
+    three.carriedPartMesh.scale.set(0.84, 0.84, 0.84);
     three.carriedPartMesh.visible = false;
     three.elbowGroup.add(three.carriedPartMesh);
     refreshCarriedCargoMesh();
@@ -813,9 +865,9 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.fillText(text, 128, 37);
 
     const tex = new THREE.CanvasTexture(canvas);
-    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true });
     const sprite = new THREE.Sprite(mat);
-    sprite.scale.set(1.18, 0.34, 1);
+    sprite.scale.set(0.96, 0.27, 1);
     return sprite;
   }
 
@@ -1064,32 +1116,47 @@ document.addEventListener("DOMContentLoaded", () => {
       ring.userData = { dragType: "waypoint", index: idx, label: wp.label, parentGroup: grp };
       grp.add(ring);
 
-      const beacon = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.13, 0.24, 16),
-        new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.4 })
-      );
-      beacon.position.y = 0.16;
-      beacon.userData = { dragType: "waypoint", index: idx, label: wp.label, parentGroup: grp };
-      grp.add(beacon);
+      let beacon = null;
+      const posts = [];
 
-      // Si es estacion de entrega (place), agregar 4 postes guia de tarima receptora
       if (wp.action === "place") {
-        const postMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, metalness: 0.6, roughness: 0.3 });
-        [[-0.30, -0.30], [0.30, -0.30], [-0.30, 0.30], [0.30, 0.30]].forEach(([px, pz]) => {
-          const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.24, 0.06), postMat);
-          post.position.set(px, 0.16, pz);
+        // Tarima receptora con 4 postes guia iluminables (sin cono central que atraviese la pieza)
+        const postMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0xa855f7, emissiveIntensity: 0.25, metalness: 0.6, roughness: 0.3 });
+        [[-0.31, -0.31], [0.31, -0.31], [-0.31, 0.31], [0.31, 0.31]].forEach(([px, pz]) => {
+          const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.22, 0.06), postMat);
+          post.position.set(px, 0.15, pz);
+          post.userData = { dragType: "waypoint", index: idx, label: wp.label, parentGroup: grp };
           grp.add(post);
+          posts.push(post);
         });
+      } else if (wp.action === "pick") {
+        // Plataforma de recoleccion limpia sin pico central
+        const dockDisk = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.32, 0.34, 0.03, 24),
+          new THREE.MeshStandardMaterial({ color: 0x0ea5e9, emissive: 0x0284c7, emissiveIntensity: 0.35 })
+        );
+        dockDisk.position.y = 0.095;
+        dockDisk.userData = { dragType: "waypoint", index: idx, label: wp.label, parentGroup: grp };
+        grp.add(dockDisk);
+        posts.push(dockDisk);
+      } else {
+        beacon = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.07, 0.13, 0.24, 16),
+          new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.4 })
+        );
+        beacon.position.y = 0.16;
+        beacon.userData = { dragType: "waypoint", index: idx, label: wp.label, parentGroup: grp };
+        grp.add(beacon);
       }
 
-      // Etiqueta flotante 3D limpia para orientar al publico en vivo
+      // Etiqueta flotante 3D por encima del brazo para no tapar la pieza ni los eslabones
       const badgeTxt = wp.action === "pick" ? "ORIGEN" : wp.action === "place" ? "DESTINO" : "SOLDAR";
-      const badgeColor = wp.action === "pick" ? "rgba(2, 132, 199, 0.88)" : wp.action === "place" ? "rgba(126, 34, 206, 0.88)" : "rgba(220, 38, 38, 0.88)";
+      const badgeColor = wp.action === "pick" ? "rgba(2, 132, 199, 0.90)" : wp.action === "place" ? "rgba(126, 34, 206, 0.90)" : "rgba(220, 38, 38, 0.90)";
       const badgeSprite = createStationBadgeSprite(badgeTxt, badgeColor);
-      badgeSprite.position.set(0, 0.88, 0);
+      badgeSprite.position.set(0, 1.56, 0);
       grp.add(badgeSprite);
 
-      grp.userData = { ring, beacon, defaultColor: colorHex };
+      grp.userData = { ring, beacon, posts, defaultColor: colorHex };
       three.scene.add(grp);
       three.waypointGroups.push(grp);
 
@@ -1097,7 +1164,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (wp.action === "pick") {
         three.floorPartMesh = new THREE.Group();
         populateCargoMeshGroup(three.floorPartMesh, state.cargoId);
-        three.floorPartMesh.position.set(pos3.x, 0.22, pos3.z);
+        three.floorPartMesh.scale.set(0.84, 0.84, 0.84);
+        three.floorPartMesh.position.set(pos3.x, 0.23, pos3.z);
         three.floorPartMesh.visible = !state.carryingPart && !state.deliveredPart;
         three.scene.add(three.floorPartMesh);
       }
@@ -1106,7 +1174,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (wp.action === "place") {
         three.deliveredPartMesh = new THREE.Group();
         populateCargoMeshGroup(three.deliveredPartMesh, state.cargoId);
-        three.deliveredPartMesh.position.set(pos3.x, 0.22, pos3.z);
+        three.deliveredPartMesh.scale.set(0.84, 0.84, 0.84);
+        three.deliveredPartMesh.position.set(pos3.x, 0.23, pos3.z);
         three.deliveredPartMesh.visible = Boolean(state.deliveredPart);
         three.scene.add(three.deliveredPartMesh);
       }
@@ -1118,21 +1187,49 @@ document.addEventListener("DOMContentLoaded", () => {
       const done = idx < completedCount;
       const colorHex = done ? 0x22c55e : grp.userData.defaultColor;
       grp.userData.ring.material.color.setHex(colorHex);
-      grp.userData.beacon.material.color.setHex(colorHex);
-      grp.userData.beacon.material.emissive.setHex(colorHex);
+      if (grp.userData.beacon) {
+        grp.userData.beacon.material.color.setHex(colorHex);
+        grp.userData.beacon.material.emissive.setHex(colorHex);
+      }
+      if (grp.userData.posts && grp.userData.posts.length) {
+        grp.userData.posts.forEach((p) => {
+          p.material.color.setHex(colorHex);
+          if (p.material.emissive) p.material.emissive.setHex(colorHex);
+        });
+      }
     });
+  }
+
+  function updateTelemetryHud(deg1, deg2, isPreview = false) {
+    if (!el.telemetryHud) return;
+    if (isPreview) {
+      el.telemetryHud.textContent = `Vista previa: ${Math.round(deg1)}° / ${Math.round(deg2)}°`;
+      return;
+    }
+    const cargoSpec = getActiveCargoSpec();
+    const cargoNote = state.carryingPart
+      ? ` · Llevando ${cargoSpec.short_name} (${cargoSpec.weight_kg} kg)`
+      : state.deliveredPart
+        ? ` · ${cargoSpec.short_name} entregada`
+        : " · Pinza libre";
+    el.telemetryHud.textContent = `${Math.round(deg1)}° / ${Math.round(deg2)}°${cargoNote}`;
+  }
+
+  function syncPlayButton() {
+    if (!el.btnPlayPause) return;
+    if (state.phase === "done" || state.phase === "failed") {
+      el.btnPlayPause.textContent = "Reproducir";
+    } else if (state.paused) {
+      el.btnPlayPause.textContent = "Reanudar";
+    } else {
+      el.btnPlayPause.textContent = "Pausar";
+    }
   }
 
   function setRobotAnglesDeg(deg1, deg2) {
     state.liveDeg = [deg1, deg2];
-    if (el.telemetryHud && !state.cspaceHover) {
-      const cargoSpec = getActiveCargoSpec();
-      const cargoNote = state.carryingPart
-        ? ` · Llevando ${cargoSpec.short_name} (${cargoSpec.weight_kg} kg)`
-        : state.deliveredPart
-          ? ` · ${cargoSpec.short_name} entregada`
-          : " · Pinza libre";
-      el.telemetryHud.textContent = `${Math.round(deg1)}° / ${Math.round(deg2)}°${cargoNote}`;
+    if (!state.cspaceHover) {
+      updateTelemetryHud(deg1, deg2, false);
     }
     if (!three.shoulderGroup || !three.elbowGroup) return;
     three.shoulderGroup.rotation.y = (deg1 * Math.PI) / 180;
@@ -1152,6 +1249,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function startRenderLoop() {
     function loop(now) {
+      if (!isBrazoSectionActive()) {
+        state.lastTickTime = now;
+        state.rafId = requestAnimationFrame(loop);
+        return;
+      }
+
       updateAnimationTick(now);
 
       three.camTheta += (three.targetCamTheta - three.camTheta) * 0.14;
@@ -1181,7 +1284,7 @@ document.addEventListener("DOMContentLoaded", () => {
         three.cargoLaser.visible = state.carryingPart;
       }
       if (three.floorPartMesh && three.floorPartMesh.visible) {
-        three.floorPartMesh.position.y = 0.22 + Math.sin(now * 0.004) * 0.025;
+        three.floorPartMesh.position.y = 0.23 + Math.sin(now * 0.004) * 0.018;
       }
 
       // Baliza pulsante para obstaculo imprevisto y anillo LED de estado del pedestal
@@ -1196,7 +1299,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ? 0xef4444
           : state.carryingPart
             ? 0x38bdf8
-            : state.phase === "exploring"
+            : (state.phase === "exploring" || state.phase === "dwell")
               ? 0xfbbf24
               : state.phase === "done"
                 ? 0x22c55e
@@ -1247,6 +1350,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function runPythonSequence(customStartDeg = null, fromWaypointIdx = 0) {
     const mySeq = ++state.reqSeq;
     state.phase = "idle";
+    state.dwellLeftMs = 0;
+    state.pendingNextStage = null;
+    state.fromWaypointOffset = fromWaypointIdx;
+    cachedBaseStageKey = "";
     three.sparksActive = false;
     if (three.sparkPoints) three.sparkPoints.visible = false;
     updateTrail3D([]);
@@ -1265,12 +1372,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const pickWp = state.waypoints.find((w) => w.action === "pick");
         if (pickWp) {
           const p3 = to3D(pickWp.x, pickWp.y);
-          three.floorPartMesh.position.set(p3.x, 0.22, p3.z);
+          three.floorPartMesh.position.set(p3.x, 0.23, p3.z);
           three.floorPartMesh.visible = true;
         }
       }
       updateWaypointVisuals(0);
     }
+
+    syncPlayButton();
 
     try {
       const taskObj = state.meta.tasks.find((t) => t.id === state.activeTaskId);
@@ -1296,7 +1405,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (json.status !== "success") return;
 
       state.lastResult = json.data;
-      updateSummary(json.data, fromWaypointIdx);
+      updateSummary(json.data, fromWaypointIdx, false);
       startStagePlayback(0, startDeg);
       if (el.logModal.classList.contains("open")) {
         loadHistoryData();
@@ -1305,6 +1414,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } catch (err) {
       if (mySeq === state.reqSeq) {
+        state.phase = "failed";
+        syncPlayButton();
         el.verdictText.textContent = "Error al calcular el ciclo en Python.";
       }
     }
@@ -1315,7 +1426,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!data || !data.stages || !data.stages[stageIndex]) return;
 
     state.paused = false;
-    el.btnPlayPause.textContent = "Pausar";
+    state.dwellLeftMs = 0;
+    state.pendingNextStage = null;
     state.stageIdx = stageIndex;
     state.expCursor = 0;
     state.pathCursor = 0;
@@ -1336,13 +1448,17 @@ document.addEventListener("DOMContentLoaded", () => {
       drawCspace(st, 0, -1, state.liveDeg);
       el.phaseBadge.textContent = `Detenido en ${st.label}`;
       el.phaseFill.style.width = "100%";
+      updateSummary(data, state.fromWaypointOffset, true);
+      syncPlayButton();
       return;
     }
     state.phase = "exploring";
+    updateSummary(data, state.fromWaypointOffset, false);
+    syncPlayButton();
   }
 
   function updateAnimationTick(now) {
-    if (state.cspaceHover) return; // No pisar la vista previa cuando el usuario explora con el cursor
+    if (state.cspaceHover) return;
 
     const data = state.lastResult;
     if (!data || state.paused || state.phase === "idle" || state.phase === "done" || state.phase === "failed") {
@@ -1352,15 +1468,28 @@ document.addEventListener("DOMContentLoaded", () => {
     const st = data.stages[state.stageIdx];
     if (!st) return;
 
-    const dt = Math.min(0.05, (now - state.lastTickTime) / 1000);
+    const dt = Math.min(0.05, Math.max(0, (now - state.lastTickTime) / 1000));
     state.lastTickTime = now;
     const totalStages = data.stages.length;
     const stageBasePct = (state.stageIdx / totalStages) * 100;
     const stageSpanPct = 100 / totalStages;
+    const cargoSpec = getActiveCargoSpec();
+
+    if (state.phase === "dwell") {
+      state.dwellLeftMs -= dt * 1000;
+      if (state.dwellLeftMs <= 0) {
+        const nextInfo = state.pendingNextStage;
+        state.pendingNextStage = null;
+        if (nextInfo) {
+          startStagePlayback(nextInfo[0], [nextInfo[1], nextInfo[2]]);
+        }
+      }
+      return;
+    }
 
     if (state.phase === "exploring") {
       const totalExp = st.explored.length;
-      const rate = Math.max(24, totalExp / 2.3) * state.speed;
+      const rate = Math.max(24, totalExp / 2.2) * state.speed;
       state.expCursor = Math.min(totalExp, state.expCursor + rate * dt);
 
       const idx = Math.max(0, Math.min(totalExp - 1, Math.floor(state.expCursor) - 1));
@@ -1375,16 +1504,19 @@ document.addEventListener("DOMContentLoaded", () => {
       drawCspace(st, Math.floor(state.expCursor), -1, liveAngles);
       const pct = stageBasePct + (state.expCursor / totalExp) * stageSpanPct * 0.55;
       el.phaseFill.style.width = `${Math.round(pct)}%`;
-      el.phaseBadge.textContent = `Etapa ${state.stageIdx + 1}/${totalStages}: Probando (${Math.floor(state.expCursor)} / ${totalExp})`;
+      el.phaseBadge.textContent = `Etapa ${state.stageIdx + 1}/${totalStages} · Probando ${Math.floor(state.expCursor)}/${totalExp}`;
 
       if (state.expCursor >= totalExp) {
         setGhostAnglesDeg(0, 0, false);
         if (st.found && st.path_frames.length > 0) {
           state.phase = "moving";
           state.pathCursor = 0;
+          updateSummary(data, state.fromWaypointOffset, false);
         } else {
           state.phase = "failed";
           el.phaseBadge.textContent = `Detenido en ${st.label}`;
+          updateSummary(data, state.fromWaypointOffset, true);
+          syncPlayButton();
         }
       }
     } else if (state.phase === "moving") {
@@ -1408,12 +1540,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const pct = stageBasePct + stageSpanPct * (0.55 + (state.pathCursor / Math.max(1, frames.length - 1)) * 0.45);
       el.phaseFill.style.width = `${Math.round(pct)}%`;
-      const cargoSpec = getActiveCargoSpec();
-      const loadTag = state.carryingPart ? ` [Transportando ${cargoSpec.short_name} · ${cargoSpec.weight_kg} kg]` : "";
-      el.phaseBadge.textContent = `Etapa ${state.stageIdx + 1}/${totalStages}${loadTag}: ${st.label}`;
+      const loadTag = state.carryingPart ? " · Con carga" : "";
+      el.phaseBadge.textContent = `Etapa ${state.stageIdx + 1}/${totalStages}${loadTag} · ${st.label}`;
 
       if (state.pathCursor >= frames.length - 1) {
-        // Accion practica al llegar al waypoint
+        // Accion coordinada al llegar al waypoint
         state.completedWaypoints += 1;
         updateWaypointVisuals(state.completedWaypoints);
         const t3 = to3D(st.target[0], st.target[1]);
@@ -1425,15 +1556,24 @@ document.addEventListener("DOMContentLoaded", () => {
           if (three.carriedPartMesh) three.carriedPartMesh.visible = true;
           setRobotAnglesDeg(curD1, curD2);
           triggerSparks(t3.x, t3.z, 0x38bdf8);
+
+          if (state.stageIdx + 1 < totalStages) {
+            state.phase = "dwell";
+            state.dwellLeftMs = 280 / Math.max(0.6, state.speed);
+            state.pendingNextStage = [state.stageIdx + 1, curD1, curD2];
+            el.phaseBadge.textContent = `Pinza cerrada: ${cargoSpec.short_name} (${cargoSpec.weight_kg} kg)`;
+            el.verdictText.textContent = `Pieza sujetada en origen (${cargoSpec.short_name}, ${cargoSpec.weight_kg} kg). Trasladando hacia destino...`;
+            return;
+          }
         } else if (st.action === "place") {
           state.carryingPart = false;
           state.deliveredPart = true;
           if (three.carriedPartMesh) three.carriedPartMesh.visible = false;
           if (three.deliveredPartMesh) {
-            three.deliveredPartMesh.position.set(t3.x, 0.22, t3.z);
+            three.deliveredPartMesh.position.set(t3.x, 0.23, t3.z);
             three.deliveredPartMesh.visible = true;
           } else if (three.floorPartMesh) {
-            three.floorPartMesh.position.set(t3.x, 0.22, t3.z);
+            three.floorPartMesh.position.set(t3.x, 0.23, t3.z);
             three.floorPartMesh.visible = true;
           }
           setRobotAnglesDeg(curD1, curD2);
@@ -1447,7 +1587,9 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           state.phase = "done";
           el.phaseFill.style.width = "100%";
-          el.phaseBadge.textContent = `¡${cargoSpec.short_name} (${cargoSpec.weight_kg} kg) entregada en destino!`;
+          el.phaseBadge.textContent = `¡${cargoSpec.short_name} (${cargoSpec.weight_kg} kg) entregada!`;
+          updateSummary(data, state.fromWaypointOffset, true);
+          syncPlayButton();
         }
       }
     }
@@ -1474,7 +1616,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return { kind: "detour", tone: "is-warn", badgeTone: "warn", budgetLimit, overBudget: false };
   }
 
-  function updateSummary(data, offsetWaypoints = 0) {
+  function updateSummary(data, offsetWaypoints = 0, isFinal = true) {
+    if (!data) return;
     const doneTotal = offsetWaypoints + data.completed_stages;
     const fullTotal = offsetWaypoints + data.total_stages;
     const cargo = data.cargo || getActiveCargoSpec();
@@ -1490,6 +1633,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     el.kpiStatusBox.classList.remove("is-ok", "is-warn", "is-fail");
     el.verdictBox.classList.remove("is-warn", "is-fail");
+
+    if (!isFinal) {
+      el.statStatus.textContent = `En curso (${state.stageIdx + 1}/${data.stages.length})`;
+      if (state.phase === "moving") {
+        el.verdictText.textContent = state.carryingPart
+          ? `Llevando ${shortCargo} (${weightKg} kg) hacia la estacion de destino...`
+          : `Moviendo pinza hacia la estacion de origen para tomar ${shortCargo} (${weightKg} kg)...`;
+      } else {
+        el.verdictText.textContent = `Evaluando posturas sin colision con ${data.algorithm.name} para ${shortCargo} (${weightKg} kg)...`;
+      }
+      return;
+    }
 
     const outcome = classifyRunOutcome(data);
     const memNote = data.from_cache ? " · Desde Memoria SQL" : "";
@@ -1523,12 +1678,66 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // =========================================================================
-  // MAPA DE POSTURAS + HOVER INTERACTIVO A 3D
+  // MAPA DE POSTURAS + HOVER INTERACTIVO A 3D (CON CACHE OFFSCREEN 60FPS)
   // =========================================================================
   const CSPACE_PAD = { l: 28, b: 24, t: 10, r: 10 };
 
+  function ensureCspaceBaseLayer(stageData) {
+    const dark = isDarkTheme();
+    const key = `${state.activeTaskId}|${state.algorithm}|${stageData.stage_index}|${dark ? 1 : 0}|${stageData.target.join(",")}|${stageData.nodes_expanded}`;
+    if (cachedBaseStageKey === key) return;
+    cachedBaseStageKey = key;
+
+    const N = state.meta.grid_n;
+    const plotW = cspaceBaseCanvas.width - CSPACE_PAD.l - CSPACE_PAD.r;
+    const plotH = cspaceBaseCanvas.height - CSPACE_PAD.t - CSPACE_PAD.b;
+    const cw = plotW / N;
+    const ch = plotH / N;
+    const cspace = stageData.cspace;
+    const toPxX = (i1) => CSPACE_PAD.l + i1 * cw;
+    const toPxY = (i2) => CSPACE_PAD.t + (N - 1 - i2) * ch;
+
+    cspaceBaseCtx.fillStyle = dark ? "#161F28" : "#F7F8F4";
+    cspaceBaseCtx.fillRect(0, 0, cspaceBaseCanvas.width, cspaceBaseCanvas.height);
+
+    cspaceBaseCtx.fillStyle = dark ? "#1C2733" : "#FFFFFF";
+    cspaceBaseCtx.fillRect(CSPACE_PAD.l, CSPACE_PAD.t, plotW, plotH);
+
+    for (let i1 = 0; i1 < N; i1++) {
+      const row = cspace[i1];
+      for (let i2 = 0; i2 < N; i2++) {
+        const val = row[i2];
+        if (val === 1) {
+          cspaceBaseCtx.fillStyle = dark ? "#7C2D2D" : "#B94A4A";
+          cspaceBaseCtx.fillRect(toPxX(i1), toPxY(i2), cw + 0.4, ch + 0.4);
+        } else if (val === 2) {
+          cspaceBaseCtx.fillStyle = "#22C55E";
+          cspaceBaseCtx.fillRect(toPxX(i1), toPxY(i2), cw + 0.5, ch + 0.5);
+        }
+      }
+    }
+
+    cspaceBaseCtx.strokeStyle = dark ? "rgba(232,228,216,0.22)" : "rgba(30,42,51,0.22)";
+    cspaceBaseCtx.lineWidth = 1;
+    cspaceBaseCtx.strokeRect(CSPACE_PAD.l, CSPACE_PAD.t, plotW, plotH);
+
+    cspaceBaseCtx.fillStyle = dark ? "#A9B0AC" : "#4B5A61";
+    cspaceBaseCtx.font = "600 10px 'IBM Plex Sans', sans-serif";
+    cspaceBaseCtx.textAlign = "center";
+    cspaceBaseCtx.fillText("Giro del hombro (0° a 360°)", CSPACE_PAD.l + plotW / 2, cspaceBaseCanvas.height - 6);
+
+    cspaceBaseCtx.save();
+    cspaceBaseCtx.translate(11, CSPACE_PAD.t + plotH / 2);
+    cspaceBaseCtx.rotate(-Math.PI / 2);
+    cspaceBaseCtx.fillText("Giro del codo (0° a 360°)", 0, 0);
+    cspaceBaseCtx.restore();
+  }
+
   function drawCspace(stageData, expCount, activePathIdx, liveDeg = null) {
     if (!stageData) return;
+    ensureCspaceBaseLayer(stageData);
+    csCtx.drawImage(cspaceBaseCanvas, 0, 0);
+
     const dark = isDarkTheme();
     const N = state.meta.grid_n;
     const plotW = el.csCanvas.width - CSPACE_PAD.l - CSPACE_PAD.r;
@@ -1536,29 +1745,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const cw = plotW / N;
     const ch = plotH / N;
     const cspace = stageData.cspace;
-
-    csCtx.fillStyle = dark ? "#161F28" : "#F7F8F4";
-    csCtx.fillRect(0, 0, el.csCanvas.width, el.csCanvas.height);
-
-    csCtx.fillStyle = dark ? "#1C2733" : "#FFFFFF";
-    csCtx.fillRect(CSPACE_PAD.l, CSPACE_PAD.t, plotW, plotH);
-
     const toPxX = (i1) => CSPACE_PAD.l + i1 * cw;
     const toPxY = (i2) => CSPACE_PAD.t + (N - 1 - i2) * ch;
-
-    for (let i1 = 0; i1 < N; i1++) {
-      const row = cspace[i1];
-      for (let i2 = 0; i2 < N; i2++) {
-        const val = row[i2];
-        if (val === 1) {
-          csCtx.fillStyle = dark ? "#7C2D2D" : "#B94A4A";
-          csCtx.fillRect(toPxX(i1), toPxY(i2), cw + 0.4, ch + 0.4);
-        } else if (val === 2) {
-          csCtx.fillStyle = "#22C55E";
-          csCtx.fillRect(toPxX(i1), toPxY(i2), cw + 0.5, ch + 0.5);
-        }
-      }
-    }
 
     const totalExp = Math.max(1, stageData.explored.length);
     for (let k = 0; k < expCount; k++) {
@@ -1613,21 +1801,6 @@ document.addEventListener("DOMContentLoaded", () => {
       csCtx.arc(toPxX(li1) + cw / 2, toPxY(li2) + ch / 2, 5.5, 0, Math.PI * 2);
       csCtx.stroke();
     }
-
-    csCtx.strokeStyle = dark ? "rgba(232,228,216,0.22)" : "rgba(30,42,51,0.22)";
-    csCtx.lineWidth = 1;
-    csCtx.strokeRect(CSPACE_PAD.l, CSPACE_PAD.t, plotW, plotH);
-
-    csCtx.fillStyle = dark ? "#A9B0AC" : "#4B5A61";
-    csCtx.font = "600 10px 'IBM Plex Sans', sans-serif";
-    csCtx.textAlign = "center";
-    csCtx.fillText("Giro del hombro (0° a 360°)", CSPACE_PAD.l + plotW / 2, el.csCanvas.height - 6);
-
-    csCtx.save();
-    csCtx.translate(11, CSPACE_PAD.t + plotH / 2);
-    csCtx.rotate(-Math.PI / 2);
-    csCtx.fillText("Giro del codo (0° a 360°)", 0, 0);
-    csCtx.restore();
   }
 
   // =========================================================================
@@ -1653,16 +1826,25 @@ document.addEventListener("DOMContentLoaded", () => {
       rebuildThreeObstaclesAndWaypoints();
 
       // Si el robot iba a medio ciclo, recalcular desde su postura y etapa actual (Opcion C real)
-      if (state.unexpectedActive && (state.phase === "exploring" || state.phase === "moving")) {
-        runPythonSequence([...state.liveDeg], state.completedWaypoints);
+      const inMidCycle = state.unexpectedActive &&
+        (state.phase === "exploring" || state.phase === "moving" || state.phase === "dwell") &&
+        state.completedWaypoints < state.waypoints.length;
+
+      if (inMidCycle) {
+        const useLiveAngles = state.phase === "moving" || state.phase === "dwell" || state.completedWaypoints > 0;
+        runPythonSequence(useLiveAngles ? [...state.liveDeg] : null, state.completedWaypoints);
       } else {
         runPythonSequence();
       }
     });
 
     el.btnPlayPause.addEventListener("click", () => {
+      if (state.phase === "done" || state.phase === "failed") {
+        runPythonSequence();
+        return;
+      }
       state.paused = !state.paused;
-      el.btnPlayPause.textContent = state.paused ? "Reanudar" : "Pausar";
+      syncPlayButton();
       if (!state.paused) state.lastTickTime = performance.now();
     });
 
@@ -1738,8 +1920,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.code === "Space") {
         const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
         const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON" || tag === "A";
-        const modalOpen = el.compareModal.classList.contains("open") || el.logModal.classList.contains("open");
-        const armSection = card.closest("#brazo-robotico");
+        const modalOpen = Boolean(document.querySelector(".modal-backdrop.open, .lightbox-backdrop.open"));
+        const armSection = card.closest("#sectionBrazo");
         const sectionActive = !armSection || armSection.classList.contains("active");
         if (!isTyping && !modalOpen && sectionActive) {
           e.preventDefault();
@@ -1798,9 +1980,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const d2 = i2 * state.meta.step_deg;
       state.cspaceHover = { i1, i2, val };
       setGhostAnglesDeg(d1, d2, true, val === 1);
-      if (el.telemetryHud) {
-        el.telemetryHud.textContent = `Vista previa: Hombro ${d1}° · Codo ${d2}°`;
-      }
+      updateTelemetryHud(d1, d2, true);
       el.hoverHud.textContent = val === 1
         ? `Postura (${d1}°, ${d2}°) — ¡Choca con una maquina!`
         : val === 2
@@ -1812,9 +1992,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const clearCspacePreview = () => {
       state.cspaceHover = null;
       setGhostAnglesDeg(0, 0, false);
-      if (el.telemetryHud) {
-        el.telemetryHud.textContent = `Hombro ${Math.round(state.liveDeg[0])}° · Codo ${Math.round(state.liveDeg[1])}°`;
-      }
+      updateTelemetryHud(state.liveDeg[0], state.liveDeg[1], false);
       el.hoverHud.hidden = true;
       state.lastTickTime = performance.now();
     };
@@ -1841,8 +2019,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const getInteractiveMeshes = () => {
       const list = [];
-      three.obstacleGroups.forEach((g) => list.push(...g.children));
-      three.waypointGroups.forEach((g) => list.push(...g.children));
+      three.obstacleGroups.forEach((g) => {
+        g.children.forEach((c) => {
+          if (!c.isSprite) list.push(c);
+        });
+      });
+      three.waypointGroups.forEach((g) => {
+        g.children.forEach((c) => {
+          if (!c.isSprite) list.push(c);
+        });
+      });
       return list;
     };
 
@@ -1910,14 +2096,38 @@ document.addEventListener("DOMContentLoaded", () => {
         const clamped3 = to3D(wp.x, wp.y);
         three.waypointGroups[three.dragTarget.index].position.set(clamped3.x, 0.02, clamped3.z);
         if (wp.action === "pick" && three.floorPartMesh && !state.carryingPart) {
-          three.floorPartMesh.position.set(clamped3.x, 0.22, clamped3.z);
+          three.floorPartMesh.position.set(clamped3.x, 0.23, clamped3.z);
+        } else if (wp.action === "place" && three.deliveredPartMesh) {
+          three.deliveredPartMesh.position.set(clamped3.x, 0.23, clamped3.z);
         }
       } else if (three.dragTarget.type === "obstacle") {
         const idx = three.dragTarget.index;
         const ob = idx < state.obstacles.length ? state.obstacles[idx] : state.unexpectedSpec;
         if (ob) {
-          ob.x = Math.max(10, Math.min(430 - ob.w, p2d.x - ob.w / 2));
-          ob.y = Math.max(10, Math.min(370 - ob.h, p2d.y - ob.h / 2));
+          let nextX = Math.max(10, Math.min(430 - ob.w, p2d.x - ob.w / 2));
+          let nextY = Math.max(10, Math.min(370 - ob.h, p2d.y - ob.h / 2));
+
+          // Evitar superponer obstaculos directamente sobre el pedestal central del brazo (220, 215)
+          const cx = nextX + ob.w / 2;
+          const cy = nextY + ob.h / 2;
+          const minDx = ob.w / 2 + 24;
+          const minDy = ob.h / 2 + 24;
+          const relX = cx - BASE_2D[0];
+          const relY = cy - BASE_2D[1];
+          if (Math.abs(relX) < minDx && Math.abs(relY) < minDy) {
+            const pushX = minDx - Math.abs(relX);
+            const pushY = minDy - Math.abs(relY);
+            if (pushX < pushY) {
+              nextX += (relX >= 0 ? pushX : -pushX);
+            } else {
+              nextY += (relY >= 0 ? pushY : -pushY);
+            }
+            nextX = Math.max(10, Math.min(430 - ob.w, nextX));
+            nextY = Math.max(10, Math.min(370 - ob.h, nextY));
+          }
+
+          ob.x = nextX;
+          ob.y = nextY;
           const clamped3 = to3D(ob.x + ob.w / 2, ob.y + ob.h / 2);
           const grp = three.obstacleGroups[idx];
           grp.position.x = clamped3.x;
@@ -1955,6 +2165,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function syncModalLock() {
+    if (window.syncGlobalModalLock) {
+      window.syncGlobalModalLock();
+      return;
+    }
     const anyOpen = el.compareModal.classList.contains("open") || el.logModal.classList.contains("open");
     document.documentElement.classList.toggle("arm-modal-lock", anyOpen);
     document.body.classList.toggle("arm-modal-lock", anyOpen);

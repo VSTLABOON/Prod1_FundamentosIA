@@ -408,13 +408,13 @@ document.addEventListener("DOMContentLoaded", () => {
     renderModalComparison();
     switchModalTab(tabKey);
     el.modal.classList.add("open");
-    document.body.style.overflow = "hidden";
+    if (window.syncGlobalModalLock) window.syncGlobalModalLock();
   }
 
   function closeSvModal() {
     if (!el.modal) return;
     el.modal.classList.remove("open");
-    document.body.style.overflow = "";
+    if (window.syncGlobalModalLock) window.syncGlobalModalLock();
   }
 
   if (el.btnOpenModal) el.btnOpenModal.addEventListener("click", () => openSvModal("compare"));
