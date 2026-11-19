@@ -5,7 +5,7 @@
       Brazo Robotico <span class="accent">Autonomo 3D</span>
     </h1>
     <p class="section-lead-text">
-      Observa al robot realizar tareas reales de fabrica (recoger piezas o soldar varios puntos) esquivando maquinas y reaccionando a imprevistos.
+      El brazo calcula su ruta en Python, transporta piezas reales esquivando maquinas y registra cada entrega en SQLite.
     </p>
   </header>
 
@@ -15,9 +15,9 @@
       <div class="arm-presets" id="armPresetButtons" role="group" aria-label="Tareas practicas de planta"></div>
 
       <div class="arm-actions">
-        <button type="button" class="arm-btn-emergency" id="armBtnEmergency" title="Colocar un obstaculo inesperado y obligar al robot a recalcular">Obstaculo imprevisto</button>
+        <button type="button" class="arm-btn-emergency" id="armBtnEmergency" title="Colocar un obstaculo inesperado y obligar al robot a recalcular">Imprevisto</button>
         <button type="button" class="sv-btn-ghost" id="armBtnHistory">Bitacora SQL <span class="arm-count-pill" id="armHistoryCount">0</span></button>
-        <button type="button" class="sv-btn-accent" id="armBtnCompare">Comparar los 5</button>
+        <button type="button" class="sv-btn-accent" id="armBtnCompare">Comparar</button>
         <button type="button" class="sv-btn-ghost" id="armBtnReset">Reiniciar</button>
       </div>
     </div>
@@ -29,35 +29,35 @@
           <span class="arm-algo-name">A* (Inteligente)</span>
           <i class="arm-algo-dot dot-smart"></i>
         </span>
-        <span class="arm-algo-desc">El mas equilibrado: va directo sin chocar</span>
+        <span class="arm-algo-desc">Directo y optimo</span>
       </button>
       <button type="button" class="arm-algo-pill" data-algo="ucs" role="tab" aria-selected="false">
         <span class="arm-algo-head">
           <span class="arm-algo-name">Costo Uniforme</span>
           <i class="arm-algo-dot dot-safe"></i>
         </span>
-        <span class="arm-algo-desc">Ahorra energia, pero revisa casi todo</span>
+        <span class="arm-algo-desc">Optimo, revisa todo</span>
       </button>
       <button type="button" class="arm-algo-pill" data-algo="greedy" role="tab" aria-selected="false">
         <span class="arm-algo-head">
-          <span class="arm-algo-name">Voraz (Apresurado)</span>
+          <span class="arm-algo-name">Voraz</span>
           <i class="arm-algo-dot dot-fast"></i>
         </span>
-        <span class="arm-algo-desc">Corre directo; puede dar rodeos largos</span>
+        <span class="arm-algo-desc">Rapido, puede desviarse</span>
       </button>
       <button type="button" class="arm-algo-pill" data-algo="bfs" role="tab" aria-selected="false">
         <span class="arm-algo-head">
-          <span class="arm-algo-name">Anchura (Paso a paso)</span>
+          <span class="arm-algo-name">Anchura (BFS)</span>
           <i class="arm-algo-dot dot-blind"></i>
         </span>
-        <span class="arm-algo-desc">Prueba todas las opciones poco a poco</span>
+        <span class="arm-algo-desc">Explora por capas</span>
       </button>
       <button type="button" class="arm-algo-pill" data-algo="dfs" role="tab" aria-selected="false">
         <span class="arm-algo-head">
-          <span class="arm-algo-name">Profundidad (Impulsivo)</span>
+          <span class="arm-algo-name">Profundidad (DFS)</span>
           <i class="arm-algo-dot dot-risk"></i>
         </span>
-        <span class="arm-algo-desc">Toma un rumbo fijo; suele perderse</span>
+        <span class="arm-algo-desc">Avanza a ciegas</span>
       </button>
     </div>
 
@@ -72,11 +72,22 @@
         </div>
       </div>
 
-      <div class="arm-speed-group" role="group" aria-label="Velocidad de animacion">
-        <span class="arm-speed-label">Velocidad:</span>
-        <button type="button" class="arm-speed-btn" data-speed="0.45">0.5&times; Lento</button>
-        <button type="button" class="arm-speed-btn active" data-speed="1">1&times; Normal</button>
-        <button type="button" class="arm-speed-btn" data-speed="2.2">2&times; Rapido</button>
+      <div class="arm-playback-right">
+        <label class="arm-cargo-picker" for="armCargoSelect">
+          <span class="arm-speed-label">Carga:</span>
+          <select id="armCargoSelect" class="arm-cargo-select" aria-label="Pieza industrial a transportar">
+            <option value="battery_module">Bateria EV (18 kg)</option>
+            <option value="door_panel">Bastidor Puerta (12 kg)</option>
+            <option value="ecu_sensor">Modulo LiDAR (5 kg)</option>
+          </select>
+        </label>
+
+        <div class="arm-speed-group" role="group" aria-label="Velocidad de animacion">
+          <span class="arm-speed-label">Velocidad:</span>
+          <button type="button" class="arm-speed-btn" data-speed="0.45">0.5&times;</button>
+          <button type="button" class="arm-speed-btn active" data-speed="1">1&times;</button>
+          <button type="button" class="arm-speed-btn" data-speed="2.2">2&times;</button>
+        </div>
       </div>
     </div>
 
@@ -85,22 +96,22 @@
       <div class="arm-panel arm-panel-3d">
         <div class="arm-panel-head">
           <span class="arm-panel-title">Celda Industrial 3D</span>
-          <span class="arm-panel-hint">Arrastra maquinas o puntos &bull; Rueda para zoom</span>
+          <span class="arm-panel-hint">Arrastra maquinas o gira la vista</span>
         </div>
         <div class="arm-3d-wrap" id="arm3dContainer" aria-label="Escena 3D interactiva del brazo robotico">
           <div class="arm-cam-hud" role="group" aria-label="Camara 3D">
-            <button type="button" class="arm-cam-btn active" data-cam="iso">Vista 3D</button>
-            <button type="button" class="arm-cam-btn" data-cam="top">Desde arriba</button>
+            <button type="button" class="arm-cam-btn active" data-cam="iso">3D</button>
+            <button type="button" class="arm-cam-btn" data-cam="top">Planta</button>
           </div>
-          <div class="arm-telemetry-hud" id="armTelemetryHud">Hombro 170° &middot; Codo 15°</div>
+          <div class="arm-telemetry-hud" id="armTelemetryHud">170° / 15° &middot; Pinza libre</div>
           <div class="arm-hover-hud" id="armHoverHud" hidden></div>
         </div>
       </div>
 
       <div class="arm-panel arm-panel-cspace">
         <div class="arm-panel-head">
-          <span class="arm-panel-title">Lo que piensa el robot</span>
-          <span class="arm-panel-hint">Pasa el cursor aqui para verlo en 3D</span>
+          <span class="arm-panel-title">Mapa de Decisiones</span>
+          <span class="arm-panel-hint">Pasa el cursor para previsualizar</span>
         </div>
         <div class="arm-canvas-wrap arm-cspace-wrap">
           <canvas id="armCspaceCanvas" class="arm-canvas arm-cspace-canvas" width="400" height="400" aria-label="Mapa visual de posturas del brazo"></canvas>
@@ -173,18 +184,20 @@
       <div class="modal-tabs sv-modal-tabs arm-log-tabs" role="tablist">
         <button type="button" class="modal-tab-item active" data-arm-tab="rag" role="tab" aria-selected="true">1. Consultor RAG</button>
         <button type="button" class="modal-tab-item" data-arm-tab="history" role="tab" aria-selected="false">2. Bitacora SQL</button>
-        <button type="button" class="modal-tab-item" data-arm-tab="memory" role="tab" aria-selected="false">3. Memoria de Rutas</button>
+        <button type="button" class="modal-tab-item" data-arm-tab="cargo" role="tab" aria-selected="false">3. Carga Transportada</button>
+        <button type="button" class="modal-tab-item" data-arm-tab="memory" role="tab" aria-selected="false">4. Memoria de Rutas</button>
       </div>
 
       <!-- Pestana 1: Consultor Mini-RAG -->
       <div class="arm-log-pane active" data-arm-pane="rag">
         <p class="sv-pane-intro">
-          Pregunta en lenguaje natural sobre las corridas registradas en SQLite. Python busca los registros mas relevantes y sintetiza la respuesta.
+          Pregunta en lenguaje natural sobre las corridas y cargas registradas en SQLite. Python busca los registros mas relevantes y sintetiza la respuesta.
         </p>
 
         <div class="arm-rag-chips">
           <button type="button" class="arm-rag-chip" data-rag-q="¿Que estrategia fallo mas veces?">¿Que fallo mas?</button>
           <button type="button" class="arm-rag-chip" data-rag-q="¿Cual gasto menos energia?">¿Cual gasto menos energia?</button>
+          <button type="button" class="arm-rag-chip" data-rag-q="¿Cuanta carga y peso se ha entregado?">¿Cuanta carga se entrego?</button>
           <button type="button" class="arm-rag-chip" data-rag-q="¿Como respondio ante obstaculo imprevisto?">¿Como fue con imprevisto?</button>
         </div>
 
@@ -193,11 +206,13 @@
           <button type="submit" class="arm-play-btn">Consultar</button>
         </form>
 
-        <div class="arm-rag-answer" id="armRagAnswer">
-          Haz clic en una pregunta rapida o escribe tu consulta sobre el historial del robot.
-        </div>
+        <div class="arm-modal-scroll arm-rag-results">
+          <div class="arm-rag-answer" id="armRagAnswer">
+            Haz clic en una pregunta rapida o escribe tu consulta sobre el historial del robot.
+          </div>
 
-        <div class="arm-modal-scroll arm-rag-sources" id="armRagSources"></div>
+          <div class="arm-rag-sources" id="armRagSources"></div>
+        </div>
       </div>
 
       <!-- Pestana 2: Bitacora SQL con filtros y scroll -->
@@ -233,7 +248,35 @@
         <div class="arm-modal-scroll arm-runs-list" id="armRunsList"></div>
       </div>
 
-      <!-- Pestana 3: Memoria de Rutas (CBR en SQL) -->
+      <!-- Pestana 3: Registro SQL de Carga Transportada (arm_cargo_ledger) -->
+      <div class="arm-log-pane" data-arm-pane="cargo" hidden>
+        <div class="arm-log-kpis">
+          <div class="arm-log-kpi">
+            <span>Entregas</span>
+            <strong id="armCargoDelivered">0</strong>
+          </div>
+          <div class="arm-log-kpi">
+            <span>Masa movida</span>
+            <strong id="armCargoKg">0 kg</strong>
+          </div>
+          <div class="arm-log-kpi">
+            <span>Recorrido carga</span>
+            <strong id="armCargoMeters">0 m</strong>
+          </div>
+          <div class="arm-log-kpi">
+            <span>Abortadas</span>
+            <strong id="armCargoAborted">0</strong>
+          </div>
+        </div>
+
+        <p class="sv-pane-intro">
+          Inventario en tabla SQLite <code>arm_cargo_ledger</code> (piezas trasladadas, peso, estaciones, distancia con pinza cerrada y sobrecarga energetica por torque):
+        </p>
+
+        <div class="arm-modal-scroll arm-cargo-list" id="armCargoList"></div>
+      </div>
+
+      <!-- Pestana 4: Memoria de Rutas (CBR en SQL) -->
       <div class="arm-log-pane" data-arm-pane="memory" hidden>
         <div class="arm-memory-banner">
           <label class="arm-memory-switch">

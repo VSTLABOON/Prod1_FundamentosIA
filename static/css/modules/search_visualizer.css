@@ -380,10 +380,14 @@
 /* ==========================================================================
    MODAL COMPACTO POR PESTANAS (SIMULADOR Y CHATBOT, SIN SATURACION NI SCROLL)
    ========================================================================== */
-.sv-compact-modal {
+.sv-compact-modal,
+.modal-window.sv-compact-modal {
   max-width: 720px;
-  padding: 22px 26px 24px;
+  max-height: min(85dvh, 650px);
+  padding: 20px 24px 22px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .sv-modal-top {
@@ -391,12 +395,13 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
 }
 
 .sv-modal-heading {
   font-family: "Fraunces", serif;
-  font-size: 1.32rem;
+  font-size: 1.28rem;
   color: var(--ink);
   margin: 4px 0 0 0;
 }
@@ -414,6 +419,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   transition: all 0.18s ease;
 }
 
@@ -424,8 +430,9 @@
 }
 
 .sv-modal-tabs {
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   gap: 16px;
+  flex-shrink: 0;
 }
 
 .sv-tab-pane {
@@ -434,12 +441,18 @@
 
 .sv-tab-pane.active {
   display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sv-pane-intro {
-  font-size: 0.84rem;
+  font-size: 0.83rem;
   color: var(--ink-soft);
-  margin: 0 0 10px 0;
+  margin: 0 0 9px 0;
+  flex-shrink: 0;
 }
 
 /* Barras comparativas en vivo */
@@ -509,13 +522,14 @@
 }
 
 .sv-compare-summary {
-  font-size: 0.82rem;
+  font-size: 0.81rem;
   line-height: 1.45;
   color: var(--ink);
   background: var(--bg-raised);
   border-left: 3px solid var(--teal);
   border-radius: var(--radius-sm);
   padding: 9px 12px;
+  flex-shrink: 0;
 }
 
 /* Tarjetas explicativas 2x2 sin scroll */

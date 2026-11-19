@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modalDifficulty: document.getElementById("modalDifficulty"),
     modalHeroImage: document.getElementById("modalHeroImage"),
     modalPlaceholder: document.getElementById("modalPlaceholder"),
-    modalTabItems: document.querySelectorAll(".modal-tab-item"),
+    modalTabItems: document.querySelectorAll("#conceptModal .modal-tab-item"),
     modalTabContent: document.getElementById("modalTabContent")
   };
 

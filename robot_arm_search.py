@@ -93,11 +93,42 @@ PRESET_SCENARIOS: Dict[str, Dict[str, Any]] = {
     },
 }
 
+CARGO_CATALOG: Dict[str, Dict[str, Any]] = {
+    "battery_module": {
+        "id": "battery_module",
+        "name": "Modulo Bateria EV",
+        "short_name": "Bateria EV",
+        "weight_kg": 18.0,
+        "torque_tax_factor": 0.35,
+        "color_hex": "#38bdf8",
+        "description": "Paquete de celdas de litio de 18 kg; exige alto torque en el hombro durante el traslado.",
+    },
+    "door_panel": {
+        "id": "door_panel",
+        "name": "Bastidor de Puerta",
+        "short_name": "Bastidor Puerta",
+        "weight_kg": 12.0,
+        "torque_tax_factor": 0.22,
+        "color_hex": "#f59e0b",
+        "description": "Sub-chasis estampado de 12 kg; requiere transporte estable entre estaciones de soldadura.",
+    },
+    "ecu_sensor": {
+        "id": "ecu_sensor",
+        "name": "Modulo LiDAR / ECU",
+        "short_name": "Modulo LiDAR",
+        "weight_kg": 5.0,
+        "torque_tax_factor": 0.10,
+        "color_hex": "#10b981",
+        "description": "Sensor optico automotriz de 5 kg; carga ligera para maniobras en pasillos estrechos.",
+    },
+}
+
 TASK_PRESETS: Dict[str, Dict[str, Any]] = {
     "pick_and_place": {
         "id": "pick_and_place",
         "name": "Pick & Place",
-        "subtitle": "Recoge una pieza de la banda y colocala en la prensa sin chocar.",
+        "subtitle": "Recoge un modulo de la banda y transportalo hasta la prensa sin chocar.",
+        "default_cargo": "battery_module",
         "start_deg": (170, 15),
         "waypoints": [
             {"id": "wp_pick", "label": "Tomar pieza en Banda", "action": "pick", "x": 118.0, "y": 275.0},
@@ -114,12 +145,13 @@ TASK_PRESETS: Dict[str, Dict[str, Any]] = {
     "multi_weld": {
         "id": "multi_weld",
         "name": "Soldar Puerta (3 pts)",
-        "subtitle": "Suelda 3 puntos reales de la puerta en secuencia continua.",
+        "subtitle": "Toma el bastidor en bisagra, sueldalo en el marco y montalo en la chapa inferior.",
+        "default_cargo": "door_panel",
         "start_deg": (165, 340),
         "waypoints": [
-            {"id": "wp_1", "label": "1. Bisagra superior", "action": "weld", "x": 325.0, "y": 125.0},
-            {"id": "wp_2", "label": "2. Marco lateral", "action": "weld", "x": 358.0, "y": 195.0},
-            {"id": "wp_3", "label": "3. Chapa inferior", "action": "weld", "x": 318.0, "y": 258.0},
+            {"id": "wp_1", "label": "1. Tomar en Bisagra sup.", "action": "pick", "x": 325.0, "y": 125.0},
+            {"id": "wp_2", "label": "2. Soldar Marco lateral", "action": "weld", "x": 358.0, "y": 195.0},
+            {"id": "wp_3", "label": "3. Montar Chapa inferior", "action": "place", "x": 318.0, "y": 258.0},
         ],
         "obstacles": [
             PlantObstacle("obs_door", "Carroceria / Puerta", "car_body", 272.0, 174.0, 68.0, 42.0),
@@ -131,11 +163,12 @@ TASK_PRESETS: Dict[str, Dict[str, Any]] = {
     "narrow_corridor": {
         "id": "narrow_corridor",
         "name": "Pasillo Estrecho",
-        "subtitle": "Maniobra fina entre prensa y chasis para fijar dos puntos de ensamble.",
+        "subtitle": "Extrae el modulo del nucleo central y depositalo en el soporte superior.",
+        "default_cargo": "ecu_sensor",
         "start_deg": (165, 35),
         "waypoints": [
-            {"id": "wp_1", "label": "1. Nucleo central", "action": "weld", "x": 355.0, "y": 215.0},
-            {"id": "wp_2", "label": "2. Soporte superior", "action": "weld", "x": 335.0, "y": 162.0},
+            {"id": "wp_1", "label": "1. Tomar en Nucleo central", "action": "pick", "x": 355.0, "y": 215.0},
+            {"id": "wp_2", "label": "2. Entregar en Soporte sup.", "action": "place", "x": 335.0, "y": 162.0},
         ],
         "obstacles": [
             PlantObstacle("obs_press", "Prensa Troquel", "press", 295.0, 68.0, 54.0, 68.0),
@@ -575,6 +608,7 @@ def get_presets_payload() -> Dict[str, Any]:
             "id": t["id"],
             "name": t["name"],
             "subtitle": t["subtitle"],
+            "default_cargo": t.get("default_cargo", "battery_module"),
             "start_deg": list(t["start_deg"]),
             "waypoints": [dict(w) for w in t["waypoints"]],
             "obstacles": [
@@ -593,6 +627,7 @@ def get_presets_payload() -> Dict[str, Any]:
         "goal_tolerance": GOAL_TOLERANCE,
         "presets": presets,
         "tasks": tasks,
+        "cargos": list(CARGO_CATALOG.values()),
         "algorithms": list(ALGORITHMS_INFO.values()),
     }
 
@@ -835,15 +870,35 @@ def _solve_stage_on_cspace(
     }
 
 
+def resolve_cargo_spec(cargo_id: Optional[str] = None) -> Dict[str, Any]:
+    """Devuelve la ficha tecnica de la carga a transportar (por defecto battery_module)."""
+    cid = str(cargo_id or "battery_module").strip().lower()
+    return dict(CARGO_CATALOG.get(cid, CARGO_CATALOG["battery_module"]))
+
+
+def _stage_tip_distance_px(path_frames: List[Dict[str, Any]]) -> float:
+    """Calcula la distancia cartesiana en pixeles recorrida por la punta del brazo en una etapa."""
+    if not path_frames or len(path_frames) < 2:
+        return 0.0
+    dist = 0.0
+    for idx in range(1, len(path_frames)):
+        prev_f = path_frames[idx - 1]
+        curr_f = path_frames[idx]
+        dist += math.hypot(float(curr_f["tx"]) - float(prev_f["tx"]), float(curr_f["ty"]) - float(prev_f["ty"]))
+    return round(dist, 1)
+
+
 def solve_arm_sequence(
     algorithm: str = "astar",
     start_deg: Tuple[int, int] = (155, 340),
     waypoints: Optional[List[Dict[str, Any]]] = None,
     raw_obstacles: Optional[List[Dict[str, Any]]] = None,
     precomputed: Optional[Tuple[List[List[int]], List[List[Tuple[float, float]]]]] = None,
+    cargo_id: Optional[str] = "battery_module",
+    origin_station_override: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Planifica una tarea practica completa multi-etapa (Pick & Place o Soldadura Multi-punto).
+    Planifica una tarea practica completa multi-etapa con transporte fisico de carga.
     Cada etapa parte desde la postura final alcanzada en la etapa anterior.
     """
     algo = (algorithm or "astar").strip().lower()
@@ -852,6 +907,7 @@ def solve_arm_sequence(
 
     d1, d2 = validate_start_deg(start_deg)
     valid_waypoints = validate_waypoints(waypoints)
+    cargo_spec = resolve_cargo_spec(cargo_id)
     t0 = time.perf_counter()
 
     if precomputed is not None:
@@ -868,28 +924,42 @@ def solve_arm_sequence(
     stages: List[Dict[str, Any]] = []
     total_expanded = 0
     total_energy = 0.0
+    loaded_base_energy = 0.0
+    transport_distance_px = 0.0
     total_steps = 0
     all_found = True
     all_optimal = True
     failure_reason = ""
+
+    # Si la secuencia empieza en una etapa post-recoleccion (recalculo en vivo con pieza ya tomada)
+    first_action = valid_waypoints[0]["action"] if valid_waypoints else "pick"
+    carrying_now = first_action != "pick"
+    picked_up = carrying_now
 
     for idx, wp in enumerate(valid_waypoints):
         wx = wp["x"]
         wy = wp["y"]
         cspace, goals = mark_goals_on_cspace(base_grid, tips, wx, wy)
         stage_res = _solve_stage_on_cspace(algo, curr_start, cspace, goals, wx, wy)
+        stage_dist_px = _stage_tip_distance_px(stage_res["path_frames"]) if stage_res["found"] else 0.0
 
         stage_entry = {
             "stage_index": idx,
             "label": wp["label"],
             "action": wp["action"],
             "target": [wx, wy],
+            "carrying_payload": carrying_now,
+            "tip_distance_px": stage_dist_px,
             **stage_res,
         }
         stages.append(stage_entry)
         total_expanded += stage_res["nodes_expanded"]
         total_energy += stage_res["energy"]
         total_steps += stage_res["steps"]
+        if carrying_now and stage_res["found"]:
+            loaded_base_energy += stage_res["energy"]
+            transport_distance_px += stage_dist_px
+
         if not stage_res["is_optimal"]:
             all_optimal = False
 
@@ -898,12 +968,57 @@ def solve_arm_sequence(
             failure_reason = f"Se detuvo en '{stage_entry['label']}': {stage_res['reason']}"
             break
 
+        if wp["action"] == "pick":
+            carrying_now = True
+            picked_up = True
+        elif wp["action"] == "place":
+            carrying_now = False
+
         curr_start = tuple(stage_res["end_node"])  # type: ignore[assignment]
 
     elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 2)
     completed_stages = sum(1 for s in stages if s["found"])
     within_budget = all_found and all(s["within_budget"] for s in stages)
     cycle_seconds = round(total_steps * 0.08 + total_expanded * 0.0012, 1)
+
+    delivered = bool(all_found and len(valid_waypoints) > 0)
+    if delivered:
+        delivery_status = "entregado"
+    elif picked_up:
+        delivery_status = "abortado_en_ruta"
+    else:
+        delivery_status = "sin_recoger"
+
+    transport_distance_m = round(transport_distance_px * 0.015, 2)
+    payload_energy_tax = round(loaded_base_energy * float(cargo_spec["torque_tax_factor"]), 1)
+    base_energy_rounded = round(total_energy, 1)
+    total_loaded_energy = round(base_energy_rounded + payload_energy_tax, 1)
+
+    origin_station = (
+        str(origin_station_override).strip()
+        if origin_station_override and str(origin_station_override).strip()
+        else (valid_waypoints[0]["label"] if valid_waypoints else "Origen")
+    )
+    destination_station = valid_waypoints[-1]["label"] if valid_waypoints else "Destino"
+
+    cargo_report = {
+        "cargo_id": cargo_spec["id"],
+        "cargo_name": cargo_spec["name"],
+        "short_name": cargo_spec["short_name"],
+        "weight_kg": cargo_spec["weight_kg"],
+        "torque_tax_factor": cargo_spec["torque_tax_factor"],
+        "color_hex": cargo_spec["color_hex"],
+        "origin_station": origin_station,
+        "destination_station": destination_station,
+        "picked_up": picked_up,
+        "delivered": delivered,
+        "delivery_status": delivery_status,
+        "transport_distance_px": round(transport_distance_px, 1),
+        "transport_distance_m": transport_distance_m,
+        "base_energy": base_energy_rounded,
+        "payload_energy_tax": payload_energy_tax,
+        "total_loaded_energy": total_loaded_energy,
+    }
 
     return {
         "algorithm": ALGORITHMS_INFO[algo],
@@ -915,10 +1030,13 @@ def solve_arm_sequence(
         "completed_stages": completed_stages,
         "total_stages": len(valid_waypoints),
         "nodes_expanded": total_expanded,
-        "energy": round(total_energy, 1),
+        "energy": base_energy_rounded,
+        "payload_energy_tax": payload_energy_tax,
+        "total_loaded_energy": total_loaded_energy,
         "steps": total_steps,
         "cycle_seconds": cycle_seconds,
         "execution_time_ms": elapsed_ms,
+        "cargo": cargo_report,
         "stages": stages,
     }
 
@@ -927,12 +1045,14 @@ def compare_arm_sequences(
     start_deg: Tuple[int, int] = (155, 340),
     waypoints: Optional[List[Dict[str, Any]]] = None,
     raw_obstacles: Optional[List[Dict[str, Any]]] = None,
+    cargo_id: Optional[str] = "battery_module",
 ) -> Dict[str, Any]:
     """Compara las 5 estrategias reutilizando el mapa de colisiones base en Python."""
     d1, d2 = validate_start_deg(start_deg)
     valid_waypoints = validate_waypoints(waypoints)
     obstacles = parse_obstacles(raw_obstacles)
     precomputed = compute_base_cspace(obstacles)
+    cargo_spec = resolve_cargo_spec(cargo_id)
 
     results = []
     for algo_id in ("astar", "ucs", "greedy", "bfs", "dfs"):
@@ -941,6 +1061,7 @@ def compare_arm_sequences(
             start_deg=(d1, d2),
             waypoints=valid_waypoints,
             precomputed=precomputed,
+            cargo_id=cargo_spec["id"],
         )
         results.append({
             "algorithm_id": algo_id,
@@ -954,11 +1075,14 @@ def compare_arm_sequences(
             "total_stages": res["total_stages"],
             "nodes_expanded": res["nodes_expanded"],
             "energy": res["energy"],
+            "payload_energy_tax": res["payload_energy_tax"],
+            "total_loaded_energy": res["total_loaded_energy"],
+            "cargo": res["cargo"],
             "steps": res["steps"],
             "cycle_seconds": res["cycle_seconds"],
             "execution_time_ms": res["execution_time_ms"],
         })
-    return {"comparisons": results}
+    return {"comparisons": results, "cargo": cargo_spec}
 
 
 if __name__ == "__main__":

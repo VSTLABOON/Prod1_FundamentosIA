@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
     btnReplay: document.getElementById("armBtnReplay"),
     phaseBadge: document.getElementById("armPhaseBadge"),
     phaseFill: document.getElementById("armPhaseFill"),
+    cargoSelect: document.getElementById("armCargoSelect"),
     speedBtns: card.querySelectorAll(".arm-speed-btn"),
     camBtns: card.querySelectorAll(".arm-cam-btn"),
     container3d: document.getElementById("arm3dContainer"),
@@ -62,6 +63,11 @@ document.addEventListener("DOMContentLoaded", () => {
     sqlFilters: document.querySelectorAll("#armLogModal [data-sql-filter]"),
     btnClearRuns: document.getElementById("armBtnClearRuns"),
     runsList: document.getElementById("armRunsList"),
+    cargoDelivered: document.getElementById("armCargoDelivered"),
+    cargoKg: document.getElementById("armCargoKg"),
+    cargoMeters: document.getElementById("armCargoMeters"),
+    cargoAborted: document.getElementById("armCargoAborted"),
+    cargoList: document.getElementById("armCargoList"),
     toggleMemory: document.getElementById("armToggleMemory"),
     btnClearCache: document.getElementById("armBtnClearCache"),
     cacheList: document.getElementById("armCacheList")
@@ -73,6 +79,7 @@ document.addEventListener("DOMContentLoaded", () => {
     meta: null,
     activeTaskId: "pick_and_place",
     algorithm: "astar",
+    cargoId: "battery_module",
     startDeg: [170, 15],
     waypoints: [],
     obstacles: [],
@@ -84,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     stageIdx: 0,
     completedWaypoints: 0,
     carryingPart: false,
+    deliveredPart: false,
+    reqSeq: 0,
     speed: 1.0,
     paused: false,
     phase: "idle", // 'exploring' | 'moving' | 'done' | 'failed'
@@ -112,8 +121,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ghostElbow: null,
     ghostMat: null,
     torchLight: null,
+    statusRing: null,
+    emergencyBeacons: [],
+    gripperLeft: null,
+    gripperRight: null,
+    clampHalo: null,
+    cargoLaser: null,
     carriedPartMesh: null,
     floorPartMesh: null,
+    deliveredPartMesh: null,
     waypointGroups: [],
     trailLine: null,
     sparkPoints: null,
@@ -181,9 +197,25 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function getActiveCargoSpec() {
+    const list = (state.meta && state.meta.cargos) || [];
+    return (
+      list.find((c) => c.id === state.cargoId) || {
+        id: "battery_module",
+        name: "Modulo Bateria EV",
+        short_name: "Bateria EV",
+        weight_kg: 18.0,
+        torque_tax_factor: 0.35,
+        color_hex: "#38bdf8"
+      }
+    );
+  }
+
   function loadTask(taskId, solveNow = true) {
     const task = state.meta.tasks.find((t) => t.id === taskId) || state.meta.tasks[0];
     state.activeTaskId = task.id;
+    state.cargoId = task.default_cargo || "battery_module";
+    if (el.cargoSelect) el.cargoSelect.value = state.cargoId;
     state.startDeg = [...task.start_deg];
     state.liveDeg = [...task.start_deg];
     state.waypoints = task.waypoints.map((w) => ({ ...w }));
@@ -191,15 +223,19 @@ document.addEventListener("DOMContentLoaded", () => {
     state.unexpectedSpec = task.unexpected ? { ...task.unexpected } : null;
     state.unexpectedActive = false;
     state.carryingPart = false;
+    state.deliveredPart = false;
     state.completedWaypoints = 0;
 
     el.btnEmergency.classList.remove("active");
-    el.btnEmergency.textContent = "Obstaculo imprevisto";
+    el.btnEmergency.textContent = "Imprevisto";
     el.presetButtons.querySelectorAll(".arm-preset-btn").forEach((b) => {
       b.classList.toggle("active", b.dataset.task === task.id);
     });
 
-    if (three.ready) rebuildThreeObstaclesAndWaypoints();
+    if (three.ready) {
+      refreshCarriedCargoMesh();
+      rebuildThreeObstaclesAndWaypoints();
+    }
     if (solveNow) runPythonSequence();
   }
 
@@ -283,19 +319,21 @@ document.addEventListener("DOMContentLoaded", () => {
     three.renderer.toneMappingExposure = 1.08;
 
     const camHud = el.container3d.querySelector(".arm-cam-hud");
+    const telemetryHud = el.telemetryHud;
     const hoverHud = el.hoverHud;
     el.container3d.innerHTML = "";
     el.container3d.appendChild(three.renderer.domElement);
     if (camHud) el.container3d.appendChild(camHud);
+    if (telemetryHud) el.container3d.appendChild(telemetryHud);
     if (hoverHud) el.container3d.appendChild(hoverHud);
 
     three.raycaster = new THREE.Raycaster();
     three.floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
-    const hemi = new THREE.HemisphereLight(0xf8fafc, 0x334155, 0.85);
+    const hemi = new THREE.HemisphereLight(0xf8fafc, 0x26323d, 0.92);
     three.scene.add(hemi);
 
-    const keyLight = new THREE.DirectionalLight(0xfffbeb, 1.35);
+    const keyLight = new THREE.DirectionalLight(0xfffbeb, 1.45);
     keyLight.position.set(6, 13, 8);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.set(2048, 2048);
@@ -307,14 +345,18 @@ document.addEventListener("DOMContentLoaded", () => {
     keyLight.shadow.camera.bottom = -d;
     three.scene.add(keyLight);
 
-    const rimLight = new THREE.DirectionalLight(0x5fb3a2, 0.55);
+    const rimLight = new THREE.DirectionalLight(0x5fb3a2, 0.7);
     rimLight.position.set(-7, 6, -6);
     three.scene.add(rimLight);
 
+    const fillLight = new THREE.PointLight(0xe0f2fe, 0.55, 22);
+    fillLight.position.set(0, 6.5, 2.5);
+    three.scene.add(fillLight);
+
     const floorMat = new THREE.MeshStandardMaterial({
       map: isDarkTheme() ? three.textures.floorDark : three.textures.floorLight,
-      roughness: 0.72,
-      metalness: 0.12
+      roughness: 0.68,
+      metalness: 0.14
     });
     const floor = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), floorMat);
     floor.rotation.x = -Math.PI / 2;
@@ -324,15 +366,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateSceneTheme();
 
+    // Zona de alcance y perimetro industrial de la celda
     const reach = L1_3D + L2_3D;
     const reachRing = new THREE.Mesh(
-      new THREE.RingGeometry(reach - 0.045, reach + 0.045, 72),
-      new THREE.MeshBasicMaterial({ color: 0x4f8c82, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
+      new THREE.RingGeometry(reach - 0.055, reach + 0.055, 72),
+      new THREE.MeshBasicMaterial({ color: 0x4f8c82, side: THREE.DoubleSide, transparent: true, opacity: 0.52 })
     );
     reachRing.rotation.x = -Math.PI / 2;
     reachRing.position.y = 0.015;
     three.scene.add(reachRing);
 
+    const innerRing = new THREE.Mesh(
+      new THREE.RingGeometry(L1_3D - 0.025, L1_3D + 0.025, 64),
+      new THREE.MeshBasicMaterial({ color: 0x64748b, side: THREE.DoubleSide, transparent: true, opacity: 0.25 })
+    );
+    innerRing.rotation.x = -Math.PI / 2;
+    innerRing.position.y = 0.014;
+    three.scene.add(innerRing);
+
+    buildIndustrialBayFrame();
     buildThreeRobot();
     buildThreeGhostRobot();
     buildThreeEffects();
@@ -374,97 +426,283 @@ document.addEventListener("DOMContentLoaded", () => {
     three.camera.lookAt(0.45, 0.45, 0);
   }
 
+  function buildIndustrialBayFrame() {
+    const THREE = window.THREE;
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.65, roughness: 0.35 });
+    const hazardMat = new THREE.MeshStandardMaterial({ map: three.textures.hazardYellow, roughness: 0.55 });
+    const railMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.45, roughness: 0.4 });
+
+    const corners = [[-5.7, -4.5], [5.7, -4.5], [-5.7, 4.5], [5.7, 4.5]];
+    corners.forEach(([cx, cz]) => {
+      const collar = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.17, 0.18, 12), hazardMat);
+      collar.position.set(cx, 0.09, cz);
+      collar.castShadow = true;
+      three.scene.add(collar);
+
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.92, 12), postMat);
+      post.position.set(cx, 0.54, cz);
+      post.castShadow = true;
+      three.scene.add(post);
+
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.085, 12, 12), railMat);
+      cap.position.set(cx, 1.0, cz);
+      three.scene.add(cap);
+    });
+
+    // Barandal trasero ligero para enmarcar la celda sin tapar la vista frontal
+    [0.45, 0.85].forEach((ry) => {
+      const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.032, 11.4, 10), railMat);
+      rail.rotation.z = Math.PI / 2;
+      rail.position.set(0, ry, -4.5);
+      three.scene.add(rail);
+    });
+
+    // Marcas perimetrales de piso
+    const lineMat = new THREE.MeshBasicMaterial({ color: 0xd97706, transparent: true, opacity: 0.36 });
+    const backLine = new THREE.Mesh(new THREE.PlaneGeometry(11.4, 0.08), lineMat);
+    backLine.rotation.x = -Math.PI / 2;
+    backLine.position.set(0, 0.012, -4.5);
+    three.scene.add(backLine);
+
+    const frontLine = new THREE.Mesh(new THREE.PlaneGeometry(11.4, 0.08), lineMat);
+    frontLine.rotation.x = -Math.PI / 2;
+    frontLine.position.set(0, 0.012, 4.5);
+    three.scene.add(frontLine);
+  }
+
   function buildThreeRobot() {
     const THREE = window.THREE;
     const armY = 1.12;
-    const steelDark = new THREE.MeshStandardMaterial({ color: 0x26323d, roughness: 0.4, metalness: 0.72 });
-    const chromeMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.25, metalness: 0.85 });
-    const tealMat = new THREE.MeshStandardMaterial({ color: 0x2f6f63, roughness: 0.32, metalness: 0.5 });
-    const goldMat = new THREE.MeshStandardMaterial({ color: 0xc98a3e, roughness: 0.32, metalness: 0.5 });
+    const steelDark = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.36, metalness: 0.78 });
+    const steelMid = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.35, metalness: 0.7 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.2, metalness: 0.9 });
+    const tealMat = new THREE.MeshStandardMaterial({ color: 0x2a7b6f, roughness: 0.28, metalness: 0.55 });
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xd4943a, roughness: 0.28, metalness: 0.55 });
 
-    const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.75, 0.82, 0.1, 32), steelDark);
-    basePlate.position.y = 0.05;
+    // Base octagonal robusta con pernos y aletas de refrigeracion
+    const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(0.84, 0.92, 0.12, 8), steelDark);
+    basePlate.position.y = 0.06;
     basePlate.receiveShadow = true;
     basePlate.castShadow = true;
     three.scene.add(basePlate);
 
-    for (let b = 0; b < 6; b++) {
-      const ang = (b * Math.PI) / 3;
-      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.06, 6), chromeMat);
-      bolt.position.set(Math.cos(ang) * 0.62, 0.11, Math.sin(ang) * 0.62);
+    const baseFlange = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.74, 0.08, 24), steelMid);
+    baseFlange.position.y = 0.14;
+    three.scene.add(baseFlange);
+
+    for (let b = 0; b < 8; b++) {
+      const ang = (b * Math.PI) / 4;
+      const bolt = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.07, 6), chromeMat);
+      bolt.position.set(Math.cos(ang) * 0.76, 0.13, Math.sin(ang) * 0.76);
       three.scene.add(bolt);
     }
 
-    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.56, armY - 0.1, 28), steelDark);
-    pedestal.position.y = 0.1 + (armY - 0.1) / 2;
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.58, armY - 0.14, 28), steelDark);
+    pedestal.position.y = 0.14 + (armY - 0.14) / 2;
     pedestal.castShadow = true;
     three.scene.add(pedestal);
 
-    const glowRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.44, 0.032, 12, 36),
+    // Anillo LED de estado del robot (cambia de color segun fase: explorando, transportando, listo, fallo)
+    three.statusRing = new THREE.Mesh(
+      new THREE.TorusGeometry(0.48, 0.036, 12, 36),
       new THREE.MeshBasicMaterial({ color: 0x4fd1c5 })
     );
-    glowRing.rotation.x = Math.PI / 2;
-    glowRing.position.y = 0.24;
-    three.scene.add(glowRing);
+    three.statusRing.rotation.x = Math.PI / 2;
+    three.statusRing.position.y = 0.26;
+    three.scene.add(three.statusRing);
+
+    const upperCollar = new THREE.Mesh(new THREE.TorusGeometry(0.43, 0.025, 10, 32), chromeMat);
+    upperCollar.rotation.x = Math.PI / 2;
+    upperCollar.position.y = armY - 0.18;
+    three.scene.add(upperCollar);
 
     three.shoulderGroup = new THREE.Group();
     three.shoulderGroup.position.set(0, armY, 0);
     three.scene.add(three.shoulderGroup);
 
-    three.shoulderGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.34, 0.42, 24), steelDark));
-    three.shoulderGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.46, 20), chromeMat));
+    // Articulacion de hombro con tambor de servomotor y contrapeso trasero
+    const shHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.38, 0.44, 24), steelDark);
+    shHousing.castShadow = true;
+    three.shoulderGroup.add(shHousing);
+    three.shoulderGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.24, 0.48, 20), chromeMat));
 
-    const link1Body = new THREE.Mesh(new THREE.BoxGeometry(L1_3D, 0.24, 0.32), tealMat);
+    const counterweight = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.26, 0.34), steelMid);
+    counterweight.position.set(-0.34, 0.02, 0);
+    counterweight.castShadow = true;
+    three.shoulderGroup.add(counterweight);
+
+    // Eslabon 1 (estructura doble con rieles metalicos y conducto de cables)
+    const link1Body = new THREE.Mesh(new THREE.BoxGeometry(L1_3D, 0.24, 0.34), tealMat);
     link1Body.position.x = L1_3D / 2;
     link1Body.castShadow = true;
     three.shoulderGroup.add(link1Body);
 
-    const link1Stripe = new THREE.Mesh(new THREE.BoxGeometry(L1_3D * 0.78, 0.05, 0.34), chromeMat);
-    link1Stripe.position.set(L1_3D / 2, 0.11, 0);
-    three.shoulderGroup.add(link1Stripe);
+    const link1Rail = new THREE.Mesh(new THREE.BoxGeometry(L1_3D * 0.82, 0.06, 0.38), chromeMat);
+    link1Rail.position.set(L1_3D / 2, 0.11, 0);
+    three.shoulderGroup.add(link1Rail);
+
+    const cableCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.15, 0.22, 0.18),
+      new THREE.Vector3(L1_3D * 0.5, 0.38, 0.21),
+      new THREE.Vector3(L1_3D - 0.1, 0.26, 0.16)
+    ]);
+    const cableMesh = new THREE.Mesh(
+      new THREE.TubeGeometry(cableCurve, 16, 0.032, 8, false),
+      steelDark
+    );
+    three.shoulderGroup.add(cableMesh);
 
     three.elbowGroup = new THREE.Group();
     three.elbowGroup.position.set(L1_3D, 0.18, 0);
     three.shoulderGroup.add(three.elbowGroup);
 
-    three.elbowGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.25, 0.36, 24), steelDark));
-    three.elbowGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.4, 18), chromeMat));
+    const elHousing = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.28, 0.38, 24), steelDark);
+    elHousing.castShadow = true;
+    three.elbowGroup.add(elHousing);
+    three.elbowGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.43, 18), chromeMat));
 
-    const link2Body = new THREE.Mesh(new THREE.BoxGeometry(L2_3D, 0.18, 0.24), goldMat);
+    const link2Body = new THREE.Mesh(new THREE.BoxGeometry(L2_3D, 0.19, 0.26), goldMat);
     link2Body.position.x = L2_3D / 2;
     link2Body.castShadow = true;
     three.elbowGroup.add(link2Body);
 
-    const torchCollar = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.10, 0.28, 16), steelDark);
+    const link2Rail = new THREE.Mesh(new THREE.BoxGeometry(L2_3D * 0.78, 0.045, 0.29), chromeMat);
+    link2Rail.position.set(L2_3D / 2, 0.09, 0);
+    three.elbowGroup.add(link2Rail);
+
+    // Actuador vertical Z con doble varilla cromada
+    const torchCollar = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.13, 0.30, 16), steelDark);
     torchCollar.position.set(L2_3D, -0.05, 0);
     three.elbowGroup.add(torchCollar);
 
-    const torchNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.03, 0.78, 16), chromeMat);
-    torchNozzle.position.set(L2_3D, -0.55, 0);
+    const torchNozzle = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.045, 0.68, 16), chromeMat);
+    torchNozzle.position.set(L2_3D, -0.46, 0);
     torchNozzle.castShadow = true;
     three.elbowGroup.add(torchNozzle);
+
+    [-0.08, 0.08].forEach((rz) => {
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.66, 8), steelMid);
+      rod.position.set(L2_3D, -0.45, rz);
+      three.elbowGroup.add(rod);
+    });
 
     const copperTip = new THREE.Mesh(
       new THREE.SphereGeometry(0.075, 14, 14),
       new THREE.MeshBasicMaterial({ color: 0xfbbf24 })
     );
-    copperTip.position.set(L2_3D, -0.96, 0);
+    copperTip.position.set(L2_3D, -0.78, 0);
     three.elbowGroup.add(copperTip);
 
-    // Pieza metalica agarrada por el brazo durante Pick & Place
-    three.carriedPartMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(0.46, 0.22, 0.46),
-      new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.7, roughness: 0.25, emissive: 0x0284c7, emissiveIntensity: 0.35 })
+    // Pinza mecanica paralela (mordazas izquierda y derecha que se cierran al transportar carga)
+    const jawMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.85, roughness: 0.22 });
+    const jawBar = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.08, 0.62), steelDark);
+    jawBar.position.set(L2_3D, -0.82, 0);
+    three.elbowGroup.add(jawBar);
+
+    three.gripperLeft = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.28, 0.07), jawMat);
+    three.gripperLeft.position.set(L2_3D, -0.98, 0.28);
+    three.gripperLeft.castShadow = true;
+    three.elbowGroup.add(three.gripperLeft);
+
+    three.gripperRight = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.28, 0.07), jawMat);
+    three.gripperRight.position.set(L2_3D, -0.98, -0.28);
+    three.gripperRight.castShadow = true;
+    three.elbowGroup.add(three.gripperRight);
+
+    three.clampHalo = new THREE.Mesh(
+      new THREE.TorusGeometry(0.38, 0.028, 12, 32),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
     );
-    three.carriedPartMesh.position.set(L2_3D, -1.06, 0);
-    three.carriedPartMesh.castShadow = true;
+    three.clampHalo.rotation.x = Math.PI / 2;
+    three.clampHalo.position.set(L2_3D, -0.92, 0);
+    three.clampHalo.visible = false;
+    three.elbowGroup.add(three.clampHalo);
+
+    three.cargoLaser = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.035, 0.14, 0.36, 16, 1, true),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
+    );
+    three.cargoLaser.position.set(L2_3D, -1.24, 0);
+    three.cargoLaser.visible = false;
+    three.elbowGroup.add(three.cargoLaser);
+
+    // Grupo 3D de la carga sujetada por la pinza durante el traslado
+    three.carriedPartMesh = new THREE.Group();
+    three.carriedPartMesh.position.set(L2_3D, -1.03, 0);
     three.carriedPartMesh.visible = false;
     three.elbowGroup.add(three.carriedPartMesh);
+    refreshCarriedCargoMesh();
 
     three.torchLight = new THREE.PointLight(0xfbbf24, 0.0, 4.5);
     three.torchLight.position.set(L2_3D, -1.0, 0);
     three.elbowGroup.add(three.torchLight);
+  }
+
+  function populateCargoMeshGroup(targetGroup, cargoId) {
+    if (!targetGroup || !window.THREE) return;
+    const THREE = window.THREE;
+    while (targetGroup.children.length > 0) {
+      targetGroup.remove(targetGroup.children[0]);
+    }
+
+    if (cargoId === "door_panel") {
+      // Bastidor de Puerta (12 kg): estructura dorada/acero con travesanos
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: 0.68, roughness: 0.26, emissive: 0xb45309, emissiveIntensity: 0.25 });
+      const steelMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.2 });
+
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.48), frameMat);
+      base.castShadow = true;
+      targetGroup.add(base);
+
+      const arch = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.16, 0.32), steelMat);
+      arch.position.y = 0.14;
+      arch.castShadow = true;
+      targetGroup.add(arch);
+
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.36, 12), frameMat);
+      handle.rotation.z = Math.PI / 2;
+      handle.position.y = 0.24;
+      targetGroup.add(handle);
+    } else if (cargoId === "ecu_sensor") {
+      // Modulo LiDAR / ECU (5 kg): chasis esmeralda con domo optico brillante
+      const bodyMat = new THREE.MeshStandardMaterial({ color: 0x10b981, metalness: 0.62, roughness: 0.28, emissive: 0x047857, emissiveIntensity: 0.3 });
+      const domeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.9, roughness: 0.1, emissive: 0x0284c7, emissiveIntensity: 0.45 });
+
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.32, 0.18, 20), bodyMat);
+      base.castShadow = true;
+      targetGroup.add(base);
+
+      const dome = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.20, 0.14, 20), domeMat);
+      dome.position.y = 0.15;
+      dome.castShadow = true;
+      targetGroup.add(dome);
+    } else {
+      // Modulo Bateria EV (18 kg): carcasa azul cobalto con 4 celdas de litio y barra colectora
+      const packMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.72, roughness: 0.24, emissive: 0x0369a1, emissiveIntensity: 0.32 });
+      const cellMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.88, roughness: 0.18 });
+      const busMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
+
+      const casing = new THREE.Mesh(new THREE.BoxGeometry(0.58, 0.22, 0.54), packMat);
+      casing.castShadow = true;
+      targetGroup.add(casing);
+
+      const offsets = [[-0.14, -0.13], [0.14, -0.13], [-0.14, 0.13], [0.14, 0.13]];
+      offsets.forEach(([ox, oz]) => {
+        const cell = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.12, 14), cellMat);
+        cell.position.set(ox, 0.15, oz);
+        cell.castShadow = true;
+        targetGroup.add(cell);
+      });
+
+      const busbar = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.04, 0.10), busMat);
+      busbar.position.y = 0.22;
+      targetGroup.add(busbar);
+    }
+  }
+
+  function refreshCarriedCargoMesh() {
+    if (!three.carriedPartMesh) return;
+    populateCargoMeshGroup(three.carriedPartMesh, state.cargoId);
   }
 
   function buildThreeGhostRobot() {
@@ -552,23 +790,66 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function updateTrail3D(frames) {
+  function createStationBadgeSprite(text, bgHex) {
+    const THREE = window.THREE;
+    const canvas = document.createElement("canvas");
+    canvas.width = 256;
+    canvas.height = 72;
+    const ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = bgHex;
+    ctx.beginPath();
+    ctx.roundRect(12, 10, 232, 52, 26);
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(255,255,255,0.65)";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 28px 'IBM Plex Sans', sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(text, 128, 37);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(1.18, 0.34, 1);
+    return sprite;
+  }
+
+  function updateTrail3D(frames, isCarrying = false) {
     const THREE = window.THREE;
     if (three.trailLine) {
       three.scene.remove(three.trailLine);
-      three.trailLine.geometry.dispose();
+      if (three.trailLine.geometry) three.trailLine.geometry.dispose();
+      if (three.trailLine.material) three.trailLine.material.dispose();
       three.trailLine = null;
     }
     if (!frames || frames.length < 2) return;
 
-    const pts = frames.map((f) => {
-      const p3 = to3D(f.tx, f.ty);
-      return new THREE.Vector3(p3.x, 0.34, p3.z);
-    });
-    const geo = new THREE.BufferGeometry().setFromPoints(pts);
-    three.trailLine = new THREE.Line(
+    const pts = [];
+    for (let i = 0; i < frames.length; i++) {
+      const p3 = to3D(frames[i].tx, frames[i].ty);
+      const v = new THREE.Vector3(p3.x, 0.34, p3.z);
+      if (!pts.length || pts[pts.length - 1].distanceToSquared(v) > 0.0004) {
+        pts.push(v);
+      }
+    }
+    if (pts.length < 2) return;
+
+    const colorHex = isCarrying ? 0x38bdf8 : 0xe0ae63;
+    const curve = new THREE.CatmullRomCurve3(pts);
+    const segs = Math.min(96, Math.max(12, pts.length * 2));
+    const geo = new THREE.TubeGeometry(curve, segs, 0.036, 8, false);
+    three.trailLine = new THREE.Mesh(
       geo,
-      new THREE.LineBasicMaterial({ color: 0xe0ae63, transparent: true, opacity: 0.85 })
+      new THREE.MeshBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.88
+      })
     );
     three.scene.add(three.trailLine);
   }
@@ -591,84 +872,132 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     if (ob.kind === "car_body") {
-      const leg = new THREE.Mesh(
-        new THREE.BoxGeometry(w3 * 0.86, 0.28, d3 * 0.78),
-        new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.4 })
-      );
-      leg.position.y = 0.14;
+      // Carroceria automotriz sobre bancada de ensamble con cabina y ventanillas
+      const jigMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.75, roughness: 0.35 });
+      const paintMat = new THREE.MeshStandardMaterial({ color: 0x336699, metalness: 0.62, roughness: 0.24 });
+      const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.12 });
+      const trimMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.2 });
+
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(w3 * 0.86, 0.26, d3 * 0.78), jigMat);
+      leg.position.y = 0.13;
       addPart(leg);
 
-      const body = new THREE.Mesh(
-        new THREE.BoxGeometry(w3, 0.86, d3),
-        new THREE.MeshStandardMaterial({ color: 0x3b6998, metalness: 0.55, roughness: 0.28 })
-      );
-      body.position.y = 0.71;
-      addPart(body);
+      const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(w3, 0.56, d3), paintMat);
+      lowerBody.position.y = 0.54;
+      addPart(lowerBody);
 
-      const win = new THREE.Mesh(
-        new THREE.BoxGeometry(w3 * 0.78, 0.36, d3 * 1.02),
-        new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.8, roughness: 0.15 })
-      );
-      win.position.y = 0.94;
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(w3 * 0.68, 0.38, d3 * 0.9), paintMat);
+      cabin.position.y = 0.98;
+      addPart(cabin);
+
+      const win = new THREE.Mesh(new THREE.BoxGeometry(w3 * 0.62, 0.28, d3 * 0.93), glassMat);
+      win.position.y = 0.99;
       addPart(win);
+
+      const trim = new THREE.Mesh(new THREE.BoxGeometry(w3 * 1.01, 0.05, d3 * 1.01), trimMat);
+      trim.position.y = 0.55;
+      addPart(trim);
     } else if (ob.kind === "press") {
       const isEmergency = ob.id === "obs_emergency";
       const base = new THREE.Mesh(
         new THREE.BoxGeometry(w3, 0.24, d3),
-        new THREE.MeshStandardMaterial({ map: three.textures.hazardYellow, roughness: 0.6 })
+        new THREE.MeshStandardMaterial({ map: isEmergency ? three.textures.hazardRed : three.textures.hazardYellow, roughness: 0.58 })
       );
       base.position.y = 0.12;
       addPart(base);
 
-      const frame = new THREE.Mesh(
-        new THREE.BoxGeometry(w3 * 0.94, isEmergency ? 0.9 : 1.32, d3 * 0.94),
-        new THREE.MeshStandardMaterial({ color: isEmergency ? 0xef4444 : 0xd97706, roughness: 0.42, metalness: 0.35 })
-      );
-      frame.position.y = isEmergency ? 0.69 : 0.90;
-      addPart(frame);
-
-      if (!isEmergency) {
-        const crown = new THREE.Mesh(
-          new THREE.BoxGeometry(w3 * 0.72, 0.28, d3 * 0.72),
-          new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.45, metalness: 0.65 })
+      if (isEmergency) {
+        const crate = new THREE.Mesh(
+          new THREE.BoxGeometry(w3 * 0.92, 0.78, d3 * 0.92),
+          new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.38, metalness: 0.4 })
         );
-        crown.position.y = 1.70;
+        crate.position.y = 0.63;
+        addPart(crate);
+
+        const beacon = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.11, 0.13, 0.20, 16),
+          new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 0.9 })
+        );
+        beacon.position.y = 1.12;
+        addPart(beacon);
+        three.emergencyBeacons.push(beacon);
+      } else {
+        const frameMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.38, metalness: 0.42 });
+        const steelMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.7 });
+        const pistonMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.2, metalness: 0.9 });
+
+        [-w3 * 0.36, w3 * 0.36].forEach((px) => {
+          const pillar = new THREE.Mesh(new THREE.BoxGeometry(w3 * 0.22, 1.30, d3 * 0.86), frameMat);
+          pillar.position.set(px, 0.89, 0);
+          addPart(pillar);
+        });
+
+        const ram = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.72, 16), pistonMat);
+        ram.position.y = 1.06;
+        addPart(ram);
+
+        const dieHead = new THREE.Mesh(new THREE.BoxGeometry(w3 * 0.46, 0.22, d3 * 0.64), steelMat);
+        dieHead.position.y = 0.66;
+        addPart(dieHead);
+
+        const crown = new THREE.Mesh(new THREE.BoxGeometry(w3 * 0.98, 0.32, d3 * 0.92), steelMat);
+        crown.position.y = 1.66;
         addPart(crown);
       }
     } else if (ob.kind === "pillar") {
       const collar = new THREE.Mesh(
-        new THREE.BoxGeometry(w3 * 1.04, 0.36, d3 * 1.04),
-        new THREE.MeshStandardMaterial({ map: three.textures.hazardRed, roughness: 0.6 })
+        new THREE.BoxGeometry(w3 * 1.06, 0.36, d3 * 1.06),
+        new THREE.MeshStandardMaterial({ map: three.textures.hazardRed, roughness: 0.58 })
       );
       collar.position.y = 0.18;
       addPart(collar);
 
       const col = new THREE.Mesh(
-        new THREE.BoxGeometry(w3 * 0.92, 1.78, d3 * 0.92),
-        new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.72, metalness: 0.2 })
+        new THREE.BoxGeometry(w3 * 0.88, 1.80, d3 * 0.88),
+        new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.62, metalness: 0.28 })
       );
-      col.position.y = 1.25;
+      col.position.y = 1.26;
       addPart(col);
-    } else {
-      const frame = new THREE.Mesh(
-        new THREE.BoxGeometry(w3, 0.32, d3 * 0.92),
-        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.5, metalness: 0.6 })
+
+      const cap = new THREE.Mesh(
+        new THREE.BoxGeometry(w3 * 1.04, 0.14, d3 * 1.04),
+        new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45, metalness: 0.65 })
       );
-      frame.position.y = 0.46;
+      cap.position.y = 2.18;
+      addPart(cap);
+    } else {
+      // Banda transportadora motorizada con patas, rieles y rodillos metalicos
+      const frameMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.45, metalness: 0.68 });
+      [[-w3 * 0.42, -d3 * 0.36], [w3 * 0.42, -d3 * 0.36], [-w3 * 0.42, d3 * 0.36], [w3 * 0.42, d3 * 0.36]].forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.46, 0.10), frameMat);
+        leg.position.set(lx, 0.23, lz);
+        addPart(leg);
+      });
+
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(w3, 0.22, d3 * 0.94), frameMat);
+      frame.position.y = 0.50;
       addPart(frame);
 
       const belt = new THREE.Mesh(
         new THREE.BoxGeometry(w3 * 0.96, 0.08, d3 * 0.78),
-        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.9 })
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.92 })
       );
-      belt.position.y = 0.65;
+      belt.position.y = 0.64;
       addPart(belt);
 
-      const rollerMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.8, roughness: 0.25 });
-      const steps = Math.max(3, Math.floor(w3 * 2));
+      const motor = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.14, 0.14, 0.28, 14),
+        new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.4, metalness: 0.5 })
+      );
+      motor.rotation.x = Math.PI / 2;
+      motor.position.set(-w3 * 0.36, 0.46, d3 * 0.55);
+      addPart(motor);
+
+      const rollerMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.22 });
+      const steps = Math.max(4, Math.floor(w3 * 2.2));
       for (let r = 0; r < steps; r++) {
-        const rx = -w3 * 0.42 + (r / (steps - 1)) * (w3 * 0.84);
-        const roller = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, d3 * 0.98, 12), rollerMat);
+        const rx = -w3 * 0.43 + (r / (steps - 1)) * (w3 * 0.86);
+        const roller = new THREE.Mesh(new THREE.CylinderGeometry(0.068, 0.068, d3 * 0.96, 12), rollerMat);
         roller.rotation.x = Math.PI / 2;
         roller.position.set(rx, 0.64, 0);
         addPart(roller);
@@ -691,6 +1020,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     three.obstacleGroups.forEach((g) => three.scene.remove(g));
     three.obstacleGroups = [];
+    three.emergencyBeacons = [];
 
     const allObs = getActiveObstaclesList();
     allObs.forEach((ob, idx) => {
@@ -705,6 +1035,10 @@ document.addEventListener("DOMContentLoaded", () => {
       three.scene.remove(three.floorPartMesh);
       three.floorPartMesh = null;
     }
+    if (three.deliveredPartMesh) {
+      three.scene.remove(three.deliveredPartMesh);
+      three.deliveredPartMesh = null;
+    }
 
     state.waypoints.forEach((wp, idx) => {
       const grp = new THREE.Group();
@@ -714,7 +1048,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const colorHex = wp.action === "pick" ? 0x38bdf8 : wp.action === "place" ? 0xa855f7 : 0xef4444;
 
       const pad = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.35, 0.39, 0.08, 24),
+        new THREE.CylinderGeometry(0.42, 0.46, 0.08, 24),
         new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.7, roughness: 0.3 })
       );
       pad.position.y = 0.04;
@@ -722,7 +1056,7 @@ document.addEventListener("DOMContentLoaded", () => {
       grp.add(pad);
 
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.37, 0.045, 12, 32),
+        new THREE.TorusGeometry(0.44, 0.048, 12, 32),
         new THREE.MeshBasicMaterial({ color: colorHex })
       );
       ring.rotation.x = Math.PI / 2;
@@ -731,26 +1065,50 @@ document.addEventListener("DOMContentLoaded", () => {
       grp.add(ring);
 
       const beacon = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.07, 0.13, 0.28, 16),
+        new THREE.CylinderGeometry(0.07, 0.13, 0.24, 16),
         new THREE.MeshStandardMaterial({ color: colorHex, emissive: colorHex, emissiveIntensity: 0.4 })
       );
-      beacon.position.y = 0.20;
+      beacon.position.y = 0.16;
       beacon.userData = { dragType: "waypoint", index: idx, label: wp.label, parentGroup: grp };
       grp.add(beacon);
+
+      // Si es estacion de entrega (place), agregar 4 postes guia de tarima receptora
+      if (wp.action === "place") {
+        const postMat = new THREE.MeshStandardMaterial({ color: 0xa855f7, metalness: 0.6, roughness: 0.3 });
+        [[-0.30, -0.30], [0.30, -0.30], [-0.30, 0.30], [0.30, 0.30]].forEach(([px, pz]) => {
+          const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.24, 0.06), postMat);
+          post.position.set(px, 0.16, pz);
+          grp.add(post);
+        });
+      }
+
+      // Etiqueta flotante 3D limpia para orientar al publico en vivo
+      const badgeTxt = wp.action === "pick" ? "ORIGEN" : wp.action === "place" ? "DESTINO" : "SOLDAR";
+      const badgeColor = wp.action === "pick" ? "rgba(2, 132, 199, 0.88)" : wp.action === "place" ? "rgba(126, 34, 206, 0.88)" : "rgba(220, 38, 38, 0.88)";
+      const badgeSprite = createStationBadgeSprite(badgeTxt, badgeColor);
+      badgeSprite.position.set(0, 0.88, 0);
+      grp.add(badgeSprite);
 
       grp.userData = { ring, beacon, defaultColor: colorHex };
       three.scene.add(grp);
       three.waypointGroups.push(grp);
 
-      // Si es Pick & Place, mostrar la pieza esperando en la banda (wp_pick)
+      // Pieza 3D esperando en la estacion de origen (pick)
       if (wp.action === "pick") {
-        three.floorPartMesh = new THREE.Mesh(
-          new THREE.BoxGeometry(0.46, 0.22, 0.46),
-          new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.7, roughness: 0.25, emissive: 0x0284c7, emissiveIntensity: 0.35 })
-        );
+        three.floorPartMesh = new THREE.Group();
+        populateCargoMeshGroup(three.floorPartMesh, state.cargoId);
         three.floorPartMesh.position.set(pos3.x, 0.22, pos3.z);
-        three.floorPartMesh.castShadow = true;
+        three.floorPartMesh.visible = !state.carryingPart && !state.deliveredPart;
         three.scene.add(three.floorPartMesh);
+      }
+
+      // Pieza 3D entregada en la estacion destino (place)
+      if (wp.action === "place") {
+        three.deliveredPartMesh = new THREE.Group();
+        populateCargoMeshGroup(three.deliveredPartMesh, state.cargoId);
+        three.deliveredPartMesh.position.set(pos3.x, 0.22, pos3.z);
+        three.deliveredPartMesh.visible = Boolean(state.deliveredPart);
+        three.scene.add(three.deliveredPartMesh);
       }
     });
   }
@@ -768,7 +1126,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function setRobotAnglesDeg(deg1, deg2) {
     state.liveDeg = [deg1, deg2];
     if (el.telemetryHud && !state.cspaceHover) {
-      el.telemetryHud.textContent = `Hombro ${Math.round(deg1)}° · Codo ${Math.round(deg2)}°`;
+      const cargoSpec = getActiveCargoSpec();
+      const cargoNote = state.carryingPart
+        ? ` · Llevando ${cargoSpec.short_name} (${cargoSpec.weight_kg} kg)`
+        : state.deliveredPart
+          ? ` · ${cargoSpec.short_name} entregada`
+          : " · Pinza libre";
+      el.telemetryHud.textContent = `${Math.round(deg1)}° / ${Math.round(deg2)}°${cargoNote}`;
     }
     if (!three.shoulderGroup || !three.elbowGroup) return;
     three.shoulderGroup.rotation.y = (deg1 * Math.PI) / 180;
@@ -799,6 +1163,46 @@ document.addEventListener("DOMContentLoaded", () => {
         const pulse = 1 + Math.sin(now * 0.005 + i) * 0.08;
         grp.userData.ring.scale.set(pulse, pulse, 1);
       });
+
+      // Animacion fisica de cierre de mordazas y halo magnetico al transportar carga
+      const targetJawOffset = state.carryingPart ? 0.16 : 0.28;
+      if (three.gripperLeft && three.gripperRight) {
+        three.gripperLeft.position.z += (targetJawOffset - three.gripperLeft.position.z) * 0.22;
+        three.gripperRight.position.z += (-targetJawOffset - three.gripperRight.position.z) * 0.22;
+      }
+      if (three.clampHalo) {
+        three.clampHalo.visible = state.carryingPart;
+        if (state.carryingPart) {
+          const haloPulse = 1 + Math.sin(now * 0.01) * 0.12;
+          three.clampHalo.scale.set(haloPulse, haloPulse, 1);
+        }
+      }
+      if (three.cargoLaser) {
+        three.cargoLaser.visible = state.carryingPart;
+      }
+      if (three.floorPartMesh && three.floorPartMesh.visible) {
+        three.floorPartMesh.position.y = 0.22 + Math.sin(now * 0.004) * 0.025;
+      }
+
+      // Baliza pulsante para obstaculo imprevisto y anillo LED de estado del pedestal
+      if (three.emergencyBeacons.length) {
+        const pulseI = 0.55 + 0.45 * Math.sin(now * 0.012);
+        three.emergencyBeacons.forEach((b) => {
+          b.material.emissiveIntensity = pulseI;
+        });
+      }
+      if (three.statusRing) {
+        const ringColor = state.phase === "failed"
+          ? 0xef4444
+          : state.carryingPart
+            ? 0x38bdf8
+            : state.phase === "exploring"
+              ? 0xfbbf24
+              : state.phase === "done"
+                ? 0x22c55e
+                : 0x4fd1c5;
+        three.statusRing.material.color.setHex(ringColor);
+      }
 
       if (three.sparksActive && three.sparkPoints) {
         const pos = three.sparkPoints.geometry.attributes.position.array;
@@ -841,6 +1245,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // EJECUCION MULTI-ETAPA Y RECALCULO EN VIVO ANTE IMPREVISTOS
   // =========================================================================
   async function runPythonSequence(customStartDeg = null, fromWaypointIdx = 0) {
+    const mySeq = ++state.reqSeq;
     state.phase = "idle";
     three.sparksActive = false;
     if (three.sparkPoints) three.sparkPoints.visible = false;
@@ -848,11 +1253,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const startDeg = customStartDeg || state.startDeg;
     const remainingWaypoints = state.waypoints.slice(fromWaypointIdx);
+    const fullOriginLabel = state.waypoints[0] ? state.waypoints[0].label : null;
 
     if (fromWaypointIdx === 0) {
       state.completedWaypoints = 0;
       state.carryingPart = false;
+      state.deliveredPart = false;
       if (three.carriedPartMesh) three.carriedPartMesh.visible = false;
+      if (three.deliveredPartMesh) three.deliveredPartMesh.visible = false;
       if (three.floorPartMesh) {
         const pickWp = state.waypoints.find((w) => w.action === "pick");
         if (pickWp) {
@@ -873,6 +1281,8 @@ document.addEventListener("DOMContentLoaded", () => {
           task_id: state.activeTaskId,
           task_name: taskObj ? taskObj.name : "Tarea en planta",
           algorithm: state.algorithm,
+          cargo_id: state.cargoId,
+          origin_station: fullOriginLabel,
           start_deg: startDeg,
           waypoints: remainingWaypoints,
           obstacles: getActiveObstaclesList(),
@@ -882,14 +1292,21 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       });
       const json = await resp.json();
+      if (mySeq !== state.reqSeq) return;
       if (json.status !== "success") return;
 
       state.lastResult = json.data;
       updateSummary(json.data, fromWaypointIdx);
       startStagePlayback(0, startDeg);
-      refreshHistoryBadge();
+      if (el.logModal.classList.contains("open")) {
+        loadHistoryData();
+      } else {
+        refreshHistoryBadge();
+      }
     } catch (err) {
-      el.verdictText.textContent = "Error al calcular el ciclo en Python.";
+      if (mySeq === state.reqSeq) {
+        el.verdictText.textContent = "Error al calcular el ciclo en Python.";
+      }
     }
   }
 
@@ -912,7 +1329,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setGhostAnglesDeg(0, 0, false);
-    updateTrail3D(st.found ? st.path_frames : []);
+    updateTrail3D(st.found ? st.path_frames : [], Boolean(st.carrying_payload || state.carryingPart));
 
     if (st.explored.length === 0) {
       state.phase = "failed";
@@ -991,7 +1408,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const pct = stageBasePct + stageSpanPct * (0.55 + (state.pathCursor / Math.max(1, frames.length - 1)) * 0.45);
       el.phaseFill.style.width = `${Math.round(pct)}%`;
-      el.phaseBadge.textContent = `Etapa ${state.stageIdx + 1}/${totalStages}: ${st.label}`;
+      const cargoSpec = getActiveCargoSpec();
+      const loadTag = state.carryingPart ? ` [Transportando ${cargoSpec.short_name} · ${cargoSpec.weight_kg} kg]` : "";
+      el.phaseBadge.textContent = `Etapa ${state.stageIdx + 1}/${totalStages}${loadTag}: ${st.label}`;
 
       if (state.pathCursor >= frames.length - 1) {
         // Accion practica al llegar al waypoint
@@ -1001,16 +1420,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (st.action === "pick") {
           state.carryingPart = true;
+          state.deliveredPart = false;
           if (three.floorPartMesh) three.floorPartMesh.visible = false;
           if (three.carriedPartMesh) three.carriedPartMesh.visible = true;
+          setRobotAnglesDeg(curD1, curD2);
           triggerSparks(t3.x, t3.z, 0x38bdf8);
         } else if (st.action === "place") {
           state.carryingPart = false;
+          state.deliveredPart = true;
           if (three.carriedPartMesh) three.carriedPartMesh.visible = false;
-          if (three.floorPartMesh) {
+          if (three.deliveredPartMesh) {
+            three.deliveredPartMesh.position.set(t3.x, 0.22, t3.z);
+            three.deliveredPartMesh.visible = true;
+          } else if (three.floorPartMesh) {
             three.floorPartMesh.position.set(t3.x, 0.22, t3.z);
             three.floorPartMesh.visible = true;
           }
+          setRobotAnglesDeg(curD1, curD2);
           triggerSparks(t3.x, t3.z, 0x22c55e);
         } else {
           triggerSparks(t3.x, t3.z, 0xfbbf24);
@@ -1021,7 +1447,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           state.phase = "done";
           el.phaseFill.style.width = "100%";
-          el.phaseBadge.textContent = "¡Tarea completada!";
+          el.phaseBadge.textContent = `¡${cargoSpec.short_name} (${cargoSpec.weight_kg} kg) entregada en destino!`;
         }
       }
     }
@@ -1051,42 +1477,48 @@ document.addEventListener("DOMContentLoaded", () => {
   function updateSummary(data, offsetWaypoints = 0) {
     const doneTotal = offsetWaypoints + data.completed_stages;
     const fullTotal = offsetWaypoints + data.total_stages;
+    const cargo = data.cargo || getActiveCargoSpec();
+    const tax = Number(data.payload_energy_tax || (cargo && cargo.payload_energy_tax) || 0);
+    const distM = Number((cargo && cargo.transport_distance_m) || 0);
+    const shortCargo = cargo.short_name || cargo.cargo_name || "Carga";
+    const weightKg = cargo.weight_kg || 18;
 
     el.statExpanded.textContent = data.nodes_expanded.toLocaleString("es-MX");
-    el.statEnergy.textContent = data.energy > 0 ? `${data.energy}` : "—";
+    el.statEnergy.textContent = data.energy > 0
+      ? (tax > 0 ? `${data.energy} (+${tax})` : `${data.energy}`)
+      : "—";
 
     el.kpiStatusBox.classList.remove("is-ok", "is-warn", "is-fail");
     el.verdictBox.classList.remove("is-warn", "is-fail");
 
     const outcome = classifyRunOutcome(data);
-    const memNote = data.from_cache ? " (Recuperado al instante desde Memoria SQL)" : "";
+    const memNote = data.from_cache ? " · Desde Memoria SQL" : "";
 
     if (outcome.kind === "fail") {
       el.statStatus.textContent = `Fallo (${doneTotal}/${fullTotal})`;
       el.kpiStatusBox.classList.add("is-fail");
       el.verdictBox.classList.add("is-fail");
-      el.verdictText.textContent = data.reason || "El robot se detuvo porque no encontro camino libre.";
+      const abortText = cargo && cargo.picked_up
+        ? `${shortCargo} (${weightKg} kg) quedo detenida en ruta.`
+        : `No logro recoger ${shortCargo} (${weightKg} kg).`;
+      el.verdictText.textContent = `${data.reason || "Camino bloqueado."} ${abortText}`;
     } else if (outcome.kind === "optimal") {
       el.statStatus.textContent = `${fullTotal}/${fullTotal} · ${data.cycle_seconds} s`;
       el.kpiStatusBox.classList.add("is-ok");
-      const geometryNote = outcome.overBudget
-        ? ` (obstaculo estrecho exigio superar el margen base de ${outcome.budgetLimit}, pero sigue siendo el minimo optimo)`
-        : "";
       el.verdictText.textContent =
-        `Ciclo optimo completado en ${data.cycle_seconds} s con energia minima (${data.energy}) probando ${data.nodes_expanded} posturas.${geometryNote}${memNote}`;
+        `Ruta optima en ${data.cycle_seconds} s: entrego ${shortCargo} (${weightKg} kg) en ${distM} m (+${tax} energia por peso).${memNote}`;
     } else if (outcome.kind === "over_budget") {
       el.statStatus.textContent = `Fuera exp. (> ${outcome.budgetLimit})`;
       el.kpiStatusBox.classList.add("is-warn");
       el.verdictBox.classList.add("is-warn");
-      const routeNote = data.is_optimal ? "encontro ruta minima" : `dio rodeos (energia ${data.energy})`;
       el.verdictText.textContent =
-        `Fuera de expectativas: ${routeNote}, pero probo ${data.nodes_expanded} posturas y supero el margen esperado de ${outcome.budgetLimit}.${memNote}`;
+        `Entrego ${shortCargo} (${weightKg} kg), pero supero el margen de ${outcome.budgetLimit} posturas (${data.nodes_expanded}).${memNote}`;
     } else {
       el.statStatus.textContent = `${fullTotal}/${fullTotal} · ${data.cycle_seconds} s`;
       el.kpiStatusBox.classList.add("is-warn");
       el.verdictBox.classList.add("is-warn");
       el.verdictText.textContent =
-        `Completo la tarea, pero dio rodeos que elevaron la energia a ${data.energy} (ciclo de ${data.cycle_seconds} s).${memNote}`;
+        `Entrego ${shortCargo} (${weightKg} kg), pero dio rodeos que elevaron la energia a ${data.energy} (+${tax} por peso).${memNote}`;
     }
   }
 
@@ -1217,7 +1649,7 @@ document.addEventListener("DOMContentLoaded", () => {
     el.btnEmergency.addEventListener("click", () => {
       state.unexpectedActive = !state.unexpectedActive;
       el.btnEmergency.classList.toggle("active", state.unexpectedActive);
-      el.btnEmergency.textContent = state.unexpectedActive ? "Quitar imprevisto" : "Obstaculo imprevisto";
+      el.btnEmergency.textContent = state.unexpectedActive ? "Quitar imprevisto" : "Imprevisto";
       rebuildThreeObstaclesAndWaypoints();
 
       // Si el robot iba a medio ciclo, recalcular desde su postura y etapa actual (Opcion C real)
@@ -1241,6 +1673,17 @@ document.addEventListener("DOMContentLoaded", () => {
     el.btnReset.addEventListener("click", () => {
       loadTask(state.activeTaskId, true);
     });
+
+    if (el.cargoSelect) {
+      el.cargoSelect.addEventListener("change", () => {
+        state.cargoId = el.cargoSelect.value || "battery_module";
+        if (three.ready) {
+          refreshCarriedCargoMesh();
+          rebuildThreeObstaclesAndWaypoints();
+        }
+        runPythonSequence();
+      });
+    }
 
     el.speedBtns.forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -1539,7 +1982,8 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({
           start_deg: state.startDeg,
           waypoints: state.waypoints,
-          obstacles: getActiveObstaclesList()
+          obstacles: getActiveObstaclesList(),
+          cargo_id: state.cargoId
         })
       });
       const json = await resp.json();
@@ -1640,7 +2084,7 @@ document.addEventListener("DOMContentLoaded", () => {
       p.classList.toggle("active", active);
       p.hidden = !active;
     });
-    if (tabName === "history" || tabName === "memory") {
+    if (tabName === "history" || tabName === "cargo" || tabName === "memory") {
       loadHistoryData();
     }
   }
@@ -1657,14 +2101,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const json = await resp.json();
       if (json.status !== "success") return;
 
-      const { kpis, runs, cache_entries: cacheEntries } = json.data;
+      const { kpis, runs, cargo_ledger: cargoLedger, cache_entries: cacheEntries } = json.data;
       if (el.historyCount) el.historyCount.textContent = String(kpis.total_runs);
       el.sqlTotal.textContent = String(kpis.total_runs);
       el.sqlFailures.textContent = String(kpis.total_failures);
       el.sqlCached.textContent = String(kpis.total_from_cache);
       el.sqlSavings.textContent = kpis.astar_energy_savings_pct !== null ? `${kpis.astar_energy_savings_pct}%` : "—";
 
+      if (el.cargoDelivered) el.cargoDelivered.textContent = String(kpis.total_deliveries || 0);
+      if (el.cargoKg) el.cargoKg.textContent = `${kpis.total_kg_delivered || 0} kg`;
+      if (el.cargoMeters) el.cargoMeters.textContent = `${kpis.total_distance_m || 0} m`;
+      if (el.cargoAborted) el.cargoAborted.textContent = String(kpis.aborted_transports || 0);
+
       renderRunsList(runs);
+      renderCargoList(cargoLedger || []);
       renderCacheList(cacheEntries);
     } catch (err) {
       el.runsList.innerHTML = `<p class="sv-pane-intro">No se pudo cargar la bitacora SQL.</p>`;
@@ -1691,6 +2141,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const budgetTag = outcome.kind === "over_budget"
         ? `<span class="arm-run-tag is-warn">&gt;${outcome.budgetLimit} exp.</span>`
         : "";
+      const cargoLabel = r.cargo_name ? `${escapeHtml(r.cargo_name)} (${r.weight_kg || 18} kg)` : "";
+      const cargoTag = cargoLabel
+        ? `<span class="arm-run-tag ${r.delivered ? "is-ok" : "is-fail"}">${cargoLabel}</span>`
+        : "";
 
       return `
         <div class="arm-run-card">
@@ -1698,12 +2152,13 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="arm-run-title">
               <span>#${r.id} · ${escapeHtml(r.task_name)}</span>
               <span class="arm-run-tag ${outcome.tone}">${tagText}</span>
+              ${cargoTag}
               ${budgetTag}
               ${memTag}
               ${unexpTag}
             </div>
             <div class="arm-run-meta">
-              <strong>${escapeHtml(r.algorithm_name)}</strong> · ${r.nodes_expanded} posturas · Energia ${r.energy}
+              <strong>${escapeHtml(r.algorithm_name)}</strong> · ${r.nodes_expanded} posturas · Energia ${r.energy}${r.payload_energy_tax ? ` (+${r.payload_energy_tax} por peso)` : ""}
               ${r.reason ? `<br><em>${escapeHtml(r.reason)}</em>` : ""}
             </div>
           </div>
@@ -1717,6 +2172,40 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!runObj) return;
       btn.addEventListener("click", () => replaySavedScene(runObj));
     });
+  }
+
+  function renderCargoList(ledger) {
+    if (!el.cargoList) return;
+    if (!ledger || !ledger.length) {
+      el.cargoList.innerHTML = `<p class="sv-pane-intro">Aun no hay traslados de carga registrados en <code>arm_cargo_ledger</code>.</p>`;
+      return;
+    }
+
+    el.cargoList.innerHTML = ledger.map((item) => {
+      const statusCls = item.delivered ? "is-ok" : item.picked_up ? "is-warn" : "is-fail";
+      const statusText = item.delivered
+        ? "Entregada en destino"
+        : item.picked_up
+          ? "Abortada en transito"
+          : "Sin recoger en origen";
+
+      return `
+        <div class="arm-run-card">
+          <div class="arm-run-main">
+            <div class="arm-run-title">
+              <span>Lote #${item.id} · ${escapeHtml(item.cargo_name)} (${item.weight_kg} kg)</span>
+              <span class="arm-run-tag ${statusCls}">${statusText}</span>
+              <span class="arm-run-tag">${escapeHtml(item.algorithm_name)}</span>
+            </div>
+            <div class="arm-run-meta">
+              Ruta: <strong>${escapeHtml(item.origin_station)}</strong> &rarr; <strong>${escapeHtml(item.destination_station)}</strong>
+              &middot; Recorrido con carga: <strong>${item.transport_distance_m} m</strong>
+              &middot; Energia: ${item.base_energy} base + <strong>${item.payload_energy_tax} por torque</strong> (Total ${item.total_loaded_energy})
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
   }
 
   function renderCacheList(entries) {
@@ -1746,6 +2235,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     state.activeTaskId = sc.task_id || state.activeTaskId;
     state.algorithm = sc.algorithm_id || runObj.algorithm_id;
+    state.cargoId = sc.cargo_id || runObj.cargo_id || state.cargoId;
+    if (el.cargoSelect) el.cargoSelect.value = state.cargoId;
     state.startDeg = [...(sc.start_deg || [170, 15])];
     state.waypoints = sc.waypoints.map((w) => ({ ...w }));
     state.unexpectedActive = Boolean(sc.had_unexpected);
@@ -1763,9 +2254,10 @@ document.addEventListener("DOMContentLoaded", () => {
       p.setAttribute("aria-selected", active ? "true" : "false");
     });
     el.btnEmergency.classList.toggle("active", state.unexpectedActive);
-    el.btnEmergency.textContent = state.unexpectedActive ? "Quitar imprevisto" : "Obstaculo imprevisto";
+    el.btnEmergency.textContent = state.unexpectedActive ? "Quitar imprevisto" : "Imprevisto";
 
     closeLogModal();
+    refreshCarriedCargoMesh();
     rebuildThreeObstaclesAndWaypoints();
     runPythonSequence();
   }

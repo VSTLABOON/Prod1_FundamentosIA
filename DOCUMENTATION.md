@@ -6,7 +6,7 @@ Este documento describe la arquitectura, las decisiones de diseno, la estructura
 
 ## 1. Resumen General del Sistema
 
-El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizando el microframework **Flask** y una base de datos relacional **SQLite**. Integra seis modulos centrales articulados mediante una barra de navegacion fija:
+El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizando el microframework **Flask**, una base de datos relacional **SQLite** y visualizacion tridimensional con **Three.js (WebGL)**. Integra siete modulos centrales articulados mediante una barra de navegacion fija:
 
 1. **Antecedentes Historicos**: Cronologia analitica de 10 hitos seminales (desde la *Ars Magna* de Ramon Llull en 1305 hasta la Conferencia de Dartmouth en 1956) acompasada por su infografia de alta resolucion ampliable mediante visor Lightbox.
 2. **Clasificacion Clasica de la IA**: Explicacion teorica de la taxonomia tripartita (**ANI**, **AGI**, **ASI**) complementada con estudios de caso reales y prospectivos acompanados de sus respectivas infografias tecnicas:
@@ -16,21 +16,27 @@ El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizan
 3. **Algoritmos de Busqueda y Optimizacion**:
    - Marco conceptual y formal: tupla formal del problema de busqueda P = &lang; S, s0, A(s), Result(s, a), GoalTest(s), c(s, a, s') &rang;.
    - Ejemplo formal aplicado: resolucion de ruta optima Puebla &rarr; Ciudad de Mexico con el algoritmo A* guiado por funcion f(n) = g(n) + h(n).
+   - Simulador 2D de robot de surtido en almacen (`search_visualizer.html`) y consola del Chatbot Clasificador ML for Kids (`chatbot_ml.html`).
    - Infografia oficial dedicada (`algoritmos_busqueda.png`) con visor Lightbox en alta definicion.
    - Clasificacion exhaustiva en 4 paradigmas: *Busqueda Ciega (No Informada)*, *Busqueda Heuristica (Informada)* con criterios de admisibilidad y consistencia, *Busqueda Local* con memoria O(1), y *Busqueda Evolutiva* con operadores geneticos.
    - Tabla comparativa de criterios operativos y referencias bibliograficas canonicas (Russell & Norvig, Nilsson, Hart et al., Goldberg).
-4. **Machine Learning (Aprendizaje Automatico)**:
+4. **Brazo Robotico 3D en Celda Automotriz (`brazo_robotico.html`, `robot_arm_search.py`, `arm_storage.py`)**:
+   - Escena industrial interactiva en **Three.js** conectada en tiempo real al Espacio de Configuraciones (C-Space) discreto de $72 \times 72 = 5{,}184$ estados ($\theta_1, \theta_2$ en pasos de $5^\circ$).
+   - Movimientos en **8 direcciones** (4 giros ortogonales de hombro `1.6` o codo `1.0` + 4 giros diagonales simultaneos hombro+codo `1.9` con heuristica octil admisible).
+   - Control de margen operativo esperado (`EXPECTED_MAX_EXPANSIONS = 900`, ~17% del C-Space) frente a topes duros extendidos (`MAX_DFS_EXPANSIONS = 2400`, `MAX_GREEDY_EXPANSIONS = 2200`), marcando corridas con mas de 900 posturas como **Fuera de expectativas (>900)** (`within_budget = False`).
+   - Tareas practicas multi-etapa (*Pick & Place*, *Soldar Puerta (3 pts)*, *Pasillo Estrecho*) con transporte fisico de piezas 3D (*Modulo Bateria EV 18 kg*, *Bastidor de Puerta 12 kg*, *Modulo LiDAR 5 kg*), cierre animado de mordazas de pinza, obstaculo imprevisto con replanificacion en vivo, **Bitacora SQL** (`arm_runs`), **Inventario de Carga Transportada** (`arm_cargo_ledger`), **Memoria de Rutas CBR** (`arm_route_cache`) y **Consultor Mini-RAG** en Python.
+5. **Machine Learning (Aprendizaje Automatico)**:
    - Marco teorico formal del aprendizaje inductivo a partir de datos frente a la programacion basada en reglas fijas.
    - Desglose de los tres grandes paradigmas: *Supervisado*, *No Supervisado* y *Por Refuerzo*.
    - Ciclo de vida / Pipeline integral de 5 fases (Recoleccion, Feature Engineering, Entrenamiento, Evaluacion, Inferencia).
    - **Caso de Estudio y Simulador de Inferencia en Tiempo Real**: Demostracion interactiva de clasificacion binaria para deteccion de fraude bancario mediante el calculo en vivo del vector de caracteristicas, el logit ponderado y la funcion logistica (sigmoide).
-5. **Glosario de Conceptos Clave**: Repositorio relacional de 20 conceptos tecnicos fundamentales con busqueda directa en tiempo real, perspectiva dinamica (3D Tilt) y modal para fichas tecnicas profundas.
-6. **Ensayo Academico ("Etica y aspectos sociales de la inteligencia artificial")**:
+6. **Glosario de Conceptos Clave**: Repositorio relacional de 20 conceptos tecnicos fundamentales con busqueda directa en tiempo real, perspectiva dinamica (3D Tilt) y modal para fichas tecnicas profundas.
+7. **Ensayo Academico ("Etica y aspectos sociales de la inteligencia artificial")**:
    - Ensayo academico integro de Barranco Cervantes Jesus Manuel (Universidad Tecnologica de Puebla, Grupo 7°C, Septiembre 2026).
    - Indice interactivo lateral con navegacion rapida por capitulos y resaltado activo.
    - Tesis de las tres condiciones inseparables (finalidad legitima, evidencia verificable y mecanismos de reparacion).
    - 14 capitulos tematicos analiticos, tabla comparativa de dilema de asignacion de becas (Grupos A y B) y bibliografia academica completa en formato APA.
-7. **Buscador Global Inteligente**: Ubicado de manera permanente en la barra superior; al escribir un termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
+8. **Buscador Global Inteligente**: Ubicado de manera permanente en la barra superior; al escribir un termino desde cualquier seccion, activa automaticamente el Glosario y filtra los conceptos en tiempo real.
 
 ---
 
@@ -103,9 +109,14 @@ El proyecto es una aplicacion web full-stack desarrollada en **Python** utilizan
 ## 4. Endpoints de la API REST
 
 - `GET /`: Renderizado de la pagina web unificada.
+- `GET /health`: Estado de salud del servidor (`{"status": "ok"}`).
 - `GET /api/concepts`: Listado filtrable de conceptos (`search`, `favorites`).
 - `GET /api/concepts/<int:id>`: Detalle de ficha tecnica profunda.
 - `POST /api/concepts/<int:id>/favorite`: Alternador del estado de favorito.
+- `GET /api/quiz`: Generador de cuestionario dinamico de opcion multiple.
+- `POST /api/chatbot/classify`, `POST /api/chatbot/verify-key`, `GET /api/chatbot/training-data`, `POST /api/chatbot/train`: Endpoints del clasificador ML for Kids.
+- `GET /api/arm/presets`, `POST /api/arm/solve`, `POST /api/arm/compare`, `POST /api/arm/solve-sequence`, `POST /api/arm/compare-sequence`: Planificador en C-Space del Brazo Robotico 3D.
+- `GET /api/arm/history`, `DELETE /api/arm/history`, `POST /api/arm/rag`: Bitacora SQL, Memoria de Rutas (CBR) y Consultor Mini-RAG sobre `glossary.db`.
 
 ---
 

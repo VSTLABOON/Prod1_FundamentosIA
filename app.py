@@ -327,6 +327,8 @@ def api_arm_solve_sequence():
     obstacles = payload.get("obstacles")
     task_id = payload.get("task_id", "pick_and_place")
     task_name = payload.get("task_name", "Pick & Place")
+    cargo_id = payload.get("cargo_id")
+    origin_station = payload.get("origin_station")
     had_unexpected = bool(payload.get("had_unexpected", False))
     use_memory = bool(payload.get("use_memory", True))
     record_run = bool(payload.get("record_run", True))
@@ -340,11 +342,17 @@ def api_arm_solve_sequence():
         parsed_obs = robot_arm_search.parse_obstacles(raw_obs)
         effective_obstacles = [vars(o) for o in parsed_obs]
 
+        default_cargo = robot_arm_search.TASK_PRESETS.get(str(task_id), {}).get("default_cargo", "battery_module")
+        cargo_spec = robot_arm_search.resolve_cargo_spec(cargo_id or default_cargo)
+        effective_cargo_id = cargo_spec["id"]
+
         algo_clean = str(algorithm or "astar").strip().lower()
         if algo_clean not in robot_arm_search.ALGORITHMS_INFO:
             raise ValueError(f"Algoritmo no soportado: '{algorithm}'")
 
-        scene_hash = arm_storage.compute_scene_hash(parsed_start, effective_waypoints, effective_obstacles)
+        scene_hash = arm_storage.compute_scene_hash(
+            parsed_start, effective_waypoints, effective_obstacles, cargo_id=effective_cargo_id
+        )
         result = None
 
         if use_memory:
@@ -356,6 +364,8 @@ def api_arm_solve_sequence():
                 start_deg=parsed_start,
                 waypoints=effective_waypoints,
                 raw_obstacles=effective_obstacles,
+                cargo_id=effective_cargo_id,
+                origin_station_override=origin_station,
             )
             result["from_cache"] = False
             if use_memory and result.get("found"):
@@ -366,6 +376,7 @@ def api_arm_solve_sequence():
                 "task_id": task_id,
                 "task_name": task_name,
                 "algorithm_id": algo_clean,
+                "cargo_id": effective_cargo_id,
                 "start_deg": list(parsed_start),
                 "waypoints": effective_waypoints,
                 "obstacles": effective_obstacles,
@@ -433,6 +444,7 @@ def api_arm_compare_sequence():
     start_deg = payload.get("start_deg", [170, 15])
     waypoints = payload.get("waypoints")
     obstacles = payload.get("obstacles")
+    cargo_id = payload.get("cargo_id", "battery_module")
 
     try:
         parsed_start = robot_arm_search.validate_start_deg(start_deg)
@@ -443,6 +455,7 @@ def api_arm_compare_sequence():
             start_deg=parsed_start,
             waypoints=waypoints,
             raw_obstacles=raw_obs,
+            cargo_id=cargo_id,
         )
     except (ValueError, TypeError, IndexError, KeyError) as err:
         return jsonify({"status": "error", "message": str(err)}), 400

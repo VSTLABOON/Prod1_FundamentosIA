@@ -252,17 +252,18 @@
   }
   /* Modales y Lightbox en moviles */
   .modal-backdrop {
-    padding: 12px;
+    padding: 10px;
   }
   .modal-window {
-    max-height: 92vh;
+    max-height: 86dvh;
+    overflow: hidden;
   }
   .modal-header-hero {
-    min-height: 160px;
-    max-height: 200px;
+    min-height: 140px;
+    max-height: 175px;
   }
   .modal-body {
-    padding: 18px 16px 24px;
+    padding: 16px 15px 20px;
   }
   .lightbox-backdrop {
     padding: 12px;

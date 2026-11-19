@@ -1,6 +1,6 @@
-# Compendio de Inteligencia Artificial: Antecedentes, Taxonomia, Algoritmos de Busqueda, Chatbot ML for Kids, Machine Learning, Glosario y Etica
+# Compendio de Inteligencia Artificial: Antecedentes, Taxonomia, Algoritmos de Busqueda, Brazo Robotico 3D, Chatbot ML for Kids, Machine Learning, Glosario y Etica
 
-Aplicacion web full-stack academica construida en **Python (Flask + SQLite)** y **JavaScript Vanilla** bajo un diseno editorial limpio y libre de ruido visual. Permite explorar la evolucion historica de la Inteligencia Artificial, su clasificacion clasica, los paradigmas de busqueda formal con un **Chatbot Clasificador y Argumentador impulsado por Machine Learning for Kids (4 etiquetas)**, fundamentos y simulacion matematica de Machine Learning, un glosario relacional de 20 conceptos tecnicos con interaccion 3D y un ensayo academico integro sobre etica de la IA.
+Aplicacion web full-stack academica construida en **Python (Flask + SQLite)**, **Three.js (WebGL 3D)** y **JavaScript Vanilla** bajo un diseno editorial limpio y libre de ruido visual. Permite explorar la evolucion historica de la Inteligencia Artificial, su clasificacion clasica, los paradigmas de busqueda formal con un **Simulador de Almacen 2D**, un **Simulador de Brazo Robotico 3D en Celda Automotriz con Bitacora SQL, Memoria de Rutas (CBR) y Mini-RAG**, un **Chatbot Clasificador y Argumentador impulsado por Machine Learning for Kids (4 etiquetas)**, fundamentos y simulacion matematica de Machine Learning, un glosario relacional de 20 conceptos tecnicos con interaccion 3D y un ensayo academico integro sobre etica de la IA.
 
 ---
 
@@ -8,24 +8,25 @@ Aplicacion web full-stack academica construida en **Python (Flask + SQLite)** y 
 
 1. [Resumen General del Sistema](#1-resumen-general-del-sistema)
 2. [Modulos y Secciones Principales](#2-modulos-y-secciones-principales)
-3. [Arquitectura del Chatbot ML for Kids (4 Etiquetas y Desambiguacion Discursiva)](#3-arquitectura-del-chatbot-ml-for-kids-4-etiquetas-y-desambiguacion-discursiva)
-4. [Simulador Matematico de Inferencia en Machine Learning](#4-simulador-matematico-de-inferencia-en-machine-learning)
-5. [Arquitectura de Base de Datos y Catalogo de 20 Conceptos](#5-arquitectura-de-base-de-datos-y-catalogo-de-20-conceptos)
-6. [Especificacion Completa de la API REST](#6-especificacion-completa-de-la-api-rest)
-7. [Estructura Completa del Proyecto](#7-estructura-completa-del-proyecto)
-8. [Sistema de Diseno Editorial Academico y Frontend](#8-sistema-de-diseno-editorial-academico-y-frontend)
-9. [Instalacion y Ejecucion Local](#9-instalacion-y-ejecucion-local)
-10. [Despliegue en Produccion (Cloud PaaS)](#10-despliegue-en-produccion-cloud-paas)
+3. [Brazo Robotico 3D: C-Space, 8 Movimientos, Margen de 900, SQL y Mini-RAG](#3-brazo-robotico-3d-c-space-8-movimientos-margen-de-900-sql-y-mini-rag)
+4. [Arquitectura del Chatbot ML for Kids (4 Etiquetas y Desambiguacion Discursiva)](#4-arquitectura-del-chatbot-ml-for-kids-4-etiquetas-y-desambiguacion-discursiva)
+5. [Simulador Matematico de Inferencia en Machine Learning](#5-simulador-matematico-de-inferencia-en-machine-learning)
+6. [Arquitectura de Base de Datos y Catalogo de 20 Conceptos](#6-arquitectura-de-base-de-datos-y-catalogo-de-20-conceptos)
+7. [Especificacion Completa de la API REST](#7-especificacion-completa-de-la-api-rest)
+8. [Estructura Completa del Proyecto](#8-estructura-completa-del-proyecto)
+9. [Sistema de Diseno Editorial Academico, Modales y Responsividad](#9-sistema-de-diseno-editorial-academico-modales-y-responsividad)
+10. [Instalacion, Pruebas y Ejecucion Local](#10-instalacion-pruebas-y-ejecucion-local)
+11. [Despliegue en Produccion (Cloud PaaS / Render)](#11-despliegue-en-produccion-cloud-paas--render)
 
 ---
 
 ## 1. Resumen General del Sistema
 
-El proyecto integra en una sola plataforma interactiva seis secciones tematicas y herramientas transversales accesibles desde una barra de navegacion superior persistente:
+El proyecto integra en una sola plataforma interactiva siete secciones tematicas y herramientas transversales accesibles desde una barra de navegacion superior persistente:
 
-- **Backend**: Microframework **Flask** (`app.py`), motor de base de datos relacional **SQLite** (`database.py`, `seed_db.py`) con auto-inicializacion automatica al arrancar, y paquete modular de lenguaje natural y clasificacion supervisada **ML for Kids** (`chatbot/`, con fachada de compatibilidad en `ml_chatbot.py`).
-- **Frontend**: Plantillas modulares **Jinja2** (`templates/components/` y `templates/sections/`), arquitectura CSS modularizada en 10 hojas de estilo (`static/css/modules/`) y controlador interactivo en JavaScript (`static/js/app.js`).
-- **Principios Visuales**: Estetica editorial universitaria con tipografias *Fraunces*, *IBM Plex Sans* e *IBM Plex Mono*, soporte nativo para **Modo Claro y Modo Oscuro**, diseno 100% responsivo y **ausencia total de emojis** o barras de porcentaje innecesarias.
+- **Backend**: Microframework **Flask** (`app.py`), motor de base de datos relacional **SQLite** (`database.py`, `seed_db.py`, `arm_storage.py`) con auto-inicializacion y migracion automatica al arrancar, motor de planificacion cinematica e inversa en espacio de configuraciones (`robot_arm_search.py`), y paquete modular de lenguaje natural y clasificacion supervisada **ML for Kids** (`chatbot/`, con fachada de compatibilidad en `ml_chatbot.py`).
+- **Frontend**: Plantillas modulares **Jinja2** (`templates/components/` y `templates/sections/`), arquitectura CSS modularizada en 12 hojas de estilo (`static/css/modules/`) y controladores interactivos en JavaScript (`static/js/app.js`, `static/js/search_visualizer.js`, `static/js/brazo_robotico.js`).
+- **Principios Visuales**: Estetica editorial universitaria con tipografias *Fraunces*, *IBM Plex Sans* e *IBM Plex Mono*, soporte nativo para **Modo Claro y Modo Oscuro**, modales de altura acotada (`dvh`) con scroll interno aislado y bloqueo de desplazamiento de fondo, diseno 100% responsivo y **ausencia total de emojis**.
 
 ---
 
@@ -67,14 +68,39 @@ El proyecto integra en una sola plataforma interactiva seis secciones tematicas 
 - Texto integro del ensayo *"Etica y aspectos sociales de la inteligencia artificial"* (**Barranco Cervantes Jesus Manuel**, Universidad Tecnologica de Puebla, Grupo 7°C, Septiembre 2026).
 - Indice lateral interactivo con seguimiento de lectura (*scroll-spy*) a lo largo de los 14 capitulos tematicos, analisis de la tesis de las tres condiciones inseparables (finalidad legitima, evidencia verificable y mecanismos de reparacion), tabla comparativa del dilema de asignacion de becas (Grupos A y B) y referencias bibliograficas en formato APA.
 
-### 2.7 Herramientas Globales Transversales
+### 2.7 Brazo Robotico 3D en Celda Automotriz (`templates/sections/brazo_robotico.html`)
+- Simulacion industrial interactiva en **Three.js (WebGL 3D)** sincronizada en tiempo real con el **Espacio de Configuraciones (C-Space 2D)** de $72 \times 72 = 5{,}184$ posturas posibles.
+- Ejecucion de tareas practicas multi-etapa (*Pick & Place*, *Soldar Puerta (3 pts)* y *Pasillo Estrecho*), arrastre en vivo de obstaculos y puntos objetivo en el escenario 3D, inyeccion de **obstaculo imprevisto** con replanificacion al vuelo, **HUD de telemetria angular** (`Hombro X° · Codo Y°`) y comparador simultaneo de 5 algoritmos (**A\***, **Costo Uniforme**, **Busqueda Voraz**, **Anchura BFS** y **Profundidad DFS**).
+- Integracion de **Bitacora SQL**, **Memoria de Rutas (CBR)** y **Consultor Mini-RAG** en lenguaje natural sobre `glossary.db`.
+
+### 2.8 Herramientas Globales Transversales
 - **Buscador Global Inteligente (`#globalSearchInput`)**: Al escribir desde cualquier pestaña del sitio, conmuta automaticamente al Glosario y filtra los conceptos en tiempo real.
 - **Acceso Directo al Chatbot ML (`#chatbotNavBtn`)**: Lleva directamente a la consola del clasificador ML for Kids y enfoca el campo de texto.
 - **Modo Quiz / Autoevaluacion (`#quizToggleBtn`)**: Genera cuestionarios dinamicos de opcion multiple basados en la base de datos SQLite con retroalimentacion inmediata y conteo de aciertos.
 
 ---
 
-## 3. Arquitectura del Chatbot ML for Kids (4 Etiquetas y Desambiguacion Discursiva)
+## 3. Brazo Robotico 3D: C-Space, 8 Movimientos, Margen de 900, SQL y Mini-RAG
+
+El modulo [`robot_arm_search.py`](robot_arm_search.py) modela formalmente un brazo robotico planar de 2 grados de libertad (eslabon de hombro $L_1 = 95\text{ px}$ y eslabon de codo/antorcha $L_2 = 80\text{ px}$) dentro de una celda de manufactura automotriz:
+
+- **Espacio de Estados ($S$)**: Cuadricula toroidal discreta de $(\theta_1, \theta_2) \in [0^\circ, 360^\circ)^2$ en pasos de `STEP_DEG = 5` grados ($72 \times 72 = 5{,}184$ estados).
+- **Acciones en 8 Direcciones ($A(s)$) y Costo Energetico ($c(s,a,s')$)**:
+  - 4 movimientos ortogonales (una sola articulacion): giro de hombro ($\pm 5^\circ$, costo `COST_SHOULDER = 1.6`) o giro de codo ($\pm 5^\circ$, costo `COST_ELBOW = 1.0`).
+  - 4 movimientos diagonales simultaneos (hombro + codo a la vez): costo `COST_DIAG = 1.9` ($\approx \sqrt{1.6^2 + 1.0^2}$) con validacion anti-cruce de esquinas de colision.
+- **Heuristica Octil Admisible ($h(n)$)**: `angular_heuristic` calcula la distancia angular minima en el toro $72 \times 72$ hacia el conjunto de posturas meta combinando pasos diagonales (`1.9`) y pasos ortogonales restantes (`1.6` o `1.0`), garantizando optimalidad en $A^*$.
+- **Margen Operativo Esperado (`EXPECTED_MAX_EXPANSIONS = 900`) y Bandera `within_budget`**:
+  - `900` posturas representan aproximadamente el **17%** del espacio total de $5{,}184$ configuraciones (el presupuesto esperado por etapa para una busqueda informada en condiciones normales).
+  - Los algoritmos exploratorios cuentan con un tope duro ampliado (`MAX_DFS_EXPANSIONS = 2400`, `MAX_GREEDY_EXPANSIONS = 2200`). Si una estrategia completa la tarea pero supera las `900` posturas en alguna etapa (por ejemplo, **DFS** en *Pick & Place* con `1,294` posturas, o **Costo Uniforme** / **BFS**), se registra con `within_budget = False` y la interfaz la señala como **Fuera de expectativas (>900)**. Si el propio **A\*** requiere superar 900 en geometrias concavas estrechas (*Soldar Puerta* o *Pasillo Estrecho*), se conserva como **Optima** indicando que es el minimo matematico posible.
+- **Persistencia en SQLite y Mini-RAG ([`arm_storage.py`](arm_storage.py))**:
+  - Tabla `arm_runs`: Bitacora de corridas con metricas (`nodes_expanded`, `energy`, `cycle_seconds`, `had_unexpected`, `from_cache`, `within_budget`, `cargo_id`, `cargo_name`, `weight_kg`, `delivered`, `payload_energy_tax`, `transport_distance_m`), geometria serializada para **Cargar escena** en 3D y documento indexado para recuperacion.
+  - Tabla `arm_cargo_ledger`: Inventario de **Carga Transportada** en planta (lote, pieza: *Modulo Bateria EV 18 kg*, *Bastidor de Puerta 12 kg* o *Modulo LiDAR 5 kg*, estacion origen $\to$ destino, distancia recorrida en metros con pinza cerrada, sobrecarga energetica por torque y estado `entregado` / `abortado_en_ruta` / `sin_recoger`).
+  - Tabla `arm_route_cache`: Memoria de rutas exitosa indexada por huella SHA-256 (`scene_hash`, `algorithm_id`) que recupera trayectorias repetidas en ~`0.8 ms` sin reexplorar.
+  - **Mini-RAG Local (`query_arm_rag`)**: Motor de recuperacion y sintesis en Python sobre `arm_runs` y `arm_cargo_ledger` que responde preguntas en lenguaje natural sobre fallos, ahorro energetico, imprevistos, piezas entregadas (`kg` y metros) y corridas fuera del margen de 900 posturas.
+
+---
+
+## 4. Arquitectura del Chatbot ML for Kids (4 Etiquetas y Desambiguacion Discursiva)
 
 Todo el codigo de Python dedicado exclusivamente al chatbot ha sido estructurado de forma modular e independiente dentro de la carpeta [`chatbot/`](chatbot/README.md), manteniendo [`ml_chatbot.py`](ml_chatbot.py) como fachada de compatibilidad hacia atras e integrando su interfaz en [`templates/components/chatbot_ml.html`](templates/components/chatbot_ml.html):
 
@@ -134,7 +160,7 @@ En lugar de devolver respuestas pre-programadas rigidas o saturar la vista con b
 
 ---
 
-## 4. Simulador Matematico de Inferencia en Machine Learning
+## 5. Simulador Matematico de Inferencia en Machine Learning
 
 Ubicado en la seccion **Machine Learning** (`templates/sections/machine_learning.html` y controlado en `static/js/app.js`), permite experimentar en tiempo real con un modelo de **Regresion Logistica Binaria** entrenado para deteccion de fraude en transacciones financieras:
 
@@ -152,7 +178,7 @@ Ubicado en la seccion **Machine Learning** (`templates/sections/machine_learning
 
 ---
 
-## 5. Arquitectura de Base de Datos y Catalogo de 20 Conceptos
+## 6. Arquitectura de Base de Datos y Catalogo de 20 Conceptos
 
 El motor [`database.py`](database.py) gestiona la base de datos SQLite (`glossary.db`) con inicializacion automatica e idempotente desde [`seed_db.py`](seed_db.py).
 
@@ -198,7 +224,7 @@ El motor [`database.py`](database.py) gestiona la base de datos SQLite (`glossar
 
 ---
 
-## 6. Especificacion Completa de la API REST
+## 7. Especificacion Completa de la API REST
 
 Todos los endpoints estan definidos en [`app.py`](app.py) y devuelven respuestas en formato JSON UTF-8.
 
@@ -262,20 +288,42 @@ Todos los endpoints estan definidos en [`app.py`](app.py) y devuelven respuestas
     }
     ```
 
+### 6.3 Planificador del Brazo Robotico 3D, Bitacora SQL y Mini-RAG
+
+- **`GET /health`**
+  Endpoint de verificacion de salud para Render (`{"status": "ok"}`).
+- **`GET /api/arm/presets`**
+  Devuelve la geometria del brazo, el catalogo de los 5 algoritmos, los 3 escenarios de una etapa (`PRESET_SCENARIOS`) y las 3 tareas practicas multi-etapa (`TASK_PRESETS`).
+- **`POST /api/arm/solve`** y **`POST /api/arm/compare`**
+  Resuelven o comparan los 5 algoritmos sobre un punto objetivo unico `(target_x, target_y)`.
+- **`POST /api/arm/solve-sequence`**
+  Resuelve una secuencia completa de puntos de trabajo (`waypoints`) con soporte de Memoria SQL (`use_memory`) y registro automatico en `arm_runs` (`record_run`), devolviendo `within_budget`, `budget_limit` (`900`), etapas, camino en C-Space y cuadros cinematicos.
+- **`POST /api/arm/compare-sequence`**
+  Ejecuta las 5 estrategias sobre la misma secuencia y obstáculos reutilizando el mapa de colisiones base en Python.
+- **`GET /api/arm/history?filter=all|failed|unexpected&limit=40`**
+  Devuelve KPIs agregados (`total_runs`, `total_failures`, `total_from_cache`, `astar_energy_savings_pct`), historial de corridas y entradas en `arm_route_cache`.
+- **`DELETE /api/arm/history?scope=runs|cache|all`**
+  Limpia la bitacora de corridas, la memoria de rutas o ambas tablas.
+- **`POST /api/arm/rag`**
+  Ejecuta el Mini-RAG local en Python sobre los registros de `arm_runs` para responder preguntas en lenguaje natural citando las corridas fuente y su similitud.
+
 ---
 
-## 7. Estructura Completa del Proyecto
+## 8. Estructura Completa del Proyecto
 
 ```text
 Prod1/
 |-- app.py                          # Servidor Flask, rutas web, endpoints API REST y auto-seed de BD
+|-- robot_arm_search.py             # Motor C-Space (72x72), 8 movimientos, A*/UCS/Voraz/BFS/DFS y margen 900
+|-- arm_storage.py                  # Persistencia SQLite (arm_runs, arm_route_cache) y motor Mini-RAG local
+|-- test_robot_arm.py               # Suite unittest de cinematica, algoritmos, endpoints Flask, SQL y Mini-RAG
 |-- ml_chatbot.py                   # Modulo de compatibilidad hacia atras (reexporta desde chatbot/)
 |-- database.py                     # Capa de persistencia SQLite, consultas parametrizadas y generador de Quiz
 |-- seed_db.py                      # Corpus de datos de los 20 conceptos tecnicos de IA
 |-- glossary.db                     # Base de datos relacional SQLite (generada/verificada automaticamente)
 |-- requirements.txt                # Dependencias de Python (Flask==3.0.3, gunicorn==22.0.0)
 |-- Procfile                        # Declaracion de proceso WSGI para despliegue cloud (web: gunicorn app:app)
-|-- runtime.txt                     # Especificacion de version de Python para plataformas PaaS
+|-- runtime.txt                     # Especificacion de version de Python (python-3.11.9)
 |-- run.bat                         # Script automatizado para crear entorno virtual, instalar paquetes y arrancar en Windows
 |-- DOCUMENTATION.md                # Documento complementario de arquitectura
 |-- README.md                       # Documentacion maestra integral del proyecto
@@ -292,21 +340,25 @@ Prod1/
 |
 |-- static/
 |   |-- css/
-|   |   |-- style.css               # Hoja de estilo maestra que importa los 10 modulos CSS
+|   |   |-- style.css               # Hoja de estilo maestra que importa los 12 modulos CSS en orden de cascada
 |   |   |-- style.backup.css        # Copia de respaldo de estilos
 |   |   `-- modules/                # Arquitectura CSS modular por dominio
 |   |       |-- base.css            # Variables CSS (Modo Claro/Oscuro), reset y tipografia editorial
 |   |       |-- navbar.css          # Barra de navegacion superior fija, buscador global y controles
+|   |       |-- modals.css          # Modales base, pestañas con flex-shrink:0, cuestionario Quiz y Lightbox
 |   |       |-- antecedentes.css    # Linea del tiempo historica y tarjetas cronologicas
 |   |       |-- clasificacion.css   # Tarjetas comparativas ANI, AGI, ASI y casos de estudio
 |   |       |-- busqueda.css        # Formulas matematicas, tablas A*, paradigmas y consola del Chatbot ML
+|   |       |-- search_visualizer.css # Simulador interactivo 2D de robot de surtido en almacen y modal compacto
 |   |       |-- machine_learning.css# Pipeline de 5 fases y simulador interactivo de fraude
 |   |       |-- glosario.css        # Cuadricula 3D Tilt de los 20 conceptos y tarjetas vectoriales
 |   |       |-- ensayo.css          # Maquetacion editorial del ensayo academico e indice lateral
-|   |       |-- modals.css          # Modales de fichas tecnicas, cuestionario Quiz y visor Lightbox
+|   |       |-- brazo_robotico.css  # Escena 3D Three.js, mapa C-Space, HUDs y modales con scroll interno aislado
 |   |       `-- responsive.css      # Reglas de adaptacion para pantallas medianas, tablets y moviles
 |   |-- js/
-|   |   `-- app.js                  # Controlador frontend: navegacion, buscador, 3D tilt, lightbox, quiz, simulador ML y chatbot
+|   |   |-- app.js                  # Controlador frontend: navegacion, buscador, 3D tilt, lightbox, quiz, simulador ML y chatbot
+|   |   |-- search_visualizer.js    # Controlador del simulador 2D de almacen
+|   |   `-- brazo_robotico.js       # Controlador Three.js 3D, C-Space interactivo, modales comparativos y Bitacora SQL/RAG
 |   `-- images/
 |       |-- timeline_antecedentes.png # Infografia de antecedentes historicos (1305 - 1956)
 |       |-- clasificacion_ani.jpg     # Infografia del caso de estudio ANI (AlphaFold)
@@ -320,6 +372,7 @@ Prod1/
     |-- index.backup.html           # Respaldo de plantilla monolitica previa
     |-- components/                 # Componentes transversales reutilizables
     |   |-- navbar.html             # Barra superior con pestañas, buscador global, boton Chatbot ML, Quiz y Tema
+    |   |-- search_visualizer.html  # Componente interactivo de busqueda en almacen 2D
     |   |-- chatbot_ml.html         # Interfaz del Chatbot ML for Kids, chips de prueba y entrenador de 4 cubetas
     |   |-- modal_concept.html      # Modal de ficha tecnica detallada de cada concepto del glosario
     |   |-- modal_lightbox.html     # Visor de alta resolucion para inspeccionar infografias
@@ -327,15 +380,16 @@ Prod1/
     `-- sections/                   # Secciones principales de contenido
         |-- antecedentes.html       # Seccion 1: Antecedentes de la IA
         |-- clasificacion.html      # Seccion 2: Clasificacion Clasica (ANI, AGI, ASI)
-        |-- busqueda.html           # Seccion 3: Algoritmos de Busqueda + Chatbot ML for Kids
-        |-- machine_learning.html   # Seccion 4: Machine Learning + Simulador en Tiempo Real
-        |-- glosario.html           # Seccion 5: Glosario Interactivo de 20 Conceptos
-        `-- ensayo.html             # Seccion 6: Ensayo Academico sobre Etica de la IA
+        |-- busqueda.html           # Seccion 3: Algoritmos de Busqueda + Simulador Almacen + Chatbot ML
+        |-- brazo_robotico.html     # Seccion 4: Brazo Robotico 3D + C-Space + Modales Comparativo y SQL/RAG
+        |-- machine_learning.html   # Seccion 5: Machine Learning + Simulador en Tiempo Real
+        |-- glosario.html           # Seccion 6: Glosario Interactivo de 20 Conceptos
+        `-- ensayo.html             # Seccion 7: Ensayo Academico sobre Etica de la IA
 ```
 
 ---
 
-## 8. Sistema de Diseno Editorial Academico y Frontend
+## 9. Sistema de Diseno Editorial Academico, Modales y Responsividad
 
 - **Tipografia Jerarquica**:
   - Titulares y encabezados academicos: `'Fraunces'` (serifa de alto contraste editorial).
@@ -344,20 +398,19 @@ Prod1/
 - **Paleta Cromatica con Soporte Dual (Claro / Oscuro)**:
   - **Modo Claro**: Papel crema calido (`#EDEFEA`), superficies blancas (`#F7F8F5`), tinta profunda (`#1E2A33`), acento dorado academico (`#A9752E`) y verde azulado (`#2F6F63`).
   - **Modo Oscuro**: Pizarra nocturna (`#11161B`), superficies elevadas (`#192129`), texto marfil (`#E6EAE8`), acento ambar (`#DF9B42`) y turquesa suave (`#4DB09E`).
-- **Diferenciacion Cromatica de las 4 Etiquetas del Chatbot**:
-  - `Heuristica`: Verde azulado (`--accent-teal`).
-  - `Ciega`: Azul pizarra academico (`#3b6e8c`).
-  - `Evolutiva`: Oro viejo (`--accent-gold`).
-  - `Desconocido`: Gris neutro editorial (`--text-muted`).
+- **Arquitectura de Modales sin Doble Scroll (`dvh` + `arm-modal-lock`)**:
+  - `modules/modals.css` se importa antes de los modulos especializados para garantizar cascada limpia.
+  - Los modales tienen altura acotada al viewport dinamico (`max-height: min(85dvh, ...)` / `height: min(78dvh, 540px)` en `#armLogModal`), cabeceras y barras de pestañas fijas (`flex-shrink: 0; overflow-y: hidden;`), bloqueo del scroll de fondo (`html.arm-modal-lock, body.arm-modal-lock`) y una unica region interna desplazable (`overscroll-behavior: contain`).
+  - En `#armCompareModal`, las 5 tarjetas de algoritmos se organizan en cuadricula compacta de 2 columnas en escritorio (con el ganador **A\*** a ancho completo arriba) para evitar scroll innecesario, pasando a 1 columna con barras de 2 columnas en moviles (`<= 640px`).
 
 ---
 
-## 9. Instalacion y Ejecucion Local
+## 10. Instalacion, Pruebas y Ejecucion Local
 
 ### Opcion A: Inicio Rapido en Windows
 Hacer doble clic sobre el archivo [`run.bat`](run.bat). El script creara automaticamente el entorno virtual `venv` (si no existe), instalara las dependencias de `requirements.txt`, verificara la base de datos SQLite e iniciara el servidor en `http://localhost:5000`.
 
-### Opcion B: Ejecucion Manual por Terminal
+### Opcion B: Ejecucion Manual y Suite de Pruebas por Terminal
 ```powershell
 # 1. Crear y activar entorno virtual (opcional pero recomendado)
 python -m venv venv
@@ -366,14 +419,18 @@ python -m venv venv
 # 2. Instalar dependencias
 pip install -r requirements.txt
 
-# 3. Iniciar la aplicacion
+# 3. Ejecutar pruebas unitarias y de integracion (Brazo Robotico 3D, SQL, RAG y Chatbot)
+python -m unittest test_robot_arm.py -v
+python -m chatbot.cli --test
+
+# 4. Iniciar la aplicacion
 python app.py
 ```
 Abrir el navegador en **`http://localhost:5000`**.
 
 ---
 
-## 10. Despliegue en Produccion (Cloud PaaS)
+## 11. Despliegue en Produccion (Cloud PaaS / Render)
 
 El proyecto esta listo para desplegarse sin configuracion adicional en **Render**, **Railway**, **Heroku** o cualquier entorno compatible con WSGI:
 

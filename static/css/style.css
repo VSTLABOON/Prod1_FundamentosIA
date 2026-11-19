@@ -9,32 +9,32 @@
 /* 2. Barra de navegacion superior persistente */
 @import "modules/navbar.css";
 
-/* 3. Seccion Antecedentes (Linea del tiempo historica) */
+/* 3. Ventanas modales base y Lightbox (antes de modulos que especializan modales) */
+@import "modules/modals.css";
+
+/* 4. Seccion Antecedentes (Linea del tiempo historica) */
 @import "modules/antecedentes.css";
 
-/* 4. Seccion Clasificacion Clasica de la IA */
+/* 5. Seccion Clasificacion Clasica de la IA */
 @import "modules/clasificacion.css";
 
-/* 5. Seccion Algoritmos de Busqueda y Optimizacion */
+/* 6. Seccion Algoritmos de Busqueda y Optimizacion */
 @import "modules/busqueda.css";
 
-/* 5b. Simulador grafico de busqueda (Robot de surtido en almacen) */
+/* 6b. Simulador grafico de busqueda (Robot de surtido en almacen) */
 @import "modules/search_visualizer.css";
 
-/* 6. Seccion Machine Learning y Simulador */
+/* 7. Seccion Machine Learning y Simulador */
 @import "modules/machine_learning.css";
 
-/* 7. Seccion Glosario y Tarjetas 3D Tilt */
+/* 8. Seccion Glosario y Tarjetas 3D Tilt */
 @import "modules/glosario.css";
 
-/* 8. Seccion Ensayo Academico */
+/* 9. Seccion Ensayo Academico */
 @import "modules/ensayo.css";
 
-/* 8b. Seccion Exclusiva: Brazo Robotico 2D */
+/* 9b. Seccion Exclusiva: Brazo Robotico 3D */
 @import "modules/brazo_robotico.css";
-
-/* 9. Ventanas modales y Lightbox */
-@import "modules/modals.css";
 
 /* 10. Reglas adaptativas unificadas (Responsividad) */
 @import "modules/responsive.css";

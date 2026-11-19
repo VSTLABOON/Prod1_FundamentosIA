@@ -165,8 +165,13 @@ class TestFlaskArmEndpoints(unittest.TestCase):
             },
         )
         self.assertEqual(r1.status_code, 200)
-        self.assertTrue(r1.get_json()["data"]["found"])
-        self.assertFalse(r1.get_json()["data"]["from_cache"])
+        r1_data = r1.get_json()["data"]
+        self.assertTrue(r1_data["found"])
+        self.assertFalse(r1_data["from_cache"])
+        self.assertTrue(r1_data["cargo"]["delivered"])
+        self.assertEqual(r1_data["cargo"]["cargo_id"], "battery_module")
+        self.assertGreater(r1_data["cargo"]["transport_distance_m"], 0.0)
+        self.assertGreater(r1_data["cargo"]["payload_energy_tax"], 0.0)
 
         r2 = self.client.post(
             "/api/arm/solve-sequence",
@@ -207,6 +212,10 @@ class TestFlaskArmEndpoints(unittest.TestCase):
         self.assertEqual(hdata["kpis"]["total_failures"], 1)
         self.assertEqual(hdata["kpis"]["total_from_cache"], 1)
         self.assertEqual(hdata["kpis"]["cache_count"], 1)
+        self.assertEqual(hdata["kpis"]["total_deliveries"], 2)
+        self.assertAlmostEqual(hdata["kpis"]["total_kg_delivered"], 36.0, places=1)
+        self.assertEqual(hdata["kpis"]["aborted_transports"], 1)
+        self.assertEqual(len(hdata["cargo_ledger"]), 3)
 
         r4 = self.client.post(
             "/api/arm/solve-sequence",
@@ -231,9 +240,111 @@ class TestFlaskArmEndpoints(unittest.TestCase):
         self.assertEqual(rag_budget.status_code, 200)
         self.assertIn("900", rag_budget.get_json()["data"]["answer"])
 
+        rag_cargo = self.client.post("/api/arm/rag", json={"question": "¿Cuanta carga y peso se ha entregado?"})
+        self.assertEqual(rag_cargo.status_code, 200)
+        self.assertIn("kg", rag_cargo.get_json()["data"]["answer"])
+
         rag_energy = self.client.post("/api/arm/rag", json={"question": "¿Cual gasto menos energia?"})
         self.assertEqual(rag_energy.status_code, 200)
         self.assertGreater(len(rag_energy.get_json()["data"]["sources"]), 0)
+
+    def test_sqlite_legacy_migration_multi_cargo_and_midcycle_origin(self):
+        # Simular una tabla arm_runs heredada (sin columnas within_budget ni cargo_*)
+        conn = db.get_db_connection()
+        try:
+            conn.execute("DROP TABLE IF EXISTS arm_runs")
+            conn.execute("DROP TABLE IF EXISTS arm_cargo_ledger")
+            conn.execute(
+                """
+                CREATE TABLE arm_runs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    task_id TEXT NOT NULL,
+                    task_name TEXT NOT NULL,
+                    algorithm_id TEXT NOT NULL,
+                    algorithm_name TEXT NOT NULL,
+                    found INTEGER NOT NULL,
+                    is_optimal INTEGER NOT NULL,
+                    completed_stages INTEGER NOT NULL,
+                    total_stages INTEGER NOT NULL,
+                    nodes_expanded INTEGER NOT NULL,
+                    energy REAL NOT NULL,
+                    steps INTEGER NOT NULL,
+                    cycle_seconds REAL NOT NULL,
+                    had_unexpected INTEGER NOT NULL,
+                    from_cache INTEGER NOT NULL DEFAULT 0,
+                    reason TEXT NOT NULL,
+                    scene_json TEXT NOT NULL,
+                    summary_doc TEXT NOT NULL
+                )
+                """
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        arm_storage.init_arm_tables()
+
+        # Registrar las 3 cargas distintas (18 + 12 + 5 = 35 kg)
+        pickup_deg = [170, 15]
+        for cid in ("battery_module", "door_panel", "ecu_sensor"):
+            resp = self.client.post(
+                "/api/arm/solve-sequence",
+                json={
+                    "task_id": "pick_and_place",
+                    "task_name": "Pick & Place",
+                    "algorithm": "astar",
+                    "cargo_id": cid,
+                    "start_deg": [170, 15],
+                    "use_memory": True,
+                    "record_run": True,
+                },
+            )
+            self.assertEqual(resp.status_code, 200)
+            payload = resp.get_json()["data"]
+            self.assertTrue(payload["cargo"]["delivered"])
+            self.assertEqual(payload["cargo"]["cargo_id"], cid)
+            last_f = payload["stages"][0]["path_frames"][-1]
+            pickup_deg = [last_f["deg1"], last_f["deg2"]]
+
+        # Recalculo a medio ciclo (ya habia recogido la pieza en Banda y solo falta Prensa)
+        place_wp = robot_arm_search.TASK_PRESETS["pick_and_place"]["waypoints"][1]
+        mid_resp = self.client.post(
+            "/api/arm/solve-sequence",
+            json={
+                "task_id": "pick_and_place",
+                "task_name": "Pick & Place",
+                "algorithm": "astar",
+                "cargo_id": "door_panel",
+                "origin_station": "Tomar pieza en Banda",
+                "start_deg": pickup_deg,
+                "waypoints": [place_wp],
+                "had_unexpected": True,
+                "use_memory": False,
+                "record_run": True,
+            },
+        )
+        self.assertEqual(mid_resp.status_code, 200)
+        mid_data = mid_resp.get_json()["data"]
+        self.assertTrue(mid_data["found"])
+        self.assertTrue(mid_data["cargo"]["delivered"])
+        self.assertEqual(mid_data["cargo"]["origin_station"], "Tomar pieza en Banda")
+        self.assertEqual(mid_data["cargo"]["destination_station"], "Colocar en Prensa")
+
+        hist = self.client.get("/api/arm/history?filter=all")
+        self.assertEqual(hist.status_code, 200)
+        hdata = hist.get_json()["data"]
+        self.assertEqual(hdata["kpis"]["total_runs"], 4)
+        self.assertEqual(hdata["kpis"]["total_deliveries"], 4)
+        self.assertAlmostEqual(hdata["kpis"]["total_kg_delivered"], 47.0, places=1)
+        self.assertEqual(len(hdata["cargo_ledger"]), 4)
+        self.assertEqual(hdata["cargo_ledger"][0]["origin_station"], "Tomar pieza en Banda")
+        self.assertEqual(hdata["cargo_ledger"][0]["destination_station"], "Colocar en Prensa")
+
+        clr = self.client.delete("/api/arm/history?scope=all")
+        self.assertEqual(clr.status_code, 200)
+        self.assertEqual(clr.get_json()["data"]["deleted_runs"], 4)
+        self.assertEqual(clr.get_json()["data"]["deleted_cargo"], 4)
 
 
 if __name__ == "__main__":
