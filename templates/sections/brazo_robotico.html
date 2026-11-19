@@ -150,153 +150,159 @@
       </div>
     </div>
   </div>
+</section>
 
-  <!-- Modal Comparativo de los 5 Algoritmos -->
-  <div class="modal-backdrop" id="armCompareModal" role="dialog" aria-modal="true" aria-labelledby="armCompareTitle">
-    <div class="modal-window sv-compact-modal arm-compare-modal">
-      <div class="sv-modal-top">
-        <div>
-          <span class="category-badge">Comparativa en Vivo (Python)</span>
-          <h3 class="sv-modal-heading" id="armCompareTitle">¿Cual estrategia rinde mejor en planta?</h3>
-        </div>
+<!-- Modales del Brazo Robotico fuera de <section> para anclaje puro al viewport -->
+<!-- Modal Comparativo de los 5 Algoritmos -->
+<div class="modal-backdrop" id="armCompareModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="armCompareTitle">
+  <div class="modal-window sv-compact-modal arm-compare-modal">
+    <div class="sv-modal-top">
+      <div>
+        <span class="category-badge">Comparativa en Vivo (Python)</span>
+        <h3 class="sv-modal-heading" id="armCompareTitle">¿Cual estrategia rinde mejor en planta?</h3>
+      </div>
+      <div class="arm-modal-head-actions">
+        <button type="button" class="sv-btn-ghost arm-modal-switch-btn" id="armSwitchToLog" title="Abrir Bitacora SQL">Bitacora SQL</button>
         <button type="button" class="sv-modal-close" id="armCompareClose" aria-label="Cerrar comparativa">&times;</button>
       </div>
+    </div>
 
+    <div class="arm-compare-body" id="armCompareBody">
       <p class="sv-pane-intro">
-        Resultado de ejecutar toda la tarea practica con cada una de las 5 estrategias:
+        Resultado de ejecutar toda la tarea practica con cada una de las 5 estrategias (haz clic en cualquier tarjeta para probarla en 3D):
       </p>
 
       <div class="arm-compare-cards" id="armCompareCards"></div>
-      <div class="sv-compare-summary" id="armCompareSummary"></div>
+      <div class="sv-compare-summary" id="armCompareSummary" hidden></div>
     </div>
   </div>
+</div>
 
-  <!-- Modal con Pestanas: Consultor RAG | Bitacora SQL | Memoria de Rutas -->
-  <div class="modal-backdrop" id="armLogModal" role="dialog" aria-modal="true" aria-labelledby="armLogTitle">
-    <div class="modal-window sv-compact-modal arm-log-modal">
-      <div class="sv-modal-top">
-        <div>
-          <span class="category-badge">SQLite + Mini-RAG Local (glossary.db)</span>
-          <h3 class="sv-modal-heading" id="armLogTitle">Registro y Memoria del Robot</h3>
-        </div>
+<!-- Modal con Pestanas: Consultor RAG | Bitacora SQL | Carga | Memoria de Rutas -->
+<div class="modal-backdrop" id="armLogModal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="armLogTitle">
+  <div class="modal-window sv-compact-modal arm-log-modal">
+    <div class="sv-modal-top">
+      <div>
+        <span class="category-badge">SQLite + Mini-RAG Local (glossary.db)</span>
+        <h3 class="sv-modal-heading" id="armLogTitle">Registro y Memoria del Robot</h3>
+      </div>
+      <div class="arm-modal-head-actions">
+        <button type="button" class="sv-btn-accent arm-modal-switch-btn" id="armSwitchToCompare" title="Comparar las 5 estrategias">Comparar</button>
         <button type="button" class="sv-modal-close" id="armLogClose" aria-label="Cerrar bitacora">&times;</button>
       </div>
+    </div>
 
-      <!-- Pestanas limpias dentro del modal -->
-      <div class="modal-tabs sv-modal-tabs arm-log-tabs" role="tablist">
-        <button type="button" class="modal-tab-item active" data-arm-tab="rag" role="tab" aria-selected="true">1. Consultor RAG</button>
-        <button type="button" class="modal-tab-item" data-arm-tab="history" role="tab" aria-selected="false">2. Bitacora SQL</button>
-        <button type="button" class="modal-tab-item" data-arm-tab="cargo" role="tab" aria-selected="false">3. Carga Transportada</button>
-        <button type="button" class="modal-tab-item" data-arm-tab="memory" role="tab" aria-selected="false">4. Memoria de Rutas</button>
+    <!-- Pestanas limpias dentro del modal -->
+    <div class="modal-tabs sv-modal-tabs arm-log-tabs" role="tablist">
+      <button type="button" class="modal-tab-item active" data-arm-tab="rag" role="tab" aria-selected="true">1. Consultor RAG</button>
+      <button type="button" class="modal-tab-item" data-arm-tab="history" role="tab" aria-selected="false">2. Bitacora SQL</button>
+      <button type="button" class="modal-tab-item" data-arm-tab="cargo" role="tab" aria-selected="false">3. Carga Transportada</button>
+      <button type="button" class="modal-tab-item" data-arm-tab="memory" role="tab" aria-selected="false">4. Memoria de Rutas</button>
+    </div>
+
+    <!-- Pestana 1: Consultor Mini-RAG -->
+    <div class="arm-log-pane active" data-arm-pane="rag" role="tabpanel">
+      <p class="sv-pane-intro">
+        Pregunta en lenguaje natural sobre las corridas y cargas registradas en SQLite. Python busca los registros mas relevantes y sintetiza la respuesta.
+      </p>
+
+      <div class="arm-rag-chips">
+        <button type="button" class="arm-rag-chip" data-rag-q="¿Que estrategia fallo mas veces?">¿Que fallo mas?</button>
+        <button type="button" class="arm-rag-chip" data-rag-q="¿Cual gasto menos energia?">¿Cual gasto menos energia?</button>
+        <button type="button" class="arm-rag-chip" data-rag-q="¿Cuanta carga y peso se ha entregado?">¿Cuanta carga se entrego?</button>
+        <button type="button" class="arm-rag-chip" data-rag-q="¿Como respondio ante obstaculo imprevisto?">¿Como fue con imprevisto?</button>
       </div>
 
-      <!-- Pestana 1: Consultor Mini-RAG -->
-      <div class="arm-log-pane active" data-arm-pane="rag">
-        <p class="sv-pane-intro">
-          Pregunta en lenguaje natural sobre las corridas y cargas registradas en SQLite. Python busca los registros mas relevantes y sintetiza la respuesta.
-        </p>
+      <form class="arm-rag-form" id="armRagForm">
+        <input type="text" class="arm-rag-input" id="armRagInput" placeholder="Ej. ¿Que estrategia fue mejor en Pick & Place?" aria-label="Pregunta sobre el historial del robot">
+        <button type="submit" class="arm-play-btn" id="armRagSubmit">Consultar</button>
+      </form>
 
-        <div class="arm-rag-chips">
-          <button type="button" class="arm-rag-chip" data-rag-q="¿Que estrategia fallo mas veces?">¿Que fallo mas?</button>
-          <button type="button" class="arm-rag-chip" data-rag-q="¿Cual gasto menos energia?">¿Cual gasto menos energia?</button>
-          <button type="button" class="arm-rag-chip" data-rag-q="¿Cuanta carga y peso se ha entregado?">¿Cuanta carga se entrego?</button>
-          <button type="button" class="arm-rag-chip" data-rag-q="¿Como respondio ante obstaculo imprevisto?">¿Como fue con imprevisto?</button>
+      <div class="arm-modal-scroll arm-rag-results">
+        <div class="arm-rag-answer" id="armRagAnswer">
+          Haz clic en una pregunta rapida o escribe tu consulta sobre el historial del robot.
         </div>
 
-        <form class="arm-rag-form" id="armRagForm">
-          <input type="text" class="arm-rag-input" id="armRagInput" placeholder="Ej. ¿Que estrategia fue mejor en Pick & Place?" aria-label="Pregunta sobre el historial del robot">
-          <button type="submit" class="arm-play-btn">Consultar</button>
-        </form>
-
-        <div class="arm-modal-scroll arm-rag-results">
-          <div class="arm-rag-answer" id="armRagAnswer">
-            Haz clic en una pregunta rapida o escribe tu consulta sobre el historial del robot.
-          </div>
-
-          <div class="arm-rag-sources" id="armRagSources"></div>
-        </div>
-      </div>
-
-      <!-- Pestana 2: Bitacora SQL con filtros y scroll -->
-      <div class="arm-log-pane" data-arm-pane="history" hidden>
-        <div class="arm-log-kpis">
-          <div class="arm-log-kpi">
-            <span>Corridas</span>
-            <strong id="armSqlTotal">0</strong>
-          </div>
-          <div class="arm-log-kpi">
-            <span>Fallos</span>
-            <strong id="armSqlFailures">0</strong>
-          </div>
-          <div class="arm-log-kpi">
-            <span>De Memoria</span>
-            <strong id="armSqlCached">0</strong>
-          </div>
-          <div class="arm-log-kpi">
-            <span>Ahorro A*</span>
-            <strong id="armSqlSavings">&mdash;</strong>
-          </div>
-        </div>
-
-        <div class="arm-log-toolbar">
-          <div class="arm-log-filters" role="group" aria-label="Filtrar bitacora">
-            <button type="button" class="arm-filter-btn active" data-sql-filter="all">Todos</button>
-            <button type="button" class="arm-filter-btn" data-sql-filter="failed">Solo fallos</button>
-            <button type="button" class="arm-filter-btn" data-sql-filter="unexpected">Con imprevisto</button>
-          </div>
-          <button type="button" class="sv-btn-ghost" id="armBtnClearRuns">Limpiar historial</button>
-        </div>
-
-        <div class="arm-modal-scroll arm-runs-list" id="armRunsList"></div>
-      </div>
-
-      <!-- Pestana 3: Registro SQL de Carga Transportada (arm_cargo_ledger) -->
-      <div class="arm-log-pane" data-arm-pane="cargo" hidden>
-        <div class="arm-log-kpis">
-          <div class="arm-log-kpi">
-            <span>Entregas</span>
-            <strong id="armCargoDelivered">0</strong>
-          </div>
-          <div class="arm-log-kpi">
-            <span>Masa movida</span>
-            <strong id="armCargoKg">0 kg</strong>
-          </div>
-          <div class="arm-log-kpi">
-            <span>Recorrido carga</span>
-            <strong id="armCargoMeters">0 m</strong>
-          </div>
-          <div class="arm-log-kpi">
-            <span>Abortadas</span>
-            <strong id="armCargoAborted">0</strong>
-          </div>
-        </div>
-
-        <p class="sv-pane-intro">
-          Inventario en tabla SQLite <code>arm_cargo_ledger</code> (piezas trasladadas, peso, estaciones, distancia con pinza cerrada y sobrecarga energetica por torque):
-        </p>
-
-        <div class="arm-modal-scroll arm-cargo-list" id="armCargoList"></div>
-      </div>
-
-      <!-- Pestana 4: Memoria de Rutas (CBR en SQL) -->
-      <div class="arm-log-pane" data-arm-pane="memory" hidden>
-        <div class="arm-memory-banner">
-          <label class="arm-memory-switch">
-            <input type="checkbox" id="armToggleMemory" checked>
-            <span><strong>Usar Memoria SQL al calcular</strong> (recupera rutas repetidas en ~1 ms sin reexplorar)</span>
-          </label>
-          <button type="button" class="sv-btn-ghost" id="armBtnClearCache">Vaciar memoria</button>
-        </div>
-
-        <p class="sv-pane-intro" id="armCacheIntro">
-          Escenas guardadas en la tabla <code>arm_route_cache</code> para reutilizacion inmediata:
-        </p>
-
-        <div class="arm-modal-scroll arm-cache-list" id="armCacheList"></div>
+        <div class="arm-rag-sources" id="armRagSources"></div>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- Three.js para la escena 3D -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <!-- Pestana 2: Bitacora SQL con filtros y scroll -->
+    <div class="arm-log-pane" data-arm-pane="history" role="tabpanel" hidden>
+      <div class="arm-log-kpis">
+        <div class="arm-log-kpi">
+          <span>Corridas</span>
+          <strong id="armSqlTotal">0</strong>
+        </div>
+        <div class="arm-log-kpi">
+          <span>Fallos</span>
+          <strong id="armSqlFailures">0</strong>
+        </div>
+        <div class="arm-log-kpi">
+          <span>De Memoria</span>
+          <strong id="armSqlCached">0</strong>
+        </div>
+        <div class="arm-log-kpi">
+          <span>Ahorro A*</span>
+          <strong id="armSqlSavings">&mdash;</strong>
+        </div>
+      </div>
+
+      <div class="arm-log-toolbar">
+        <div class="arm-log-filters" role="group" aria-label="Filtrar bitacora">
+          <button type="button" class="arm-filter-btn active" data-sql-filter="all">Todos</button>
+          <button type="button" class="arm-filter-btn" data-sql-filter="failed">Solo fallos</button>
+          <button type="button" class="arm-filter-btn" data-sql-filter="unexpected">Con imprevisto</button>
+        </div>
+        <button type="button" class="sv-btn-ghost" id="armBtnClearRuns">Limpiar historial</button>
+      </div>
+
+      <div class="arm-modal-scroll arm-runs-list" id="armRunsList"></div>
+    </div>
+
+    <!-- Pestana 3: Registro SQL de Carga Transportada (arm_cargo_ledger) -->
+    <div class="arm-log-pane" data-arm-pane="cargo" role="tabpanel" hidden>
+      <div class="arm-log-kpis">
+        <div class="arm-log-kpi">
+          <span>Entregas</span>
+          <strong id="armCargoDelivered">0</strong>
+        </div>
+        <div class="arm-log-kpi">
+          <span>Masa movida</span>
+          <strong id="armCargoKg">0 kg</strong>
+        </div>
+        <div class="arm-log-kpi">
+          <span>Recorrido carga</span>
+          <strong id="armCargoMeters">0 m</strong>
+        </div>
+        <div class="arm-log-kpi">
+          <span>Abortadas</span>
+          <strong id="armCargoAborted">0</strong>
+        </div>
+      </div>
+
+      <p class="sv-pane-intro">
+        Inventario en tabla SQLite <code>arm_cargo_ledger</code> (piezas trasladadas, peso, estaciones, distancia con pinza cerrada y sobrecarga energetica por torque):
+      </p>
+
+      <div class="arm-modal-scroll arm-cargo-list" id="armCargoList"></div>
+    </div>
+
+    <!-- Pestana 4: Memoria de Rutas (CBR en SQL) -->
+    <div class="arm-log-pane" data-arm-pane="memory" role="tabpanel" hidden>
+      <div class="arm-memory-banner">
+        <label class="arm-memory-switch">
+          <input type="checkbox" id="armToggleMemory" checked>
+          <span><strong>Usar Memoria SQL al calcular</strong> (recupera rutas repetidas en ~1 ms sin reexplorar)</span>
+        </label>
+        <button type="button" class="sv-btn-ghost" id="armBtnClearCache">Vaciar memoria</button>
+      </div>
+
+      <p class="sv-pane-intro" id="armCacheIntro">
+        Escenas guardadas en la tabla <code>arm_route_cache</code> para reutilizacion inmediata:
+      </p>
+
+      <div class="arm-modal-scroll arm-cache-list" id="armCacheList"></div>
+    </div>
+  </div>
+</div>

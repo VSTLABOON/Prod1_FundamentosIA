@@ -35,36 +35,38 @@ def init_db() -> None:
     formula tecnica y ruta del archivo de imagen.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
 
-    cursor.execute(
-        """
-        CREATE TABLE IF NOT EXISTS concepts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            slug TEXT UNIQUE NOT NULL,
-            title TEXT NOT NULL,
-            title_en TEXT NOT NULL,
-            category TEXT NOT NULL,
-            difficulty TEXT NOT NULL,
-            short_desc TEXT NOT NULL,
-            full_definition TEXT NOT NULL,
-            real_world_example TEXT NOT NULL,
-            technical_detail TEXT NOT NULL,
-            historical_milestone TEXT NOT NULL,
-            image_name TEXT NOT NULL,
-            tags TEXT NOT NULL,
-            is_favorite INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS concepts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                slug TEXT UNIQUE NOT NULL,
+                title TEXT NOT NULL,
+                title_en TEXT NOT NULL,
+                category TEXT NOT NULL,
+                difficulty TEXT NOT NULL,
+                short_desc TEXT NOT NULL,
+                full_definition TEXT NOT NULL,
+                real_world_example TEXT NOT NULL,
+                technical_detail TEXT NOT NULL,
+                historical_milestone TEXT NOT NULL,
+                image_name TEXT NOT NULL,
+                tags TEXT NOT NULL,
+                is_favorite INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
         )
-        """
-    )
 
-    # Indice para acelerar busquedas por categoria y slug
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_concepts_category ON concepts(category)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_concepts_slug ON concepts(slug)")
+        # Indice para acelerar busquedas por categoria y slug
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_concepts_category ON concepts(category)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_concepts_slug ON concepts(slug)")
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def count_concepts() -> int:
@@ -72,11 +74,12 @@ def count_concepts() -> int:
     Retorna la cantidad total de conceptos registrados en la base de datos.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM concepts")
-    count = cursor.fetchone()[0]
-    conn.close()
-    return count
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM concepts")
+        return cursor.fetchone()[0]
+    finally:
+        conn.close()
 
 
 def get_all_concepts(
@@ -90,35 +93,36 @@ def get_all_concepts(
     termino de busqueda en titulo/descripcion, etiqueta o favoritos.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
 
-    query = "SELECT * FROM concepts WHERE 1=1"
-    params: List[Any] = []
+        query = "SELECT * FROM concepts WHERE 1=1"
+        params: List[Any] = []
 
-    if category and category.strip() and category != "all":
-        query += " AND category = ?"
-        params.append(category.strip())
+        if category and category.strip() and category != "all":
+            query += " AND category = ?"
+            params.append(category.strip())
 
-    if search and search.strip():
-        search_term = f"%{search.strip()}%"
-        query += " AND (title LIKE ? OR title_en LIKE ? OR short_desc LIKE ? OR tags LIKE ?)"
-        params.extend([search_term, search_term, search_term, search_term])
+        if search and search.strip():
+            search_term = f"%{search.strip()}%"
+            query += " AND (title LIKE ? OR title_en LIKE ? OR short_desc LIKE ? OR tags LIKE ?)"
+            params.extend([search_term, search_term, search_term, search_term])
 
-    if tag and tag.strip():
-        tag_term = f"%{tag.strip()}%"
-        query += " AND tags LIKE ?"
-        params.append(tag_term)
+        if tag and tag.strip():
+            tag_term = f"%{tag.strip()}%"
+            query += " AND tags LIKE ?"
+            params.append(tag_term)
 
-    if favorites_only:
-        query += " AND is_favorite = 1"
+        if favorites_only:
+            query += " AND is_favorite = 1"
 
-    query += " ORDER BY id ASC"
+        query += " ORDER BY id ASC"
 
-    cursor.execute(query, params)
-    rows = cursor.fetchall()
-    conn.close()
-
-    return [dict(row) for row in rows]
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
 
 
 def get_concept_by_id(concept_id: int) -> Optional[Dict[str, Any]]:
@@ -126,23 +130,13 @@ def get_concept_by_id(concept_id: int) -> Optional[Dict[str, Any]]:
     Obtiene el detalle completo de un concepto a partir de su identificador primario.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM concepts WHERE id = ?", (concept_id,))
-    row = cursor.fetchone()
-    conn.close()
-    return dict(row) if row else None
-
-
-def get_concept_by_slug(slug: str) -> Optional[Dict[str, Any]]:
-    """
-    Obtiene un concepto utilizando su identificador legible (slug).
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM concepts WHERE slug = ?", (slug,))
-    row = cursor.fetchone()
-    conn.close()
-    return dict(row) if row else None
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM concepts WHERE id = ?", (concept_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
 
 
 def toggle_favorite(concept_id: int) -> Optional[bool]:
@@ -151,22 +145,22 @@ def toggle_favorite(concept_id: int) -> Optional[bool]:
     Retorna el nuevo estado booleano o None si el concepto no existe.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT is_favorite FROM concepts WHERE id = ?", (concept_id,))
-    row = cursor.fetchone()
-    if not row:
+        cursor.execute("SELECT is_favorite FROM concepts WHERE id = ?", (concept_id,))
+        row = cursor.fetchone()
+        if not row:
+            return None
+
+        current_state = row["is_favorite"]
+        new_state = 0 if current_state == 1 else 1
+
+        cursor.execute("UPDATE concepts SET is_favorite = ? WHERE id = ?", (new_state, concept_id))
+        conn.commit()
+        return bool(new_state)
+    finally:
         conn.close()
-        return None
-
-    current_state = row["is_favorite"]
-    new_state = 0 if current_state == 1 else 1
-
-    cursor.execute("UPDATE concepts SET is_favorite = ? WHERE id = ?", (new_state, concept_id))
-    conn.commit()
-    conn.close()
-
-    return bool(new_state)
 
 
 def get_categories() -> List[str]:
@@ -174,11 +168,13 @@ def get_categories() -> List[str]:
     Retorna la lista ordenada de categorias unicas presentes en la base de datos.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT DISTINCT category FROM concepts ORDER BY category ASC")
-    rows = cursor.fetchall()
-    conn.close()
-    return [row["category"] for row in rows]
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT category FROM concepts ORDER BY category ASC")
+        rows = cursor.fetchall()
+        return [row["category"] for row in rows]
+    finally:
+        conn.close()
 
 
 def get_quiz_questions(limit: int = 5) -> List[Dict[str, Any]]:

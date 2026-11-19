@@ -341,56 +341,6 @@ def parse_obstacles(raw_obstacles: Optional[List[Dict[str, Any]]]) -> List[Plant
     return parsed
 
 
-def compute_cspace(
-    obstacles: List[PlantObstacle],
-    target_x: float,
-    target_y: float,
-) -> Tuple[List[List[int]], Set[Tuple[int, int]]]:
-    """
-    Construye el Espacio de Configuraciones (72 x 72):
-      - 0: configuracion libre
-      - 1: colision con algun obstaculo de la planta
-      - 2: configuracion libre que alcanza el punto objetivo (Meta)
-    """
-    grid = [[0] * GRID_N for _ in range(GRID_N)]
-    goals: Set[Tuple[int, int]] = set()
-    tol_sq = GOAL_TOLERANCE * GOAL_TOLERANCE
-
-    for i1 in range(GRID_N):
-        a1 = math.radians(i1 * STEP_DEG)
-        ex = BASE_X + L1 * math.cos(a1)
-        ey = BASE_Y - L1 * math.sin(a1)
-
-        # Verificar si el primer eslabon (hombro->codo) ya colisiona
-        link1_hit = any(
-            _segment_intersects_aabb(BASE_X, BASE_Y, ex, ey, ob.x, ob.y, ob.w, ob.h)
-            for ob in obstacles
-        )
-        if link1_hit:
-            grid[i1] = [1] * GRID_N
-            continue
-
-        row = grid[i1]
-        for i2 in range(GRID_N):
-            a2 = math.radians((i1 + i2) * STEP_DEG)
-            tx = ex + L2 * math.cos(a2)
-            ty = ey - L2 * math.sin(a2)
-
-            if any(
-                _segment_intersects_aabb(ex, ey, tx, ty, ob.x, ob.y, ob.w, ob.h)
-                for ob in obstacles
-            ):
-                row[i2] = 1
-            else:
-                dx = tx - target_x
-                dy = ty - target_y
-                if dx * dx + dy * dy <= tol_sq:
-                    row[i2] = 2
-                    goals.add((i1, i2))
-
-    return grid, goals
-
-
 def circular_step_dist(a: int, b: int) -> int:
     """Distancia minima en pasos sobre un circulo de GRID_N (72) posiciones."""
     d = abs(a - b)
@@ -399,7 +349,7 @@ def circular_step_dist(a: int, b: int) -> int:
 
 def angular_heuristic(
     node: Tuple[int, int],
-    goals: Set[Tuple[int, int]],
+    goals: Any,
 ) -> float:
     """
     Heuristica octil ponderada admisible y consistente para movimientos de 8 direcciones
@@ -409,11 +359,16 @@ def angular_heuristic(
         return 0.0
     i1, i2 = node
     best = float("inf")
+    grid_n = GRID_N
     for g1, g2 in goals:
-        d1 = circular_step_dist(i1, g1)
-        d2 = circular_step_dist(i2, g2)
-        diag = min(d1, d2)
-        h = COST_DIAG * diag + COST_SHOULDER * max(0, d1 - diag) + COST_ELBOW * max(0, d2 - diag)
+        d1 = abs(i1 - g1)
+        if grid_n - d1 < d1:
+            d1 = grid_n - d1
+        d2 = abs(i2 - g2)
+        if grid_n - d2 < d2:
+            d2 = grid_n - d2
+        diag = d1 if d1 < d2 else d2
+        h = COST_DIAG * diag + COST_SHOULDER * (d1 - diag) + COST_ELBOW * (d2 - diag)
         if h < best:
             best = h
     return best
@@ -534,8 +489,9 @@ def _quick_astar_energy(
     start: Tuple[int, int],
     goals: Set[Tuple[int, int]],
 ) -> Optional[float]:
+    goal_list = tuple(goals)
     counter = 0
-    heap: List[Tuple[float, int, Tuple[int, int], float]] = [(angular_heuristic(start, goals), counter, start, 0.0)]
+    heap: List[Tuple[float, int, Tuple[int, int], float]] = [(angular_heuristic(start, goal_list), counter, start, 0.0)]
     best_g: Dict[Tuple[int, int], float] = {start: 0.0}
     closed: Set[Tuple[int, int]] = set()
     while heap:
@@ -552,7 +508,7 @@ def _quick_astar_energy(
             if new_g < best_g.get((n1, n2), float("inf")):
                 best_g[(n1, n2)] = new_g
                 counter += 1
-                heapq.heappush(heap, (new_g + angular_heuristic((n1, n2), goals), counter, (n1, n2), new_g))
+                heapq.heappush(heap, (new_g + angular_heuristic((n1, n2), goal_list), counter, (n1, n2), new_g))
     return None
 
 
@@ -561,19 +517,30 @@ def compare_arm_algorithms(
     target: Tuple[float, float] = (325.0, 125.0),
     raw_obstacles: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
-    """Ejecuta los 5 algoritmos sobre la misma celda robotica y compara eficiencia y fallos."""
+    """Ejecuta los 5 algoritmos sobre la misma celda robotica reutilizando el C-Space base."""
+    d1, d2 = validate_start_deg(start_deg)
+    if not isinstance(target, (list, tuple)) or len(target) < 2:
+        raise ValueError("target debe contener [x, y]")
+    tx = _finite_float(target[0], "target[0]")
+    ty = _finite_float(target[1], "target[1]")
+
+    obstacles = parse_obstacles(raw_obstacles)
+    start = (
+        round((d1 % 360) / STEP_DEG) % GRID_N,
+        round((d2 % 360) / STEP_DEG) % GRID_N,
+    )
+    base_grid, tips = compute_base_cspace(obstacles)
+    cspace, goals = mark_goals_on_cspace(base_grid, tips, tx, ty)
+
     results = []
     for algo_id in ("astar", "ucs", "greedy", "bfs", "dfs"):
-        res = solve_arm_motion(
-            algorithm=algo_id,
-            start_deg=start_deg,
-            target=target,
-            raw_obstacles=raw_obstacles,
-        )
+        t0 = time.perf_counter()
+        res = _solve_stage_on_cspace(algo_id, start, cspace, goals, tx, ty, include_visuals=False)
+        elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 2)
         results.append({
             "algorithm_id": algo_id,
-            "algorithm_name": res["algorithm"]["name"],
-            "paradigm": res["algorithm"]["paradigm"],
+            "algorithm_name": ALGORITHMS_INFO[algo_id]["name"],
+            "paradigm": ALGORITHMS_INFO[algo_id]["paradigm"],
             "found": res["found"],
             "status": res["status"],
             "reason": res["reason"],
@@ -581,7 +548,7 @@ def compare_arm_algorithms(
             "nodes_expanded": res["nodes_expanded"],
             "energy": res["energy"],
             "steps": res["steps"],
-            "execution_time_ms": res["execution_time_ms"],
+            "execution_time_ms": elapsed_ms,
         })
     return {"comparisons": results}
 
@@ -694,6 +661,7 @@ def _solve_stage_on_cspace(
     goals: Set[Tuple[int, int]],
     tx: float,
     ty: float,
+    include_visuals: bool = True,
 ) -> Dict[str, Any]:
     """Ejecuta un algoritmo de busqueda sobre un C-Space ya construido."""
     s1, s2 = start
@@ -703,7 +671,7 @@ def _solve_stage_on_cspace(
             "found": False,
             "reason": "El brazo quedo bloqueado por un obstaculo en su postura actual.",
             "start": [s1, s2],
-            "cspace": cspace,
+            "cspace": cspace if include_visuals else [],
             "explored": [],
             "path": [],
             "path_frames": [],
@@ -727,7 +695,7 @@ def _solve_stage_on_cspace(
             "found": False,
             "reason": reason,
             "start": [s1, s2],
-            "cspace": cspace,
+            "cspace": cspace if include_visuals else [],
             "explored": [],
             "path": [],
             "path_frames": [],
@@ -780,10 +748,10 @@ def _solve_stage_on_cspace(
                     stack.append(((n1, n2), curr))
 
     else:
+        goal_list = tuple(goals)
         counter = 0
-        h0 = angular_heuristic(start, goals)
-        f0 = 0.0 if algo == "ucs" else h0
-        heap: List[Tuple[float, int, Tuple[int, int], float]] = [(f0, counter, start, 0.0)]
+        h0 = angular_heuristic(start, goal_list) if algo != "ucs" else 0.0
+        heap: List[Tuple[float, int, Tuple[int, int], float]] = [(h0, counter, start, 0.0)]
         best_g: Dict[Tuple[int, int], float] = {start: 0.0}
         closed: Set[Tuple[int, int]] = set()
         max_exp = MAX_GREEDY_EXPANSIONS if algo == "greedy" else 6000
@@ -813,12 +781,12 @@ def _solve_stage_on_cspace(
                     best_g[(n1, n2)] = new_g
                     parents[(n1, n2)] = curr
                     counter += 1
-                    heapq.heappush(heap, (angular_heuristic((n1, n2), goals), counter, (n1, n2), new_g))
+                    heapq.heappush(heap, (angular_heuristic((n1, n2), goal_list), counter, (n1, n2), new_g))
                 else:
                     if new_g < best_g.get((n1, n2), float("inf")):
                         best_g[(n1, n2)] = new_g
                         parents[(n1, n2)] = curr
-                        h_val = angular_heuristic((n1, n2), goals) if algo == "astar" else 0.0
+                        h_val = angular_heuristic((n1, n2), goal_list) if algo == "astar" else 0.0
                         counter += 1
                         heapq.heappush(heap, (new_g + h_val, counter, (n1, n2), new_g))
 
@@ -833,18 +801,19 @@ def _solve_stage_on_cspace(
             is_optimal = ref_opt is not None and abs(energy - ref_opt) <= 0.05
 
     path_frames = []
-    for i1, i2 in path:
-        ex, ey, tip_x, tip_y = forward_kinematics(i1, i2)
-        path_frames.append({
-            "i1": i1,
-            "i2": i2,
-            "deg1": i1 * STEP_DEG,
-            "deg2": i2 * STEP_DEG,
-            "ex": round(ex, 1),
-            "ey": round(ey, 1),
-            "tx": round(tip_x, 1),
-            "ty": round(tip_y, 1),
-        })
+    if include_visuals:
+        for i1, i2 in path:
+            ex, ey, tip_x, tip_y = forward_kinematics(i1, i2)
+            path_frames.append({
+                "i1": i1,
+                "i2": i2,
+                "deg1": i1 * STEP_DEG,
+                "deg2": i2 * STEP_DEG,
+                "ex": round(ex, 1),
+                "ey": round(ey, 1),
+                "tx": round(tip_x, 1),
+                "ty": round(tip_y, 1),
+            })
 
     if found_goal is None and not failure_reason:
         failure_reason = "No existe ningun camino libre hacia el siguiente objetivo."
@@ -857,8 +826,8 @@ def _solve_stage_on_cspace(
         "found": found_goal is not None,
         "reason": failure_reason,
         "start": [s1, s2],
-        "cspace": cspace,
-        "explored": [list(pt) for pt in explored_order],
+        "cspace": cspace if include_visuals else [],
+        "explored": [list(pt) for pt in explored_order] if include_visuals else [],
         "path": [list(pt) for pt in path],
         "path_frames": path_frames,
         "end_node": list(found_goal) if found_goal is not None else None,
@@ -876,15 +845,19 @@ def resolve_cargo_spec(cargo_id: Optional[str] = None) -> Dict[str, Any]:
     return dict(CARGO_CATALOG.get(cid, CARGO_CATALOG["battery_module"]))
 
 
-def _stage_tip_distance_px(path_frames: List[Dict[str, Any]]) -> float:
-    """Calcula la distancia cartesiana en pixeles recorrida por la punta del brazo en una etapa."""
-    if not path_frames or len(path_frames) < 2:
+def _stage_tip_distance_from_path(
+    path: List[List[int]],
+    tips: List[List[Tuple[float, float]]],
+) -> float:
+    """Calcula la distancia cartesiana en pixeles recorrida por la punta del brazo usando tips precalculados."""
+    if not path or len(path) < 2:
         return 0.0
     dist = 0.0
-    for idx in range(1, len(path_frames)):
-        prev_f = path_frames[idx - 1]
-        curr_f = path_frames[idx]
-        dist += math.hypot(float(curr_f["tx"]) - float(prev_f["tx"]), float(curr_f["ty"]) - float(prev_f["ty"]))
+    px, py = tips[path[0][0]][path[0][1]]
+    for idx in range(1, len(path)):
+        cx, cy = tips[path[idx][0]][path[idx][1]]
+        dist += math.hypot(cx - px, cy - py)
+        px, py = cx, cy
     return round(dist, 1)
 
 
@@ -896,6 +869,8 @@ def solve_arm_sequence(
     precomputed: Optional[Tuple[List[List[int]], List[List[Tuple[float, float]]]]] = None,
     cargo_id: Optional[str] = "battery_module",
     origin_station_override: Optional[str] = None,
+    precomputed_stage_goals: Optional[List[Tuple[List[List[int]], Set[Tuple[int, int]]]]] = None,
+    include_visuals: bool = True,
 ) -> Dict[str, Any]:
     """
     Planifica una tarea practica completa multi-etapa con transporte fisico de carga.
@@ -939,9 +914,14 @@ def solve_arm_sequence(
     for idx, wp in enumerate(valid_waypoints):
         wx = wp["x"]
         wy = wp["y"]
-        cspace, goals = mark_goals_on_cspace(base_grid, tips, wx, wy)
-        stage_res = _solve_stage_on_cspace(algo, curr_start, cspace, goals, wx, wy)
-        stage_dist_px = _stage_tip_distance_px(stage_res["path_frames"]) if stage_res["found"] else 0.0
+        if precomputed_stage_goals is not None and idx < len(precomputed_stage_goals):
+            cspace, goals = precomputed_stage_goals[idx]
+        else:
+            cspace, goals = mark_goals_on_cspace(base_grid, tips, wx, wy)
+        stage_res = _solve_stage_on_cspace(
+            algo, curr_start, cspace, goals, wx, wy, include_visuals=include_visuals
+        )
+        stage_dist_px = _stage_tip_distance_from_path(stage_res["path"], tips) if stage_res["found"] else 0.0
 
         stage_entry = {
             "stage_index": idx,
@@ -1037,7 +1017,7 @@ def solve_arm_sequence(
         "cycle_seconds": cycle_seconds,
         "execution_time_ms": elapsed_ms,
         "cargo": cargo_report,
-        "stages": stages,
+        "stages": stages if include_visuals else [],
     }
 
 
@@ -1047,11 +1027,13 @@ def compare_arm_sequences(
     raw_obstacles: Optional[List[Dict[str, Any]]] = None,
     cargo_id: Optional[str] = "battery_module",
 ) -> Dict[str, Any]:
-    """Compara las 5 estrategias reutilizando el mapa de colisiones base en Python."""
+    """Compara las 5 estrategias reutilizando el mapa de colisiones base y metas en Python."""
     d1, d2 = validate_start_deg(start_deg)
     valid_waypoints = validate_waypoints(waypoints)
     obstacles = parse_obstacles(raw_obstacles)
-    precomputed = compute_base_cspace(obstacles)
+    base_grid, tips = compute_base_cspace(obstacles)
+    precomputed = (base_grid, tips)
+    stage_goals = [mark_goals_on_cspace(base_grid, tips, wp["x"], wp["y"]) for wp in valid_waypoints]
     cargo_spec = resolve_cargo_spec(cargo_id)
 
     results = []
@@ -1062,6 +1044,8 @@ def compare_arm_sequences(
             waypoints=valid_waypoints,
             precomputed=precomputed,
             cargo_id=cargo_spec["id"],
+            precomputed_stage_goals=stage_goals,
+            include_visuals=False,
         )
         results.append({
             "algorithm_id": algo_id,

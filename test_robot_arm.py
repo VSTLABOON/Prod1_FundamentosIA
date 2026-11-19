@@ -101,6 +101,11 @@ class TestFlaskArmEndpoints(unittest.TestCase):
         html = resp.get_data(as_text=True)
         self.assertIn("sectionBrazo", html)
         self.assertIn("brazo_robotico.js", html)
+        # Verificar que los modales del brazo estan fuera de <section id="sectionBrazo">
+        sec_start = html.index('id="sectionBrazo"')
+        sec_end = html.index("</section>", sec_start)
+        self.assertGreater(html.index('id="armCompareModal"'), sec_end)
+        self.assertGreater(html.index('id="armLogModal"'), sec_end)
 
     def test_arm_presets_solve_and_compare_endpoints(self):
         presets_resp = self.client.get("/api/arm/presets")
@@ -116,6 +121,13 @@ class TestFlaskArmEndpoints(unittest.TestCase):
         self.assertEqual(solve_resp.status_code, 200)
         self.assertTrue(solve_resp.get_json()["data"]["found"])
 
+        cmp_single_resp = self.client.post(
+            "/api/arm/compare",
+            json={"start_deg": [165, 340], "target": [335, 130]},
+        )
+        self.assertEqual(cmp_single_resp.status_code, 200)
+        self.assertEqual(len(cmp_single_resp.get_json()["data"]["comparisons"]), 5)
+
         seq_resp = self.client.post(
             "/api/arm/solve-sequence",
             json={"algorithm": "astar", "start_deg": [170, 15]},
@@ -129,6 +141,14 @@ class TestFlaskArmEndpoints(unittest.TestCase):
         )
         self.assertEqual(cmp_seq_resp.status_code, 200)
         self.assertEqual(len(cmp_seq_resp.get_json()["data"]["comparisons"]), 5)
+
+        summary_resp = self.client.get("/api/arm/history?summary_only=1")
+        self.assertEqual(summary_resp.status_code, 200)
+        sdata = summary_resp.get_json()["data"]
+        self.assertEqual(sdata["kpis"]["total_runs"], 1)
+        self.assertEqual(sdata["runs"], [])
+        self.assertEqual(sdata["cargo_ledger"], [])
+        self.assertEqual(sdata["cache_entries"], [])
 
     def test_arm_validation_rejects_malformed_inputs_with_400(self):
         self.assertEqual(

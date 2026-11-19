@@ -117,47 +117,6 @@
   min-width: 0;
 }
 
-.chatbot-label-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
-.chatbot-tag-item {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 2px 9px;
-  border-radius: 999px;
-}
-
-.chatbot-tag-item.tag-heuristica {
-  background: var(--teal-subtle);
-  color: var(--teal);
-  border: 1px solid var(--teal-soft);
-}
-
-.chatbot-tag-item.tag-ciega {
-  background: var(--gold-subtle);
-  color: var(--gold);
-  border: 1px solid var(--gold-soft);
-}
-
-.chatbot-tag-item.tag-evolutiva {
-  background: var(--crimson-subtle);
-  color: var(--crimson);
-  border: 1px solid var(--crimson);
-}
-
-.chatbot-tag-item.tag-desconocido {
-  background: var(--bg-raised);
-  color: var(--ink-soft);
-  border: 1px solid var(--rule);
-}
-
 .chatbot-title {
   font-family: "Fraunces", serif;
   font-size: 1.28rem;
@@ -173,62 +132,6 @@
   margin: 0;
 }
 
-.chatbot-config-trigger {
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--ink-soft);
-  background: var(--bg-raised);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.chatbot-config-trigger:hover {
-  border-color: var(--teal);
-  color: var(--teal);
-}
-
-/* Panel discreto de Entrenamiento Sin Cuenta y API Key */
-.chatbot-collapsible-panel {
-  margin-bottom: 12px;
-}
-
-.chatbot-panel-inner {
-  background: var(--bg-raised);
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--teal);
-  border-radius: var(--radius-md);
-  padding: 12px 16px;
-}
-
-.chatbot-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 6px;
-}
-
-.chatbot-panel-header h4 {
-  font-size: 0.92rem;
-  color: var(--ink);
-}
-
-.chatbot-panel-tag {
-  font-family: "IBM Plex Mono", monospace;
-  font-size: 0.71rem;
-  font-weight: 600;
-  color: var(--teal);
-  background: var(--teal-subtle);
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-
 .chatbot-panel-desc {
   font-size: 0.81rem;
   color: var(--ink-soft);
@@ -241,10 +144,6 @@
   gap: 8px;
   flex-wrap: wrap;
   align-items: center;
-}
-
-.chatbot-train-row {
-  margin-bottom: 10px;
 }
 
 .chatbot-train-select {
@@ -437,42 +336,11 @@
   gap: 8px;
 }
 
-.chat-argument-section-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--gold);
-  margin-bottom: 2px;
-}
-
 .chat-argument-paragraph {
   font-size: 0.87rem;
   line-height: 1.52;
   color: var(--ink);
   margin: 0;
-}
-
-.chat-more-details {
-  margin-top: 6px;
-  font-size: 0.8rem;
-  color: var(--ink-soft);
-}
-
-.chat-more-details summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: var(--teal);
-  user-select: none;
-}
-
-.chat-more-details-body {
-  margin-top: 6px;
-  padding-top: 6px;
-  border-top: 1px solid var(--rule-light);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
 /* Formulario inferior de entrada */
@@ -501,13 +369,6 @@
   outline: none;
   border-color: var(--teal);
   background: var(--bg-card);
-}
-
-.chatbot-submit-col {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  justify-content: center;
 }
 
 .chatbot-btn-primary {

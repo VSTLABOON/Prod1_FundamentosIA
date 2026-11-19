@@ -406,7 +406,8 @@ def api_arm_get_history():
     """
     filter_mode = request.args.get("filter", "all")
     limit = request.args.get("limit", default=40, type=int)
-    data = arm_storage.get_arm_history(filter_mode=filter_mode, limit=limit)
+    summary_only = request.args.get("summary_only", "").lower() in ("1", "true", "yes")
+    data = arm_storage.get_arm_history(filter_mode=filter_mode, limit=limit, summary_only=summary_only)
     return jsonify({"status": "success", "data": data})
 
 

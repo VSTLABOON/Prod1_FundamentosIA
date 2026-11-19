@@ -135,7 +135,7 @@ a {
   text-decoration: none;
 }
 
-h1, h2, h3, h4, .serif-font {
+h1, h2, h3, h4 {
   font-family: "Fraunces", Georgia, serif;
   font-weight: 600;
   letter-spacing: -0.02em;
@@ -154,7 +154,7 @@ h1, h2, h3, h4, .serif-font {
    ========================================================================== */
 .main-page-section {
   display: none;
-  animation: fadeInSection 0.3s ease forwards;
+  animation: fadeInSection 0.26s ease;
 }
 
 .main-page-section.active {
@@ -168,7 +168,7 @@ h1, h2, h3, h4, .serif-font {
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 

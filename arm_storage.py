@@ -12,13 +12,14 @@ import math
 import re
 import unicodedata
 from collections import Counter
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set
 
 import database as db
 
 
 MAX_RUNS_STORED = 300
 MAX_CACHE_STORED = 40
+_INITIALIZED_DB_PATHS: Set[str] = set()
 
 STOPWORDS_ES = {
     "el", "la", "los", "las", "un", "una", "unos", "unas", "de", "del", "al",
@@ -148,8 +149,15 @@ def init_arm_tables() -> None:
         )
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_arm_cache_lookup ON arm_route_cache(scene_hash, algorithm_id)")
         conn.commit()
+        _INITIALIZED_DB_PATHS.add(db.DB_PATH)
     finally:
         conn.close()
+
+
+def _ensure_arm_tables() -> None:
+    """Ejecuta init_arm_tables solo una vez por ruta de base de datos activa."""
+    if db.DB_PATH not in _INITIALIZED_DB_PATHS:
+        init_arm_tables()
 
 
 def compute_scene_hash(
@@ -190,7 +198,7 @@ def compute_scene_hash(
 
 def lookup_cached_sequence(scene_hash: str, algorithm_id: str) -> Optional[Dict[str, Any]]:
     """Busca una ruta previamente resuelta en arm_route_cache."""
-    init_arm_tables()
+    _ensure_arm_tables()
     conn = db.get_db_connection()
     try:
         cursor = conn.cursor()
@@ -242,7 +250,7 @@ def save_cached_sequence(
     """Almacena una solucion exitosa en arm_route_cache con poda LRU a MAX_CACHE_STORED."""
     if not result.get("found"):
         return
-    init_arm_tables()
+    _ensure_arm_tables()
     payload = dict(result)
     payload.pop("from_cache", None)
     payload_str = json.dumps(payload, ensure_ascii=False)
@@ -327,7 +335,7 @@ def log_arm_run(
     had_unexpected: bool = False,
 ) -> int:
     """Guarda una ejecucion real en arm_runs y registra el movimiento de carga en arm_cargo_ledger."""
-    init_arm_tables()
+    _ensure_arm_tables()
     algo = result.get("algorithm", {})
     cargo = result.get("cargo") or {}
     cargo_id = str(cargo.get("cargo_id") or scene_payload.get("cargo_id") or "battery_module")
@@ -493,12 +501,35 @@ def _compute_paired_astar_savings(cursor: Any) -> Optional[float]:
     return None
 
 
-def get_arm_history(filter_mode: str = "all", limit: int = 50) -> Dict[str, Any]:
+def get_arm_history(filter_mode: str = "all", limit: int = 50, summary_only: bool = False) -> Dict[str, Any]:
     """Consulta la bitacora SQLite, la memoria de rutas y las metricas acumuladas."""
-    init_arm_tables()
+    _ensure_arm_tables()
     conn = db.get_db_connection()
     try:
         cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            SELECT
+                COUNT(*) AS total_runs,
+                SUM(CASE WHEN found = 0 THEN 1 ELSE 0 END) AS total_failures,
+                SUM(CASE WHEN from_cache = 1 THEN 1 ELSE 0 END) AS total_from_cache
+            FROM arm_runs
+            """
+        )
+        stats_row = dict(cursor.fetchone() or {})
+
+        if summary_only:
+            return {
+                "kpis": {
+                    "total_runs": int(stats_row.get("total_runs") or 0),
+                    "total_failures": int(stats_row.get("total_failures") or 0),
+                    "total_from_cache": int(stats_row.get("total_from_cache") or 0),
+                },
+                "runs": [],
+                "cargo_ledger": [],
+                "cache_entries": [],
+            }
 
         where_clause = ""
         if filter_mode == "failed":
@@ -536,16 +567,6 @@ def get_arm_history(filter_mode: str = "all", limit: int = 50) -> Dict[str, Any]
                 item["scene"] = {}
             runs.append(item)
 
-        cursor.execute(
-            """
-            SELECT
-                COUNT(*) AS total_runs,
-                SUM(CASE WHEN found = 0 THEN 1 ELSE 0 END) AS total_failures,
-                SUM(CASE WHEN from_cache = 1 THEN 1 ELSE 0 END) AS total_from_cache
-            FROM arm_runs
-            """
-        )
-        stats_row = dict(cursor.fetchone() or {})
         savings_pct = _compute_paired_astar_savings(cursor)
 
         cursor.execute(
@@ -621,7 +642,7 @@ def clear_arm_storage(scope: str = "runs") -> Dict[str, int]:
     if clean_scope not in ("runs", "cargo", "cache", "all"):
         raise ValueError(f"Scope invalido: '{scope}'. Usa 'runs', 'cargo', 'cache' o 'all'.")
 
-    init_arm_tables()
+    _ensure_arm_tables()
     conn = db.get_db_connection()
     try:
         cursor = conn.cursor()
@@ -708,7 +729,7 @@ def _retrieve_relevant_runs(question: str, all_rows: List[Dict[str, Any]], top_k
 
 def query_arm_rag(question: str) -> Dict[str, Any]:
     """Ejecuta el pipeline Mini-RAG local (Retrieval SQL + Synthesis) sobre arm_runs."""
-    init_arm_tables()
+    _ensure_arm_tables()
     clean_q = str(question or "").strip()
     if not clean_q:
         return {

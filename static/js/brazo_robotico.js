@@ -18,6 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const L1_3D = L1_2D / SCALE;
   const L2_3D = L2_2D / SCALE;
 
+  const THREE_CDN_URL = "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js";
+  let threeLoadPromise = null;
+
   const el = {
     presetButtons: document.getElementById("armPresetButtons"),
     algoPills: card.querySelectorAll(".arm-algo-pill"),
@@ -45,15 +48,19 @@ document.addEventListener("DOMContentLoaded", () => {
     verdictText: document.getElementById("armVerdictText"),
     compareModal: document.getElementById("armCompareModal"),
     compareClose: document.getElementById("armCompareClose"),
+    compareBody: document.getElementById("armCompareBody"),
     compareCards: document.getElementById("armCompareCards"),
     compareSummary: document.getElementById("armCompareSummary"),
+    switchToLog: document.getElementById("armSwitchToLog"),
     logModal: document.getElementById("armLogModal"),
     logClose: document.getElementById("armLogClose"),
+    switchToCompare: document.getElementById("armSwitchToCompare"),
     logTabs: document.querySelectorAll("#armLogModal [data-arm-tab]"),
     logPanes: document.querySelectorAll("#armLogModal [data-arm-pane]"),
     ragChips: document.querySelectorAll("#armLogModal [data-rag-q]"),
     ragForm: document.getElementById("armRagForm"),
     ragInput: document.getElementById("armRagInput"),
+    ragSubmit: document.getElementById("armRagSubmit"),
     ragAnswer: document.getElementById("armRagAnswer"),
     ragSources: document.getElementById("armRagSources"),
     sqlTotal: document.getElementById("armSqlTotal"),
@@ -94,18 +101,27 @@ document.addEventListener("DOMContentLoaded", () => {
     carryingPart: false,
     deliveredPart: false,
     reqSeq: 0,
+    compareReqSeq: 0,
+    historyReqSeq: 0,
+    ragReqSeq: 0,
+    historyDirty: true,
+    historyLoadedFilter: null,
     speed: 1.0,
     paused: false,
     phase: "idle", // 'idle' | 'exploring' | 'moving' | 'dwell' | 'done' | 'failed'
     dwellLeftMs: 0,
     pendingNextStage: null,
     activated: false,
+    uiBound: false,
+    threePointerBound: false,
     expCursor: 0,
     pathCursor: 0,
     liveDeg: [170, 15],
     cspaceHover: null, // { i1, i2, val }
     lastTickTime: 0,
-    rafId: null
+    rafId: null,
+    lastFocusedEl: null,
+    confirmTimers: {}
   };
 
   const cspaceBaseCanvas = document.createElement("canvas");
@@ -113,6 +129,13 @@ document.addEventListener("DOMContentLoaded", () => {
   cspaceBaseCanvas.height = el.csCanvas.height;
   const cspaceBaseCtx = cspaceBaseCanvas.getContext("2d");
   let cachedBaseStageKey = "";
+
+  const cspaceExploredCanvas = document.createElement("canvas");
+  cspaceExploredCanvas.width = el.csCanvas.width;
+  cspaceExploredCanvas.height = el.csCanvas.height;
+  const cspaceExploredCtx = cspaceExploredCanvas.getContext("2d");
+  let cachedExploredKey = "";
+  let cachedExploredCount = 0;
 
   const three = {
     ready: false,
@@ -148,9 +171,12 @@ document.addEventListener("DOMContentLoaded", () => {
     shockwaveRing: null,
     shockwaveScale: 0,
     obstacleGroups: [],
+    interactiveMeshes: [],
     dragTarget: null,
     raycaster: null,
     floorPlane: null,
+    pointerNdc: null,
+    floorHitVec: null,
     textures: {}
   };
 
@@ -182,6 +208,32 @@ document.addEventListener("DOMContentLoaded", () => {
     return !sec || sec.classList.contains("active");
   }
 
+  function isAnyModalOpen() {
+    return Boolean(document.querySelector(".modal-backdrop.open, .lightbox-backdrop.open"));
+  }
+
+  function shouldRunRenderLoop() {
+    return three.ready && isBrazoSectionActive() && !document.hidden && !isAnyModalOpen();
+  }
+
+  function stopRenderLoop() {
+    if (state.rafId !== null) {
+      cancelAnimationFrame(state.rafId);
+      state.rafId = null;
+    }
+  }
+
+  function ensureRenderLoop() {
+    if (!shouldRunRenderLoop()) {
+      stopRenderLoop();
+      return;
+    }
+    if (state.rafId === null) {
+      state.lastTickTime = performance.now();
+      startRenderLoop();
+    }
+  }
+
   function resizeThreeRenderer() {
     if (!three.renderer || !three.camera || !el.container3d) return;
     const nw = el.container3d.clientWidth;
@@ -193,21 +245,61 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function loadThreeLibrary() {
+    if (typeof window.THREE !== "undefined") return Promise.resolve(window.THREE);
+    if (threeLoadPromise) return threeLoadPromise;
+
+    threeLoadPromise = new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${THREE_CDN_URL}"]`);
+      if (existing) {
+        existing.addEventListener("load", () => resolve(window.THREE), { once: true });
+        existing.addEventListener("error", () => reject(new Error("Three.js load failed")), { once: true });
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = THREE_CDN_URL;
+      script.async = true;
+      script.onload = () => (window.THREE ? resolve(window.THREE) : reject(new Error("Three.js missing")));
+      script.onerror = () => reject(new Error("Three.js load failed"));
+      document.head.appendChild(script);
+    });
+    return threeLoadPromise;
+  }
+
   async function ensureBrazoActivated() {
     if (!state.meta) return;
+    bindUiEvents();
+
     if (!state.activated) {
       state.activated = true;
+      let loadingBanner = null;
+      if (!three.ready && typeof window.THREE === "undefined" && el.container3d) {
+        loadingBanner = document.createElement("div");
+        loadingBanner.className = "arm-3d-loading";
+        loadingBanner.textContent = "Cargando escena 3D...";
+        el.container3d.appendChild(loadingBanner);
+      }
+
+      try {
+        await loadThreeLibrary();
+      } catch (err) {
+        // Continua funcionando el mapa C-Space y modales incluso sin WebGL/CDN
+      } finally {
+        if (loadingBanner) loadingBanner.remove();
+      }
+
       if (!three.ready) {
         initThreeScene();
-        bindEvents();
+        bindThreePointerEvents();
       }
       requestAnimationFrame(() => {
         resizeThreeRenderer();
+        ensureRenderLoop();
       });
       await runPythonSequence();
     } else {
       resizeThreeRenderer();
-      state.lastTickTime = performance.now();
+      ensureRenderLoop();
     }
   }
 
@@ -229,6 +321,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const obs = new MutationObserver(() => {
           if (isBrazoSectionActive()) {
             ensureBrazoActivated();
+          } else {
+            stopRenderLoop();
           }
         });
         obs.observe(sec, { attributes: true, attributeFilter: ["class"] });
@@ -344,18 +438,44 @@ document.addEventListener("DOMContentLoaded", () => {
     return tex;
   }
 
+  function disposeObject3D(obj) {
+    if (!obj) return;
+    const sharedTex = new Set(Object.values(three.textures));
+    obj.traverse((child) => {
+      if (child.geometry && typeof child.geometry.dispose === "function") {
+        child.geometry.dispose();
+      }
+      if (child.material) {
+        const mats = Array.isArray(child.material) ? child.material : [child.material];
+        mats.forEach((m) => {
+          if (m.map && !sharedTex.has(m.map) && typeof m.map.dispose === "function") {
+            m.map.dispose();
+          }
+          if (typeof m.dispose === "function") {
+            m.dispose();
+          }
+        });
+      }
+    });
+  }
+
   // =========================================================================
   // ESCENA 3D EN THREE.JS
   // =========================================================================
   function initThreeScene() {
     if (typeof window.THREE === "undefined") {
-      el.container3d.innerHTML = `<p style="padding:20px;text-align:center;">No se pudo cargar Three.js.</p>`;
+      if (el.container3d && !el.container3d.querySelector(".arm-3d-loading")) {
+        const msg = document.createElement("div");
+        msg.className = "arm-3d-loading";
+        msg.textContent = "Vista 3D no disponible sin conexion a Three.js. El Mapa de Decisiones y la Bitacora SQL siguen activos.";
+        el.container3d.appendChild(msg);
+      }
       return;
     }
 
     const THREE = window.THREE;
     const w = el.container3d.clientWidth || 560;
-    const h = el.container3d.clientHeight || 416;
+    const h = el.container3d.clientHeight || 400;
 
     three.scene = new THREE.Scene();
     three.textures.hazardYellow = createStripeTexture("#D97706", "#1E293B");
@@ -380,6 +500,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     three.raycaster = new THREE.Raycaster();
     three.floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    three.pointerNdc = new THREE.Vector2();
+    three.floorHitVec = new THREE.Vector3();
 
     const hemi = new THREE.HemisphereLight(0xf8fafc, 0x26323d, 0.92);
     three.scene.add(hemi);
@@ -387,7 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const keyLight = new THREE.DirectionalLight(0xfffbeb, 1.45);
     keyLight.position.set(6, 13, 8);
     keyLight.castShadow = true;
-    keyLight.shadow.mapSize.set(2048, 2048);
+    keyLight.shadow.mapSize.set(1024, 1024);
     keyLight.shadow.bias = -0.0005;
     const d = 9.5;
     keyLight.shadow.camera.left = -d;
@@ -441,19 +563,13 @@ document.addEventListener("DOMContentLoaded", () => {
     buildThreeEffects();
     rebuildThreeObstaclesAndWaypoints();
 
-    const ro = new ResizeObserver(() => {
-      const nw = el.container3d.clientWidth;
-      const nh = el.container3d.clientHeight;
-      if (nw > 10 && nh > 10 && three.renderer) {
-        three.camera.aspect = nw / nh;
-        three.camera.updateProjectionMatrix();
-        three.renderer.setSize(nw, nh);
-      }
-    });
-    ro.observe(el.container3d);
+    if (typeof ResizeObserver !== "undefined") {
+      const ro = new ResizeObserver(resizeThreeRenderer);
+      ro.observe(el.container3d);
+    }
 
     three.ready = true;
-    startRenderLoop();
+    ensureRenderLoop();
   }
 
   function updateSceneTheme() {
@@ -694,7 +810,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!targetGroup || !window.THREE) return;
     const THREE = window.THREE;
     while (targetGroup.children.length > 0) {
-      targetGroup.remove(targetGroup.children[0]);
+      const child = targetGroup.children[0];
+      targetGroup.remove(child);
+      disposeObject3D(child);
     }
 
     if (cargoId === "door_panel") {
@@ -844,27 +962,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function createStationBadgeSprite(text, bgHex) {
     const THREE = window.THREE;
-    const canvas = document.createElement("canvas");
-    canvas.width = 256;
-    canvas.height = 72;
-    const ctx = canvas.getContext("2d");
+    const texKey = `badge_${text}`;
+    let tex = three.textures[texKey];
+    if (!tex) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256;
+      canvas.height = 72;
+      const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = bgHex;
-    ctx.beginPath();
-    ctx.roundRect(12, 10, 232, 52, 26);
-    ctx.fill();
+      ctx.fillStyle = bgHex;
+      ctx.beginPath();
+      if (typeof ctx.roundRect === "function") {
+        ctx.roundRect(12, 10, 232, 52, 26);
+      } else {
+        ctx.rect(12, 10, 232, 52);
+      }
+      ctx.fill();
 
-    ctx.strokeStyle = "rgba(255,255,255,0.65)";
-    ctx.lineWidth = 4;
-    ctx.stroke();
+      ctx.strokeStyle = "rgba(255,255,255,0.65)";
+      ctx.lineWidth = 4;
+      ctx.stroke();
 
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "700 28px 'IBM Plex Sans', sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(text, 128, 37);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "700 28px 'IBM Plex Sans', sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(text, 128, 37);
 
-    const tex = new THREE.CanvasTexture(canvas);
+      tex = new THREE.CanvasTexture(canvas);
+      three.textures[texKey] = tex;
+    }
+
     const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true });
     const sprite = new THREE.Sprite(mat);
     sprite.scale.set(0.96, 0.27, 1);
@@ -1066,11 +1194,29 @@ document.addEventListener("DOMContentLoaded", () => {
     return list;
   }
 
+  function refreshInteractiveMeshesCache() {
+    const list = [];
+    three.obstacleGroups.forEach((g) => {
+      g.children.forEach((c) => {
+        if (!c.isSprite) list.push(c);
+      });
+    });
+    three.waypointGroups.forEach((g) => {
+      g.children.forEach((c) => {
+        if (!c.isSprite) list.push(c);
+      });
+    });
+    three.interactiveMeshes = list;
+  }
+
   function rebuildThreeObstaclesAndWaypoints() {
     if (!three.scene || !window.THREE) return;
     const THREE = window.THREE;
 
-    three.obstacleGroups.forEach((g) => three.scene.remove(g));
+    three.obstacleGroups.forEach((g) => {
+      three.scene.remove(g);
+      disposeObject3D(g);
+    });
     three.obstacleGroups = [];
     three.emergencyBeacons = [];
 
@@ -1081,14 +1227,19 @@ document.addEventListener("DOMContentLoaded", () => {
       three.obstacleGroups.push(grp);
     });
 
-    three.waypointGroups.forEach((g) => three.scene.remove(g));
+    three.waypointGroups.forEach((g) => {
+      three.scene.remove(g);
+      disposeObject3D(g);
+    });
     three.waypointGroups = [];
     if (three.floorPartMesh) {
       three.scene.remove(three.floorPartMesh);
+      disposeObject3D(three.floorPartMesh);
       three.floorPartMesh = null;
     }
     if (three.deliveredPartMesh) {
       three.scene.remove(three.deliveredPartMesh);
+      disposeObject3D(three.deliveredPartMesh);
       three.deliveredPartMesh = null;
     }
 
@@ -1180,6 +1331,8 @@ document.addEventListener("DOMContentLoaded", () => {
         three.scene.add(three.deliveredPartMesh);
       }
     });
+
+    refreshInteractiveMeshesCache();
   }
 
   function updateWaypointVisuals(completedCount) {
@@ -1210,7 +1363,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const cargoNote = state.carryingPart
       ? ` · Llevando ${cargoSpec.short_name} (${cargoSpec.weight_kg} kg)`
       : state.deliveredPart
-        ? ` · ${cargoSpec.short_name} entregada`
+        ? ` · Carga entregada (${cargoSpec.short_name})`
         : " · Pinza libre";
     el.telemetryHud.textContent = `${Math.round(deg1)}° / ${Math.round(deg2)}°${cargoNote}`;
   }
@@ -1249,9 +1402,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function startRenderLoop() {
     function loop(now) {
-      if (!isBrazoSectionActive()) {
-        state.lastTickTime = now;
-        state.rafId = requestAnimationFrame(loop);
+      if (!shouldRunRenderLoop()) {
+        state.rafId = null;
         return;
       }
 
@@ -1354,6 +1506,8 @@ document.addEventListener("DOMContentLoaded", () => {
     state.pendingNextStage = null;
     state.fromWaypointOffset = fromWaypointIdx;
     cachedBaseStageKey = "";
+    cachedExploredKey = "";
+    cachedExploredCount = 0;
     three.sparksActive = false;
     if (three.sparkPoints) three.sparkPoints.visible = false;
     updateTrail3D([]);
@@ -1402,9 +1556,15 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const json = await resp.json();
       if (mySeq !== state.reqSeq) return;
-      if (json.status !== "success") return;
+      if (json.status !== "success") {
+        state.phase = "failed";
+        syncPlayButton();
+        el.verdictText.textContent = json.message || "Error al calcular el ciclo en Python.";
+        return;
+      }
 
       state.lastResult = json.data;
+      state.historyDirty = true;
       updateSummary(json.data, fromWaypointIdx, false);
       startStagePlayback(0, startDeg);
       if (el.logModal.classList.contains("open")) {
@@ -1587,7 +1747,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           state.phase = "done";
           el.phaseFill.style.width = "100%";
-          el.phaseBadge.textContent = `¡${cargoSpec.short_name} (${cargoSpec.weight_kg} kg) entregada!`;
+          el.phaseBadge.textContent = `Entrega completada: ${cargoSpec.short_name} (${cargoSpec.weight_kg} kg)`;
           updateSummary(data, state.fromWaypointOffset, true);
           syncPlayButton();
         }
@@ -1733,11 +1893,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cspaceBaseCtx.restore();
   }
 
-  function drawCspace(stageData, expCount, activePathIdx, liveDeg = null) {
-    if (!stageData) return;
-    ensureCspaceBaseLayer(stageData);
-    csCtx.drawImage(cspaceBaseCanvas, 0, 0);
-
+  function syncExploredCache(stageData, expCount) {
     const dark = isDarkTheme();
     const N = state.meta.grid_n;
     const plotW = el.csCanvas.width - CSPACE_PAD.l - CSPACE_PAD.r;
@@ -1749,15 +1905,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const toPxY = (i2) => CSPACE_PAD.t + (N - 1 - i2) * ch;
 
     const totalExp = Math.max(1, stageData.explored.length);
-    for (let k = 0; k < expCount; k++) {
+    const clampedCount = Math.max(0, Math.min(expCount, stageData.explored.length));
+    const key = cachedBaseStageKey;
+
+    if (cachedExploredKey !== key || clampedCount < cachedExploredCount) {
+      cspaceExploredCtx.drawImage(cspaceBaseCanvas, 0, 0);
+      cachedExploredKey = key;
+      cachedExploredCount = 0;
+    }
+
+    for (let k = cachedExploredCount; k < clampedCount; k++) {
       const [e1, e2] = stageData.explored[k];
       if (cspace[e1][e2] === 2) continue;
       const ratio = k / totalExp;
-      if (ratio < 0.45) csCtx.fillStyle = dark ? "rgba(56,142,130,0.52)" : "rgba(47,111,99,0.45)";
-      else if (ratio < 0.85) csCtx.fillStyle = dark ? "rgba(79,184,168,0.68)" : "rgba(59,154,140,0.65)";
-      else csCtx.fillStyle = dark ? "rgba(125,226,209,0.85)" : "rgba(38,166,154,0.82)";
-      csCtx.fillRect(toPxX(e1), toPxY(e2), cw + 0.3, ch + 0.3);
+      if (ratio < 0.45) cspaceExploredCtx.fillStyle = dark ? "rgba(56,142,130,0.52)" : "rgba(47,111,99,0.45)";
+      else if (ratio < 0.85) cspaceExploredCtx.fillStyle = dark ? "rgba(79,184,168,0.68)" : "rgba(59,154,140,0.65)";
+      else cspaceExploredCtx.fillStyle = dark ? "rgba(125,226,209,0.85)" : "rgba(38,166,154,0.82)";
+      cspaceExploredCtx.fillRect(toPxX(e1), toPxY(e2), cw + 0.3, ch + 0.3);
     }
+    cachedExploredCount = clampedCount;
+  }
+
+  function drawCspace(stageData, expCount, activePathIdx, liveDeg = null) {
+    if (!stageData) return;
+    ensureCspaceBaseLayer(stageData);
+    syncExploredCache(stageData, expCount);
+    csCtx.drawImage(cspaceExploredCanvas, 0, 0);
+
+    const N = state.meta.grid_n;
+    const plotW = el.csCanvas.width - CSPACE_PAD.l - CSPACE_PAD.r;
+    const plotH = el.csCanvas.height - CSPACE_PAD.t - CSPACE_PAD.b;
+    const cw = plotW / N;
+    const ch = plotH / N;
+    const toPxX = (i1) => CSPACE_PAD.l + i1 * cw;
+    const toPxY = (i2) => CSPACE_PAD.t + (N - 1 - i2) * ch;
 
     if (activePathIdx >= 0 && stageData.path.length > 1) {
       const limit = Math.min(activePathIdx + 1, stageData.path.length);
@@ -1803,19 +1984,41 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function redrawCurrentCspace() {
+    if (!state.lastResult || !state.lastResult.stages[state.stageIdx]) return;
+    const st = state.lastResult.stages[state.stageIdx];
+    const expCount = state.phase === "moving" || state.phase === "dwell" || state.phase === "done"
+      ? st.explored.length
+      : Math.floor(state.expCursor);
+    const activePathIdx = state.phase === "moving"
+      ? Math.floor(state.pathCursor)
+      : (state.phase === "dwell" || state.phase === "done")
+        ? st.path.length - 1
+        : -1;
+    drawCspace(st, expCount, activePathIdx, state.liveDeg);
+  }
+
+  function selectAlgorithm(algoId, solveNow = true) {
+    if (!algoId) return;
+    state.algorithm = algoId;
+    el.algoPills.forEach((p) => {
+      const active = p.dataset.algo === algoId;
+      p.classList.toggle("active", active);
+      p.setAttribute("aria-selected", active ? "true" : "false");
+    });
+    if (solveNow) runPythonSequence();
+  }
+
   // =========================================================================
-  // EVENTOS
+  // EVENTOS UI (INDEPENDIENTES DE THREE.JS, ENLAZADOS UNA SOLA VEZ)
   // =========================================================================
-  function bindEvents() {
+  function bindUiEvents() {
+    if (state.uiBound) return;
+    state.uiBound = true;
+
     el.algoPills.forEach((pill) => {
       pill.addEventListener("click", () => {
-        state.algorithm = pill.dataset.algo;
-        el.algoPills.forEach((p) => {
-          const active = p === pill;
-          p.classList.toggle("active", active);
-          p.setAttribute("aria-selected", active ? "true" : "false");
-        });
-        runPythonSequence();
+        selectAlgorithm(pill.dataset.algo, true);
       });
     });
 
@@ -1845,7 +2048,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       state.paused = !state.paused;
       syncPlayButton();
-      if (!state.paused) state.lastTickTime = performance.now();
+      if (!state.paused) {
+        state.lastTickTime = performance.now();
+        ensureRenderLoop();
+      }
     });
 
     el.btnReplay.addEventListener("click", () => {
@@ -1889,28 +2095,48 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
 
+    // Modales del Brazo Robotico (cierre seguro sin cerrar al arrastrar seleccion)
     el.btnCompare.addEventListener("click", openCompareModal);
-    el.compareClose.addEventListener("click", closeCompareModal);
-    el.compareModal.addEventListener("click", (e) => {
-      if (e.target === el.compareModal) closeCompareModal();
-    });
+    el.compareClose.addEventListener("click", () => closeCompareModal(true));
+    if (window.bindSafeBackdropClose) {
+      window.bindSafeBackdropClose(el.compareModal, () => closeCompareModal(true));
+    } else {
+      el.compareModal.addEventListener("click", (e) => {
+        if (e.target === el.compareModal) closeCompareModal(true);
+      });
+    }
 
-    // Modal Bitacora SQL + Mini-RAG + Memoria
     el.btnHistory.addEventListener("click", openLogModal);
-    el.logClose.addEventListener("click", closeLogModal);
-    el.logModal.addEventListener("click", (e) => {
-      if (e.target === el.logModal) closeLogModal();
-    });
+    el.logClose.addEventListener("click", () => closeLogModal(true));
+    if (window.bindSafeBackdropClose) {
+      window.bindSafeBackdropClose(el.logModal, () => closeLogModal(true));
+    } else {
+      el.logModal.addEventListener("click", (e) => {
+        if (e.target === el.logModal) closeLogModal(true);
+      });
+    }
+
+    // Navegacion fluida directa entre Comparativa y Bitacora SQL
+    if (el.switchToLog) {
+      el.switchToLog.addEventListener("click", () => {
+        openLogModal();
+      });
+    }
+    if (el.switchToCompare) {
+      el.switchToCompare.addEventListener("click", () => {
+        openCompareModal();
+      });
+    }
 
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") {
         let closed = false;
         if (el.compareModal.classList.contains("open")) {
-          closeCompareModal();
+          closeCompareModal(true);
           closed = true;
         }
         if (el.logModal.classList.contains("open")) {
-          closeLogModal();
+          closeLogModal(true);
           closed = true;
         }
         if (closed) e.preventDefault();
@@ -1920,39 +2146,76 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.code === "Space") {
         const tag = (e.target && e.target.tagName) ? e.target.tagName.toUpperCase() : "";
         const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON" || tag === "A";
-        const modalOpen = Boolean(document.querySelector(".modal-backdrop.open, .lightbox-backdrop.open"));
-        const armSection = card.closest("#sectionBrazo");
-        const sectionActive = !armSection || armSection.classList.contains("active");
-        if (!isTyping && !modalOpen && sectionActive) {
+        if (!isTyping && !isAnyModalOpen() && isBrazoSectionActive()) {
           e.preventDefault();
           el.btnPlayPause.click();
         }
       }
     });
-    el.logTabs.forEach((tab) => {
+
+    // Pestanas accesibles con clic y flechas de teclado en Bitacora SQL
+    const tabList = Array.from(el.logTabs);
+    tabList.forEach((tab, idx) => {
       tab.addEventListener("click", () => switchLogTab(tab.dataset.armTab));
+      tab.addEventListener("keydown", (e) => {
+        let nextIdx = -1;
+        if (e.key === "ArrowRight") nextIdx = (idx + 1) % tabList.length;
+        else if (e.key === "ArrowLeft") nextIdx = (idx - 1 + tabList.length) % tabList.length;
+        else if (e.key === "Home") nextIdx = 0;
+        else if (e.key === "End") nextIdx = tabList.length - 1;
+        if (nextIdx >= 0) {
+          e.preventDefault();
+          tabList[nextIdx].focus();
+          switchLogTab(tabList[nextIdx].dataset.armTab);
+        }
+      });
     });
+
     el.ragChips.forEach((chip) => {
       chip.addEventListener("click", () => {
+        el.ragChips.forEach((c) => c.classList.toggle("active", c === chip));
         el.ragInput.value = chip.dataset.ragQ;
         runRagQuery(chip.dataset.ragQ);
       });
+    });
+    el.ragInput.addEventListener("input", () => {
+      el.ragChips.forEach((c) => c.classList.remove("active"));
     });
     el.ragForm.addEventListener("submit", (e) => {
       e.preventDefault();
       runRagQuery(el.ragInput.value);
     });
+
     el.sqlFilters.forEach((btn) => {
       btn.addEventListener("click", () => {
-        state.sqlFilter = btn.dataset.sqlFilter;
+        const nextFilter = btn.dataset.sqlFilter;
+        if (state.sqlFilter === nextFilter && !state.historyDirty) return;
+        state.sqlFilter = nextFilter;
         el.sqlFilters.forEach((b) => b.classList.toggle("active", b === btn));
-        loadHistoryData();
+        loadHistoryData(true);
       });
     });
-    el.btnClearRuns.addEventListener("click", () => clearStorage("runs"));
-    el.btnClearCache.addEventListener("click", () => clearStorage("cache"));
+
+    el.btnClearRuns.addEventListener("click", () => handleConfirmClear(el.btnClearRuns, "runs", "Limpiar historial"));
+    el.btnClearCache.addEventListener("click", () => handleConfirmClear(el.btnClearCache, "cache", "Vaciar memoria"));
     el.toggleMemory.addEventListener("change", () => {
       state.useMemory = el.toggleMemory.checked;
+    });
+
+    // Pausar render WebGL cuando la pestana del navegador no es visible o hay un modal abierto
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopRenderLoop();
+      } else {
+        ensureRenderLoop();
+      }
+    });
+    window.addEventListener("modalLockChange", (e) => {
+      if (e.detail && e.detail.open) {
+        stopRenderLoop();
+      } else {
+        ensureRenderLoop();
+      }
     });
 
     // Hover o toque en el mapa C-Space -> mueve el brazo fantasma 3D al instante
@@ -2005,38 +2268,45 @@ document.addEventListener("DOMContentLoaded", () => {
     el.csCanvas.addEventListener("pointercancel", clearCspacePreview);
     el.csCanvas.addEventListener("pointerleave", clearCspacePreview);
 
-    // Interaccion 3D (arrastrar obstaculos/waypoints o girar camara)
+    const themeBtn = document.getElementById("btnThemeToggle");
+    if (themeBtn) {
+      themeBtn.addEventListener("click", () => {
+        setTimeout(() => {
+          updateSceneTheme();
+          cachedBaseStageKey = "";
+          cachedExploredKey = "";
+          cachedExploredCount = 0;
+          redrawCurrentCspace();
+          if (three.ready && three.renderer && three.scene && three.camera) {
+            three.renderer.render(three.scene, three.camera);
+          }
+        }, 40);
+      });
+    }
+  }
+
+  // =========================================================================
+  // EVENTOS DE INTERACCION 3D (RAYCASTING SIN ALLOCACIONES POR FRAME)
+  // =========================================================================
+  function bindThreePointerEvents() {
+    if (state.threePointerBound) return;
     const domEl = three.renderer ? three.renderer.domElement : null;
     if (!domEl) return;
+    state.threePointerBound = true;
 
-    const getNdc = (evt) => {
+    const updateNdc = (evt) => {
       const rect = domEl.getBoundingClientRect();
-      return new window.THREE.Vector2(
+      three.pointerNdc.set(
         ((evt.clientX - rect.left) / rect.width) * 2 - 1,
         -((evt.clientY - rect.top) / rect.height) * 2 + 1
       );
-    };
-
-    const getInteractiveMeshes = () => {
-      const list = [];
-      three.obstacleGroups.forEach((g) => {
-        g.children.forEach((c) => {
-          if (!c.isSprite) list.push(c);
-        });
-      });
-      three.waypointGroups.forEach((g) => {
-        g.children.forEach((c) => {
-          if (!c.isSprite) list.push(c);
-        });
-      });
-      return list;
+      return three.pointerNdc;
     };
 
     domEl.addEventListener("pointerdown", (e) => {
-      three.raycaster.setFromCamera(getNdc(e), three.camera);
-      const hits = three.raycaster.intersectObjects(getInteractiveMeshes(), false);
-      const floorHit = new window.THREE.Vector3();
-      three.raycaster.ray.intersectPlane(three.floorPlane, floorHit);
+      three.raycaster.setFromCamera(updateNdc(e), three.camera);
+      const hits = three.raycaster.intersectObjects(three.interactiveMeshes, false);
+      three.raycaster.ray.intersectPlane(three.floorPlane, three.floorHitVec);
 
       if (hits.length > 0) {
         const meta = hits[0].object.userData;
@@ -2044,8 +2314,8 @@ document.addEventListener("DOMContentLoaded", () => {
         three.dragTarget = {
           type: meta.dragType,
           index: meta.index,
-          offsetX: grp.position.x - floorHit.x,
-          offsetZ: grp.position.z - floorHit.z
+          offsetX: grp.position.x - three.floorHitVec.x,
+          offsetZ: grp.position.z - three.floorHitVec.z
         };
         domEl.style.cursor = "grabbing";
       } else {
@@ -2056,9 +2326,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     domEl.addEventListener("pointermove", (e) => {
+      if (isAnyModalOpen()) return;
+
       if (!three.dragTarget) {
-        three.raycaster.setFromCamera(getNdc(e), three.camera);
-        const hits = three.raycaster.intersectObjects(getInteractiveMeshes(), false);
+        if (e.pointerType !== "mouse") return;
+        three.raycaster.setFromCamera(updateNdc(e), three.camera);
+        const hits = three.raycaster.intersectObjects(three.interactiveMeshes, false);
         if (hits.length > 0) {
           const label = hits[0].object.userData.label || "Elemento";
           el.hoverHud.textContent = `${label} — Arrastra para mover`;
@@ -2081,12 +2354,11 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      three.raycaster.setFromCamera(getNdc(e), three.camera);
-      const floorHit = new window.THREE.Vector3();
-      if (!three.raycaster.ray.intersectPlane(three.floorPlane, floorHit)) return;
+      three.raycaster.setFromCamera(updateNdc(e), three.camera);
+      if (!three.raycaster.ray.intersectPlane(three.floorPlane, three.floorHitVec)) return;
 
-      const nx = floorHit.x + three.dragTarget.offsetX;
-      const nz = floorHit.z + three.dragTarget.offsetZ;
+      const nx = three.floorHitVec.x + three.dragTarget.offsetX;
+      const nz = three.floorHitVec.z + three.dragTarget.offsetZ;
       const p2d = to2D(nx, nz);
 
       if (three.dragTarget.type === "waypoint") {
@@ -2150,20 +2422,11 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       three.targetCamRadius = Math.max(7.5, Math.min(19.0, three.targetCamRadius + e.deltaY * 0.008));
     }, { passive: false });
-
-    const themeBtn = document.getElementById("btnThemeToggle");
-    if (themeBtn) {
-      themeBtn.addEventListener("click", () => {
-        setTimeout(() => {
-          updateSceneTheme();
-          if (state.lastResult && state.lastResult.stages[state.stageIdx]) {
-            drawCspace(state.lastResult.stages[state.stageIdx], Math.floor(state.expCursor), -1, state.liveDeg);
-          }
-        }, 40);
-      });
-    }
   }
 
+  // =========================================================================
+  // GESTION FLUIDA DE MODALES (FOCO, SCROLL, CAMBIO DIRECTO Y CIERRE SEGURO)
+  // =========================================================================
   function syncModalLock() {
     if (window.syncGlobalModalLock) {
       window.syncGlobalModalLock();
@@ -2172,22 +2435,90 @@ document.addEventListener("DOMContentLoaded", () => {
     const anyOpen = el.compareModal.classList.contains("open") || el.logModal.classList.contains("open");
     document.documentElement.classList.toggle("arm-modal-lock", anyOpen);
     document.body.classList.toggle("arm-modal-lock", anyOpen);
+    if (anyOpen) stopRenderLoop();
+    else ensureRenderLoop();
   }
 
-  function closeCompareModal() {
+  function resetConfirmButtons() {
+    [
+      [el.btnClearRuns, "runs", "Limpiar historial"],
+      [el.btnClearCache, "cache", "Vaciar memoria"]
+    ].forEach(([btn, key, label]) => {
+      if (!btn) return;
+      if (state.confirmTimers[key]) {
+        clearTimeout(state.confirmTimers[key]);
+        delete state.confirmTimers[key];
+      }
+      delete btn.dataset.confirmPending;
+      btn.classList.remove("arm-btn-confirm");
+      btn.textContent = label;
+    });
+  }
+
+  function handleConfirmClear(btn, scope, defaultLabel) {
+    if (!btn) return;
+    if (btn.dataset.confirmPending === "1") {
+      resetConfirmButtons();
+      clearStorage(scope);
+      return;
+    }
+    btn.dataset.confirmPending = "1";
+    btn.classList.add("arm-btn-confirm");
+    btn.textContent = "¿Confirmar?";
+    if (state.confirmTimers[scope]) clearTimeout(state.confirmTimers[scope]);
+    state.confirmTimers[scope] = setTimeout(() => {
+      delete btn.dataset.confirmPending;
+      btn.classList.remove("arm-btn-confirm");
+      btn.textContent = defaultLabel;
+      delete state.confirmTimers[scope];
+    }, 3800);
+  }
+
+  function restoreModalFocus() {
+    const prev = state.lastFocusedEl;
+    state.lastFocusedEl = null;
+    if (prev && typeof prev.focus === "function" && document.contains(prev)) {
+      prev.focus();
+    }
+  }
+
+  function closeCompareModal(restoreFocus = false) {
+    if (!el.compareModal.classList.contains("open")) return;
     el.compareModal.classList.remove("open");
+    el.compareModal.setAttribute("aria-hidden", "true");
     syncModalLock();
+    if (restoreFocus) restoreModalFocus();
   }
 
-  function closeLogModal() {
+  function closeLogModal(restoreFocus = false) {
+    if (!el.logModal.classList.contains("open")) return;
+    resetConfirmButtons();
     el.logModal.classList.remove("open");
+    el.logModal.setAttribute("aria-hidden", "true");
     syncModalLock();
+    if (restoreFocus) restoreModalFocus();
   }
 
   async function openCompareModal() {
+    const switchingFromLog = el.logModal.classList.contains("open");
+    if (!switchingFromLog) {
+      state.lastFocusedEl = document.activeElement;
+    } else {
+      closeLogModal(false);
+    }
+
     el.compareModal.classList.add("open");
+    el.compareModal.setAttribute("aria-hidden", "false");
+    if (el.compareBody) el.compareBody.scrollTop = 0;
     syncModalLock();
+    requestAnimationFrame(() => {
+      if (el.compareClose) el.compareClose.focus();
+    });
+
+    const myCmpSeq = ++state.compareReqSeq;
     el.compareCards.innerHTML = `<p class="sv-pane-intro">Ejecutando la tarea completa con las 5 estrategias en Python...</p>`;
+    el.compareSummary.textContent = "";
+    el.compareSummary.hidden = true;
 
     try {
       const resp = await fetch("/api/arm/compare-sequence", {
@@ -2201,22 +2532,31 @@ document.addEventListener("DOMContentLoaded", () => {
         })
       });
       const json = await resp.json();
-      if (json.status !== "success") return;
+      if (myCmpSeq !== state.compareReqSeq) return;
+      if (json.status !== "success") {
+        el.compareCards.innerHTML = `<p class="sv-pane-intro">${escapeHtml(json.message || "No se pudo completar la comparativa.")}</p>`;
+        return;
+      }
 
       const rows = json.data.comparisons;
       const maxExp = Math.max(...rows.map((r) => r.nodes_expanded), 1);
       const maxEn = Math.max(...rows.map((r) => r.energy || 0), 1);
 
       el.compareCards.innerHTML = rows.map((row) => {
-        const expPct = Math.round((row.nodes_expanded / maxExp) * 100);
-        const enPct = row.found ? Math.round((row.energy / maxEn) * 100) : 100;
+        const expPct = row.nodes_expanded > 0 ? Math.max(4, Math.round((row.nodes_expanded / maxExp) * 100)) : 0;
+        const enPct = row.found ? Math.max(4, Math.round((row.energy / maxEn) * 100)) : 100;
 
         const outcome = classifyRunOutcome(row);
-        const cardCls = outcome.kind === "fail"
-          ? "is-failed"
-          : (outcome.kind === "optimal" && row.algorithm_id === "astar")
-            ? "is-winner"
-            : "";
+        const isCurrent = row.algorithm_id === state.algorithm;
+        const cardCls = [
+          outcome.kind === "fail"
+            ? "is-failed"
+            : (outcome.kind === "optimal" && row.algorithm_id === "astar")
+              ? "is-winner"
+              : "",
+          isCurrent ? "is-current" : ""
+        ].filter(Boolean).join(" ");
+
         const badgeLabel = outcome.kind === "fail"
           ? `Fallo (${row.completed_stages}/${row.total_stages})`
           : outcome.kind === "optimal"
@@ -2225,11 +2565,15 @@ document.addEventListener("DOMContentLoaded", () => {
               ? `Fuera exp. (&gt;${outcome.budgetLimit})`
               : `Rodeo · ${row.cycle_seconds} s`;
         const badgeHtml = `<span class="arm-cmp-badge ${outcome.badgeTone}">${badgeLabel}</span>`;
+        const activeTag = isCurrent ? `<span class="arm-cmp-active-tag">Activa</span>` : "";
 
         return `
-          <div class="arm-cmp-card ${cardCls}">
+          <button type="button" class="arm-cmp-card ${cardCls}" data-pick-algo="${escapeHtml(row.algorithm_id)}" title="Aplicar ${escapeHtml(row.algorithm_name)} en la celda 3D">
             <div class="arm-cmp-top">
-              <span class="arm-cmp-name">${escapeHtml(row.algorithm_name)}</span>
+              <span class="arm-cmp-title-wrap">
+                <span class="arm-cmp-name">${escapeHtml(row.algorithm_name)}</span>
+                ${activeTag}
+              </span>
               ${badgeHtml}
             </div>
             <div class="arm-cmp-bars">
@@ -2248,9 +2592,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="arm-bar-track"><div class="arm-bar-fill ${row.found ? "is-alt" : "is-fail"}" style="width:${enPct}%"></div></div>
               </div>
             </div>
-          </div>
+          </button>
         `;
       }).join("");
+
+      el.compareCards.querySelectorAll("[data-pick-algo]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const picked = btn.dataset.pickAlgo;
+          closeCompareModal(false);
+          selectAlgorithm(picked, true);
+        });
+      });
 
       const astar = rows.find((r) => r.algorithm_id === "astar");
       const ucs = rows.find((r) => r.algorithm_id === "ucs");
@@ -2258,17 +2610,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const overBudget = rows
         .filter((r) => classifyRunOutcome(r).kind === "over_budget")
         .map((r) => r.algorithm_name);
+      const budgetLimit = (astar && astar.budget_limit) || 900;
+
       if (astar && ucs && astar.found) {
         const failText = failed.length ? ` No logro terminar: ${failed.join(", ")}.` : "";
-        const budgetText = overBudget.length ? ` Fuera de expectativas (>900 posturas): ${overBudget.join(", ")}.` : "";
+        const budgetText = overBudget.length ? ` Fuera de expectativas (>${budgetLimit} posturas): ${overBudget.join(", ")}.` : "";
         el.compareSummary.textContent =
           `Resumen de produccion: A* completo la tarea en ${astar.cycle_seconds} s con energia minima (${astar.energy}) ` +
           `probando ${astar.nodes_expanded} posturas, frente a ${ucs.nodes_expanded} de Costo Uniforme.${budgetText}${failText}`;
       } else {
         el.compareSummary.textContent = "Con los obstaculos actuales no es posible completar la secuencia.";
       }
+      el.compareSummary.hidden = false;
     } catch (err) {
+      if (myCmpSeq !== state.compareReqSeq) return;
       el.compareCards.innerHTML = `<p class="sv-pane-intro">Error al comparar estrategias en Python.</p>`;
+      el.compareSummary.hidden = true;
     }
   }
 
@@ -2277,7 +2634,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // =========================================================================
   async function refreshHistoryBadge() {
     try {
-      const resp = await fetch("/api/arm/history?limit=1");
+      const resp = await fetch("/api/arm/history?summary_only=1");
       const json = await resp.json();
       if (json.status === "success" && el.historyCount) {
         el.historyCount.textContent = String(json.data.kpis.total_runs || 0);
@@ -2288,34 +2645,71 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function switchLogTab(tabName) {
+    resetConfirmButtons();
     el.logTabs.forEach((t) => {
       const active = t.dataset.armTab === tabName;
       t.classList.toggle("active", active);
       t.setAttribute("aria-selected", active ? "true" : "false");
+      if (active && typeof t.scrollIntoView === "function") {
+        t.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      }
     });
     el.logPanes.forEach((p) => {
       const active = p.dataset.armPane === tabName;
       p.classList.toggle("active", active);
       p.hidden = !active;
+      if (active) {
+        p.scrollTop = 0;
+        const scrollEl = p.querySelector(".arm-modal-scroll");
+        if (scrollEl) scrollEl.scrollTop = 0;
+      }
     });
-    if (tabName === "history" || tabName === "cargo" || tabName === "memory") {
-      loadHistoryData();
+    if ((tabName === "history" || tabName === "cargo" || tabName === "memory") &&
+        (state.historyDirty || state.historyLoadedFilter !== state.sqlFilter)) {
+      loadHistoryData(false);
     }
   }
 
   async function openLogModal() {
+    const switchingFromCompare = el.compareModal.classList.contains("open");
+    if (!switchingFromCompare) {
+      state.lastFocusedEl = document.activeElement;
+    } else {
+      closeCompareModal(false);
+    }
+
     el.logModal.classList.add("open");
+    el.logModal.setAttribute("aria-hidden", "false");
     syncModalLock();
-    await loadHistoryData();
+    requestAnimationFrame(() => {
+      const activeTab = el.logModal.querySelector(".arm-log-tabs .modal-tab-item.active");
+      if (activeTab) activeTab.focus();
+      else if (el.logClose) el.logClose.focus();
+    });
+
+    if (state.historyDirty || state.historyLoadedFilter !== state.sqlFilter) {
+      await loadHistoryData(false);
+    }
   }
 
-  async function loadHistoryData() {
+  async function loadHistoryData(force = true) {
+    if (!force && !state.historyDirty && state.historyLoadedFilter === state.sqlFilter) return;
+    const mySeq = ++state.historyReqSeq;
+    const requestedFilter = state.sqlFilter;
+
     try {
-      const resp = await fetch(`/api/arm/history?filter=${encodeURIComponent(state.sqlFilter)}&limit=40`);
+      const resp = await fetch(`/api/arm/history?filter=${encodeURIComponent(requestedFilter)}&limit=40`);
       const json = await resp.json();
-      if (json.status !== "success") return;
+      if (mySeq !== state.historyReqSeq) return;
+      if (json.status !== "success") {
+        el.runsList.innerHTML = `<p class="sv-pane-intro">No se pudo consultar la bitacora SQL.</p>`;
+        return;
+      }
 
       const { kpis, runs, cargo_ledger: cargoLedger, cache_entries: cacheEntries } = json.data;
+      state.historyDirty = false;
+      state.historyLoadedFilter = requestedFilter;
+
       if (el.historyCount) el.historyCount.textContent = String(kpis.total_runs);
       el.sqlTotal.textContent = String(kpis.total_runs);
       el.sqlFailures.textContent = String(kpis.total_failures);
@@ -2331,6 +2725,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderCargoList(cargoLedger || []);
       renderCacheList(cacheEntries);
     } catch (err) {
+      if (mySeq !== state.historyReqSeq) return;
       el.runsList.innerHTML = `<p class="sv-pane-intro">No se pudo cargar la bitacora SQL.</p>`;
     }
   }
@@ -2457,20 +2852,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const allObs = (sc.obstacles || []).map((o) => ({ ...o }));
     state.obstacles = allObs.filter((o) => o.id !== "obs_emergency");
     const emerg = allObs.find((o) => o.id === "obs_emergency");
-    if (emerg) state.unexpectedSpec = emerg;
+    const presetTask = state.meta && state.meta.tasks.find((t) => t.id === state.activeTaskId);
+    state.unexpectedSpec = emerg || (presetTask && presetTask.unexpected ? { ...presetTask.unexpected } : state.unexpectedSpec);
 
     el.presetButtons.querySelectorAll(".arm-preset-btn").forEach((b) => {
       b.classList.toggle("active", b.dataset.task === state.activeTaskId);
     });
-    el.algoPills.forEach((p) => {
-      const active = p.dataset.algo === state.algorithm;
-      p.classList.toggle("active", active);
-      p.setAttribute("aria-selected", active ? "true" : "false");
-    });
+    selectAlgorithm(state.algorithm, false);
     el.btnEmergency.classList.toggle("active", state.unexpectedActive);
     el.btnEmergency.textContent = state.unexpectedActive ? "Quitar imprevisto" : "Imprevisto";
 
-    closeLogModal();
+    closeLogModal(false);
     refreshCarriedCargoMesh();
     rebuildThreeObstaclesAndWaypoints();
     runPythonSequence();
@@ -2479,7 +2871,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function runRagQuery(question) {
     const q = String(question || "").trim();
     if (!q) return;
+    const mySeq = ++state.ragReqSeq;
     el.ragAnswer.textContent = "Consultando registros en SQLite...";
+    if (el.ragSubmit) el.ragSubmit.disabled = true;
 
     try {
       const resp = await fetch("/api/arm/rag", {
@@ -2488,7 +2882,12 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ question: q })
       });
       const json = await resp.json();
-      if (json.status !== "success") return;
+      if (mySeq !== state.ragReqSeq) return;
+      if (json.status !== "success") {
+        el.ragAnswer.textContent = json.message || "No se pudo completar la consulta en SQLite.";
+        el.ragSources.innerHTML = "";
+        return;
+      }
 
       const rag = json.data;
       el.ragAnswer.textContent = rag.answer;
@@ -2512,16 +2911,29 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `).join("");
     } catch (err) {
+      if (mySeq !== state.ragReqSeq) return;
       el.ragAnswer.textContent = "Error al consultar el Mini-RAG en Python.";
+      el.ragSources.innerHTML = "";
+    } finally {
+      if (mySeq === state.ragReqSeq && el.ragSubmit) {
+        el.ragSubmit.disabled = false;
+      }
     }
   }
 
   async function clearStorage(scope) {
     try {
-      await fetch(`/api/arm/history?scope=${encodeURIComponent(scope)}`, { method: "DELETE" });
-      await loadHistoryData();
+      const resp = await fetch(`/api/arm/history?scope=${encodeURIComponent(scope)}`, { method: "DELETE" });
+      if (!resp.ok) return;
+      state.historyDirty = true;
+      if (scope === "runs" || scope === "all") {
+        el.ragAnswer.textContent = "Historial limpiado. Ejecuta una tarea en la celda 3D y vuelve a consultar.";
+        el.ragSources.innerHTML = "";
+        el.ragChips.forEach((c) => c.classList.remove("active"));
+      }
+      await loadHistoryData(true);
     } catch (err) {
-      // Silencioso
+      el.runsList.innerHTML = `<p class="sv-pane-intro">No se pudo limpiar el almacenamiento SQL.</p>`;
     }
   }
 

@@ -380,12 +380,13 @@
 }
 
 /* ==========================================================================
-   MODAL COMPACTO POR PESTANAS (SIMULADOR Y CHATBOT, SIN SATURACION NI SCROLL)
+   MODAL COMPACTO POR PESTANAS (SIMULADOR Y CHATBOT, SCROLL FLUIDO)
    ========================================================================== */
 .sv-compact-modal,
 .modal-window.sv-compact-modal {
-  max-width: 720px;
-  max-height: min(85dvh, 650px);
+  max-width: 740px;
+  height: auto;
+  max-height: min(88dvh, 740px);
   padding: 20px 24px 22px;
   overflow: hidden;
   display: flex;

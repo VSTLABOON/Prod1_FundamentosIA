@@ -204,10 +204,6 @@
     align-items: stretch;
     gap: 12px;
   }
-  .chatbot-config-trigger {
-    width: 100%;
-    text-align: center;
-  }
   .chatbot-apikey-row {
     flex-direction: column;
     align-items: stretch;
@@ -242,21 +238,12 @@
   .chatbot-input-row {
     flex-direction: column;
   }
-  .chatbot-submit-col {
-    flex-direction: row;
-    width: 100%;
-  }
-  .chatbot-submit-col button {
-    flex: 1;
-    text-align: center;
-    justify-content: center;
-  }
   /* Modales y Lightbox en moviles */
   .modal-backdrop {
     padding: 10px;
   }
   .modal-window {
-    max-height: 86dvh;
+    max-height: calc(100dvh - 20px);
     overflow: hidden;
   }
   .modal-header-hero {
@@ -307,9 +294,6 @@
   }
   .meter-score-highlight {
     font-size: 1.15rem;
-  }
-  .chatbot-submit-col {
-    flex-direction: column;
   }
   .essay-meta-bar {
     flex-direction: column;

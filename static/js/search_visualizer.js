@@ -52,8 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
     btnOpenModal: document.getElementById("svBtnOpenModal"),
     modal: document.getElementById("svModal"),
     modalClose: document.getElementById("svModalClose"),
-    modalTabs: root.querySelectorAll("[data-sv-tab]"),
-    modalPanes: root.querySelectorAll("[data-sv-pane]"),
+    modalTabs: document.querySelectorAll("#svModal [data-sv-tab]"),
+    modalPanes: document.querySelectorAll("#svModal [data-sv-pane]"),
     compareCards: document.getElementById("svCompareCards"),
     compareNote: document.getElementById("svCompareNote")
   };
@@ -400,6 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const active = p.dataset.svPane === tabKey;
       p.classList.toggle("active", active);
       p.hidden = !active;
+      if (active) p.scrollTop = 0;
     });
   }
 
@@ -420,9 +421,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (el.btnOpenModal) el.btnOpenModal.addEventListener("click", () => openSvModal("compare"));
   if (el.modalClose) el.modalClose.addEventListener("click", closeSvModal);
   if (el.modal) {
-    el.modal.addEventListener("click", (e) => {
-      if (e.target === el.modal) closeSvModal();
-    });
+    if (window.bindSafeBackdropClose) {
+      window.bindSafeBackdropClose(el.modal, closeSvModal);
+    } else {
+      el.modal.addEventListener("click", (e) => {
+        if (e.target === el.modal) closeSvModal();
+      });
+    }
   }
   el.modalTabs.forEach(t => {
     t.addEventListener("click", () => switchModalTab(t.dataset.svTab));

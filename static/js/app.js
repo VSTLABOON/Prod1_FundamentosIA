@@ -298,11 +298,42 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ==========================================================================
      4. MODAL LIGHTBOX PARA AMPLIAR INFOGRAFIAS EN ALTA RESOLUCION
      ========================================================================== */
+  function bindSafeBackdropClose(backdropEl, onClose, extraMatchFn = null) {
+    if (!backdropEl) return;
+    let pointerStartedOnBackdrop = false;
+    const isBackdropTarget = (target) =>
+      target === backdropEl || (typeof extraMatchFn === "function" && extraMatchFn(target));
+
+    backdropEl.addEventListener("pointerdown", (e) => {
+      pointerStartedOnBackdrop = isBackdropTarget(e.target);
+    });
+    backdropEl.addEventListener("click", (e) => {
+      if (pointerStartedOnBackdrop && isBackdropTarget(e.target)) {
+        onClose();
+      }
+      pointerStartedOnBackdrop = false;
+    });
+  }
+  window.bindSafeBackdropClose = bindSafeBackdropClose;
+
   function syncGlobalModalLock() {
     const anyOpen = Boolean(document.querySelector(".modal-backdrop.open, .lightbox-backdrop.open"));
+    const wasLocked = document.body.classList.contains("arm-modal-lock");
+
+    if (anyOpen && !wasLocked) {
+      const scrollbarW = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+      document.documentElement.style.setProperty("--modal-scrollbar-comp", `${scrollbarW}px`);
+    } else if (!anyOpen && wasLocked) {
+      document.documentElement.style.removeProperty("--modal-scrollbar-comp");
+    }
+
     document.documentElement.classList.toggle("arm-modal-lock", anyOpen);
     document.body.classList.toggle("arm-modal-lock", anyOpen);
     document.body.style.overflow = "";
+
+    if (anyOpen !== wasLocked) {
+      window.dispatchEvent(new CustomEvent("modalLockChange", { detail: { open: anyOpen } }));
+    }
   }
   window.syncGlobalModalLock = syncGlobalModalLock;
 
@@ -338,11 +369,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (dom.lightboxModal) {
-      dom.lightboxModal.addEventListener("click", (e) => {
-        if (e.target === dom.lightboxModal || e.target.classList.contains("lightbox-scroll-area")) {
-          closeLightbox();
-        }
-      });
+      bindSafeBackdropClose(
+        dom.lightboxModal,
+        closeLightbox,
+        (target) => target.classList && target.classList.contains("lightbox-scroll-area")
+      );
     }
 
     document.addEventListener("keydown", (e) => {
@@ -540,6 +571,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setActiveModalTab("definition");
+    const modalBody = dom.modalBackdrop ? dom.modalBackdrop.querySelector(".modal-body") : null;
+    if (modalBody) modalBody.scrollTop = 0;
     dom.modalBackdrop.classList.add("open");
     syncGlobalModalLock();
   }
@@ -607,9 +640,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (dom.modalCloseBtn) dom.modalCloseBtn.addEventListener("click", closeModal);
   if (dom.modalBackdrop) {
-    dom.modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === dom.modalBackdrop) closeModal();
-    });
+    bindSafeBackdropClose(dom.modalBackdrop, closeModal);
   }
 
   document.addEventListener("keydown", (e) => {
@@ -821,6 +852,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const active = p.dataset.cbPane === tabKey;
         p.classList.toggle("active", active);
         p.hidden = !active;
+        if (active) p.scrollTop = 0;
       });
     }
 
@@ -844,9 +876,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chatbotModalClose.addEventListener("click", closeChatbotModal);
     }
     if (chatbotModal) {
-      chatbotModal.addEventListener("click", (e) => {
-        if (e.target === chatbotModal) closeChatbotModal();
-      });
+      bindSafeBackdropClose(chatbotModal, closeChatbotModal);
     }
     chatbotModalTabs.forEach(t => {
       t.addEventListener("click", () => switchChatbotModalTab(t.dataset.cbTab));
